@@ -1,3 +1,3 @@
 # newsoracle
 NewsOracle - Sports &amp; Finance news
-Updated June 2026
+Updated June 2026 
