@@ -278,7 +278,7 @@ Return ONLY a JSON object, no markdown:
         <meta property="og:description" content={seoDesc} />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://newsoracle.online" />
-        <link rel="canonical" href="https://newsoracle.online" /><meta name="google-site-verification" content="GphR72nuV4wEDspz9HSjRE6U_9Q8PpOGxIJ7" />
+        <link rel="canonical" href="https://newsoracle.online" /><meta name="google-site-verification" content="3E4NHl4VZajyzpKK_sXE71m3uNrk0nsretKgK7nNMrs" />
       </Head>
       <div style={{ minHeight: "100vh", background: "#f9fafb", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
         <div style={{ width: "100%", maxWidth: 440 }}>
