@@ -12,10 +12,33 @@ const RSS_SOURCES = [
 ];
 
 const DISCLAIMERS = {
-  Sports:  "The analysis and forecasts presented here are based on statistical data and expert assessment. They are intended for informational purposes only and do not constitute a guarantee of outcome.",
-  Markets: "The information and analysis on this page are provided for informational purposes only and do not constitute financial, investment, or trading advice. Past performance is not indicative of future results. Always consult a qualified financial adviser before making investment decisions.",
-  Crypto:  "Cryptocurrency markets are highly volatile. The analysis presented is for informational purposes only and does not constitute financial advice. You should not invest more than you can afford to lose. Always conduct your own research.",
+  Sports:  "The analysis and forecasts presented here are based on statistical data and expert assessment. For informational purposes only.",
+  Markets: "This is not financial advice. Always consult a qualified financial adviser before making investment decisions.",
+  Crypto:  "Cryptocurrency markets are highly volatile. This is not financial advice. Always conduct your own research.",
 };
+
+const CATEGORY_IMAGES = {
+  Sports: [
+    "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=800&q=80",
+    "https://images.unsplash.com/photo-1560272564-c83b66b1ad12?w=800&q=80",
+    "https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=800&q=80",
+    "https://images.unsplash.com/photo-1517649763962-0c623066013b?w=800&q=80",
+  ],
+  Markets: [
+    "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&q=80",
+    "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=800&q=80",
+    "https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=800&q=80",
+  ],
+  Crypto: [
+    "https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=800&q=80",
+    "https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=800&q=80",
+  ],
+};
+
+function getImage(category, index) {
+  const imgs = CATEGORY_IMAGES[category] || CATEGORY_IMAGES.Markets;
+  return imgs[index % imgs.length];
+}
 
 const CORS = "https://api.allorigins.win/get?url=";
 
@@ -31,22 +54,32 @@ function formatDate(d) {
   return new Date(d).toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
 }
 
+function slugify(title) {
+  return title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 60);
+}
+
 function parseFeed(xml, source) {
   try {
     const doc = new DOMParser().parseFromString(xml, "text/xml");
-    return Array.from(doc.querySelectorAll("item")).slice(0, 6).map(item => ({
-      id: (item.querySelector("guid")?.textContent || item.querySelector("link")?.textContent || "") + source.name,
-      title: item.querySelector("title")?.textContent?.replace(/<!\[CDATA\[|\]\]>/g, "").trim() || "Untitled",
-      description: item.querySelector("description")?.textContent?.replace(/<[^>]+>/g, "").replace(/<!\[CDATA\[|\]\]>/g, "").slice(0, 400).trim() || "",
-      link: item.querySelector("link")?.textContent || "#",
-      pubDate: item.querySelector("pubDate")?.textContent || new Date().toISOString(),
-      source: source.name, tag: source.tag, category: source.category,
-    }));
+    return Array.from(doc.querySelectorAll("item")).slice(0, 6).map(item => {
+      const mediaUrl = item.querySelector("content")?.getAttribute("url") ||
+        item.querySelector("thumbnail")?.getAttribute("url") ||
+        item.querySelector("enclosure")?.getAttribute("url") || null;
+      return {
+        id: (item.querySelector("guid")?.textContent || item.querySelector("link")?.textContent || "") + source.name,
+        title: item.querySelector("title")?.textContent?.replace(/<!\[CDATA\[|\]\]>/g, "").trim() || "Untitled",
+        description: item.querySelector("description")?.textContent?.replace(/<[^>]+>/g, "").replace(/<!\[CDATA\[|\]\]>/g, "").slice(0, 400).trim() || "",
+        link: item.querySelector("link")?.textContent || "#",
+        pubDate: item.querySelector("pubDate")?.textContent || new Date().toISOString(),
+        image: mediaUrl,
+        source: source.name, tag: source.tag, category: source.category,
+      };
+    });
   } catch { return []; }
 }
 
 function Ticker({ posts }) {
-  const items = posts.length > 0 ? posts.map(p => `${p.tag.toUpperCase()}: ${p.title}`) : ["NEWSORACLE — Live sports and financial analysis", "Markets coverage across stocks, crypto and forex", "Sports predictions and match previews updated throughout the day"];
+  const items = posts.length > 0 ? posts.map(p => `${p.tag.toUpperCase()}: ${p.title}`) : ["NEWSORACLE — Live sports and financial analysis", "Markets coverage across stocks, crypto and forex", "Sports predictions updated throughout the day"];
   const text = items.join("   ·   ");
   return (
     <div style={{ background: "#CC0000", overflow: "hidden", height: 34, display: "flex", alignItems: "center" }}>
@@ -58,16 +91,17 @@ function Ticker({ posts }) {
       </div>
     </div>
   );
-}
-
-function ArticleCard({ post, size = "normal" }) {
+}function ArticleCard({ post, size = "normal", imgIndex = 0 }) {
   const [open, setOpen] = useState(false);
+  const [imgError, setImgError] = useState(false);
   const catColor = post.category === "Sports" ? "#1a56db" : post.category === "Crypto" ? "#b45309" : "#166534";
+  const imageUrl = (!imgError && post.image) ? post.image : getImage(post.category, imgIndex);
 
   if (size === "hero") return (
     <div style={{ borderBottom: "1px solid #e5e7eb", paddingBottom: 28, marginBottom: 28 }}>
+      <img src={imageUrl} alt={post.title} onError={() => setImgError(true)} style={{ width: "100%", height: 340, objectFit: "cover", marginBottom: 20, display: "block" }} />
       <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 10 }}>
-        <span style={{ background: catColor, color: "#fff", fontSize: 10, fontWeight: 800, padding: "3px 8px", letterSpacing: "0.08em" }}>{post.category.toUpperCase()}</span>
+        <span style={{ background: catColor, color: "#fff", fontSize: 10, fontWeight: 800, padding: "3px 8px" }}>{post.category.toUpperCase()}</span>
         <span style={{ color: "#6b7280", fontSize: 12 }}>{post.tag}</span>
         <span style={{ color: "#d1d5db", fontSize: 12 }}>·</span>
         <span style={{ color: "#6b7280", fontSize: 12 }}>{formatDate(post.pubDate)}</span>
@@ -78,39 +112,44 @@ function ArticleCard({ post, size = "normal" }) {
         <div style={{ borderLeft: "3px solid #1a56db", paddingLeft: 16, margin: "16px 0" }}>
           <div style={{ color: "#1a56db", fontSize: 11, fontWeight: 800, letterSpacing: "0.1em", marginBottom: 6 }}>ANALYSIS & OUTLOOK</div>
           <p style={{ color: "#111827", fontSize: 15, lineHeight: 1.7, margin: "0 0 10px", fontFamily: "Georgia, serif" }}>{post.prediction}</p>
-          <p style={{ color: "#6b7280", fontSize: 12, lineHeight: 1.5, margin: 0, fontStyle: "italic" }}>{post.disclaimer}</p>
+          <p style={{ color: "#6b7280", fontSize: 12, lineHeight: 1.5, margin: "0 0 8px", fontStyle: "italic" }}>{post.disclaimer}</p>
         </div>
       )}
-      <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
-        <a href={post.link} target="_blank" rel="noreferrer" style={{ color: "#1a56db", fontSize: 13, fontWeight: 600, textDecoration: "none" }}>Read full story →</a>
+      <div style={{ display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap" }}>
+        <a href={post.link} target="_blank" rel="noreferrer" style={{ color: "#1a56db", fontSize: 13, fontWeight: 600, textDecoration: "none" }}>Read full story at {post.tag} →</a>
         {post.prediction && <button onClick={() => setOpen(!open)} style={{ background: "none", border: "1px solid #d1d5db", color: "#374151", fontSize: 12, padding: "5px 12px", cursor: "pointer" }}>{open ? "Hide analysis" : "View analysis"}</button>}
         {post.confidence && <span style={{ color: "#6b7280", fontSize: 12 }}>Confidence: <strong style={{ color: "#111" }}>{post.confidence}%</strong></span>}
       </div>
+      <div style={{ marginTop: 10, color: "#9ca3af", fontSize: 11 }}>Source: <a href={post.link} target="_blank" rel="noreferrer" style={{ color: "#9ca3af" }}>{post.tag}</a> · Analysis by NewsOracle editorial team</div>
     </div>
   );
 
   if (size === "small") return (
-    <div style={{ paddingBottom: 16, marginBottom: 16, borderBottom: "1px solid #f3f4f6" }}>
-      <div style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 6 }}>
-        <span style={{ background: catColor, color: "#fff", fontSize: 9, fontWeight: 800, padding: "2px 6px" }}>{post.category.toUpperCase()}</span>
-        <span style={{ color: "#9ca3af", fontSize: 11 }}>{timeAgo(post.postedAt || post.pubDate)}</span>
-      </div>
-      <h4 onClick={() => setOpen(!open)} style={{ fontFamily: "Georgia, serif", fontSize: 14, fontWeight: 700, color: "#111827", margin: "0 0 6px", lineHeight: 1.4, cursor: "pointer" }}>{post.title}</h4>
-      {open && post.prediction && (
-        <div style={{ borderLeft: "2px solid #e5e7eb", paddingLeft: 10, margin: "8px 0" }}>
-          <p style={{ color: "#374151", fontSize: 12, lineHeight: 1.6, margin: "0 0 6px" }}>{post.prediction}</p>
-          <p style={{ color: "#9ca3af", fontSize: 11, fontStyle: "italic", margin: 0 }}>{post.disclaimer}</p>
+    <div style={{ paddingBottom: 16, marginBottom: 16, borderBottom: "1px solid #f3f4f6", display: "flex", gap: 12 }}>
+      <img src={imageUrl} alt={post.title} onError={() => setImgError(true)} style={{ width: 72, height: 54, objectFit: "cover", flexShrink: 0 }} />
+      <div style={{ flex: 1 }}>
+        <div style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 4 }}>
+          <span style={{ background: catColor, color: "#fff", fontSize: 9, fontWeight: 800, padding: "2px 6px" }}>{post.category.toUpperCase()}</span>
+          <span style={{ color: "#9ca3af", fontSize: 11 }}>{timeAgo(post.postedAt || post.pubDate)}</span>
         </div>
-      )}
-      <div style={{ display: "flex", gap: 10 }}>
-        <a href={post.link} target="_blank" rel="noreferrer" style={{ color: "#1a56db", fontSize: 12, textDecoration: "none" }}>Read →</a>
-        {post.prediction && <button onClick={() => setOpen(!open)} style={{ background: "none", border: "none", color: "#6b7280", fontSize: 11, cursor: "pointer", padding: 0 }}>{open ? "Hide" : "Analysis"}</button>}
+        <h4 onClick={() => setOpen(!open)} style={{ fontFamily: "Georgia, serif", fontSize: 13, fontWeight: 700, color: "#111827", margin: "0 0 4px", lineHeight: 1.4, cursor: "pointer" }}>{post.title}</h4>
+        {open && post.prediction && (
+          <div style={{ borderLeft: "2px solid #e5e7eb", paddingLeft: 10, margin: "6px 0" }}>
+            <p style={{ color: "#374151", fontSize: 12, lineHeight: 1.6, margin: "0 0 4px" }}>{post.prediction}</p>
+            <p style={{ color: "#9ca3af", fontSize: 11, fontStyle: "italic", margin: 0 }}>{post.disclaimer}</p>
+          </div>
+        )}
+        <div style={{ display: "flex", gap: 10 }}>
+          <a href={post.link} target="_blank" rel="noreferrer" style={{ color: "#1a56db", fontSize: 12, textDecoration: "none" }}>Read at {post.tag} →</a>
+          {post.prediction && <button onClick={() => setOpen(!open)} style={{ background: "none", border: "none", color: "#6b7280", fontSize: 11, cursor: "pointer", padding: 0 }}>{open ? "Hide" : "Analysis"}</button>}
+        </div>
       </div>
     </div>
   );
 
   return (
     <div style={{ paddingBottom: 20, marginBottom: 20, borderBottom: "1px solid #e5e7eb" }}>
+      <img src={imageUrl} alt={post.title} onError={() => setImgError(true)} style={{ width: "100%", height: 180, objectFit: "cover", marginBottom: 12, display: "block" }} />
       <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8 }}>
         <span style={{ background: catColor, color: "#fff", fontSize: 10, fontWeight: 800, padding: "3px 8px" }}>{post.category.toUpperCase()}</span>
         <span style={{ color: "#6b7280", fontSize: 12 }}>{post.tag}</span>
@@ -127,15 +166,14 @@ function ArticleCard({ post, size = "normal" }) {
           <p style={{ color: "#94a3b8", fontSize: 11, fontStyle: "italic", margin: 0 }}>{post.disclaimer}</p>
         </div>
       )}
-      <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-        <a href={post.link} target="_blank" rel="noreferrer" style={{ color: "#1a56db", fontSize: 13, fontWeight: 600, textDecoration: "none" }}>Read full story →</a>
+      <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+        <a href={post.link} target="_blank" rel="noreferrer" style={{ color: "#1a56db", fontSize: 13, fontWeight: 600, textDecoration: "none" }}>Read at {post.tag} →</a>
         {post.prediction && <button onClick={() => setOpen(!open)} style={{ background: "none", border: "1px solid #d1d5db", color: "#374151", fontSize: 12, padding: "4px 10px", cursor: "pointer" }}>{open ? "Close" : "View analysis"}</button>}
       </div>
+      <div style={{ marginTop: 8, color: "#9ca3af", fontSize: 11 }}>Source: <a href={post.link} target="_blank" rel="noreferrer" style={{ color: "#9ca3af" }}>{post.tag}</a> · Analysis: NewsOracle</div>
     </div>
   );
-}
-
-export default function Home() {
+}export default function Home() {
   const [screen, setScreen]         = useState("setup");
   const [apiKey, setApiKey]         = useState("");
   const [apiInput, setApiInput]     = useState("");
@@ -179,18 +217,22 @@ export default function Home() {
     addLog(`Processing: ${article.title.slice(0, 50)}...`);
     try {
       const isSports = article.category === "Sports";
-      const prompt = `You are a senior editor at a leading news publication. Write a professional news analysis for the following article.
+      const slug = slugify(article.title);
+      const prompt = `You are a senior editor at a leading news publication. Write professional news analysis.
 
 Title: ${article.title}
 Content: ${article.description}
 Category: ${article.category}
+Source: ${article.tag}
 
-Return ONLY a JSON object with these exact fields, no markdown:
+Return ONLY a JSON object, no markdown:
 {
-  "summary": "3 clear, factual sentences summarising the story in journalistic style. Third person, active voice.",
-  "prediction": "${isSports ? "2 sentences analysing likely outcomes based on current form and context." : "2 sentences of forward-looking market analysis with specific factors."}",
+  "summary": "3 clear factual sentences. Third person, active voice. Include key names and facts.",
+  "prediction": "${isSports ? "2 sentences on likely outcomes based on form and context." : "2 sentences of forward-looking market analysis with specific factors."}",
   "confidence": <integer 55-92>,
-  "sentiment": "${isSports ? "home_win OR away_win OR draw OR bullish OR bearish" : "bullish OR bearish OR neutral"}"
+  "sentiment": "${isSports ? "home_win OR away_win OR draw OR bullish OR bearish" : "bullish OR bearish OR neutral"}",
+  "metaDescription": "155-character SEO meta description with key search terms.",
+  "keywords": "5 comma-separated SEO keywords"
 }`;
 
       const res = await fetch("https://api.anthropic.com/v1/messages", {
@@ -202,7 +244,7 @@ Return ONLY a JSON object with these exact fields, no markdown:
       if (data.error) throw new Error(data.error.message);
       const raw = data.content[0].text.replace(/```json|```/g, "").trim();
       const parsed = JSON.parse(raw);
-      setPosts(p => [{ id: article.id, title: article.title, summary: parsed.summary, prediction: parsed.prediction, confidence: parsed.confidence, sentiment: parsed.sentiment, source: article.source, tag: article.tag, category: article.category, link: article.link, pubDate: article.pubDate, postedAt: new Date().toISOString(), disclaimer: DISCLAIMERS[article.category] || DISCLAIMERS.Markets }, ...p]);
+      setPosts(p => [{ id: article.id, title: article.title, slug, summary: parsed.summary, prediction: parsed.prediction, confidence: parsed.confidence, sentiment: parsed.sentiment, metaDescription: parsed.metaDescription, keywords: parsed.keywords, source: article.source, tag: article.tag, category: article.category, link: article.link, image: article.image, pubDate: article.pubDate, postedAt: new Date().toISOString(), disclaimer: DISCLAIMERS[article.category] || DISCLAIMERS.Markets }, ...p]);
       addLog(`Published: ${article.title.slice(0, 45)}`);
     } catch (e) { setError("Error: " + e.message); addLog("Error: " + e.message); }
     setProcessing(null);
@@ -220,11 +262,24 @@ Return ONLY a JSON object with these exact fields, no markdown:
   const tabs = ["All", "Sports", "Markets", "Crypto"];
   const filteredSite = posts.filter(p => siteTab === "All" ? true : p.category === siteTab);
   const filteredDash = posts.filter(p => activeTab === "All" ? true : p.category === activeTab);
+  const featuredPost = filteredSite[0];
+  const seoTitle = "NewsOracle — Sports Predictions, Market Analysis & Financial News";
+  const seoDesc = "NewsOracle delivers real-time sports predictions, stock market analysis, crypto forecasts and forex insights. Expert analysis updated 24/7.";
+  const seoKeywords = "sports predictions, market analysis, crypto forecast, football predictions, stock market news, forex analysis";
 
-  // SETUP
   if (screen === "setup") return (
     <>
-      <Head><title>NewsOracle — Enter Newsroom</title></Head>
+      <Head>
+        <title>{seoTitle}</title>
+        <meta name="description" content={seoDesc} />
+        <meta name="keywords" content={seoKeywords} />
+        <meta name="robots" content="index, follow" />
+        <meta property="og:title" content={seoTitle} />
+        <meta property="og:description" content={seoDesc} />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://newsoracle.online" />
+        <link rel="canonical" href="https://newsoracle.online" />
+      </Head>
       <div style={{ minHeight: "100vh", background: "#f9fafb", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
         <div style={{ width: "100%", maxWidth: 440 }}>
           <div style={{ textAlign: "center", marginBottom: 36 }}>
@@ -245,10 +300,22 @@ Return ONLY a JSON object with these exact fields, no markdown:
     </>
   );
 
-  // PUBLIC SITE
   if (screen === "site") return (
     <>
-      <Head><title>NewsOracle — Sports & Finance News</title></Head>
+      <Head>
+        <title>{featuredPost ? `${featuredPost.title} — NewsOracle` : seoTitle}</title>
+        <meta name="description" content={featuredPost?.metaDescription || seoDesc} />
+        <meta name="keywords" content={featuredPost?.keywords || seoKeywords} />
+        <meta name="robots" content="index, follow" />
+        <meta name="author" content="NewsOracle Editorial Team" />
+        <meta property="og:title" content={featuredPost?.title || seoTitle} />
+        <meta property="og:description" content={featuredPost?.metaDescription || seoDesc} />
+        <meta property="og:image" content={featuredPost?.image || getImage("Sports", 0)} />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://newsoracle.online" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <link rel="canonical" href="https://newsoracle.online" />
+      </Head>
       <div style={{ minHeight: "100vh", background: "#fff" }}>
         <div style={{ background: "#111827", padding: "0 32px", height: 36, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <span style={{ color: "#9ca3af", fontSize: 12 }}>{new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</span>
@@ -276,12 +343,12 @@ Return ONLY a JSON object with these exact fields, no markdown:
           ) : (
             <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: 48 }}>
               <div>
-                {filteredSite[0] && <ArticleCard post={filteredSite[0]} size="hero" />}
-                {filteredSite.slice(1, 5).map(p => <ArticleCard key={p.id} post={p} />)}
+                {filteredSite[0] && <ArticleCard post={filteredSite[0]} size="hero" imgIndex={0} />}
+                {filteredSite.slice(1, 5).map((p, i) => <ArticleCard key={p.id} post={p} imgIndex={i + 1} />)}
               </div>
               <div style={{ borderLeft: "1px solid #e5e7eb", paddingLeft: 32 }}>
                 <div style={{ borderBottom: "2px solid #111827", paddingBottom: 8, marginBottom: 16 }}><span style={{ fontFamily: "Georgia, serif", fontSize: 16, fontWeight: 700 }}>Latest</span></div>
-                {filteredSite.slice(0, 8).map(p => <ArticleCard key={p.id} post={p} size="small" />)}
+                {filteredSite.slice(0, 8).map((p, i) => <ArticleCard key={p.id} post={p} size="small" imgIndex={i} />)}
                 <div style={{ borderTop: "2px solid #111827", paddingTop: 16, marginTop: 8 }}>
                   <div style={{ fontFamily: "Georgia, serif", fontSize: 16, fontWeight: 700, marginBottom: 14 }}>At a Glance</div>
                   {[["Stories Published", posts.length], ["Sports", posts.filter(p=>p.category==="Sports").length], ["Markets", posts.filter(p=>p.category==="Markets").length], ["Crypto", posts.filter(p=>p.category==="Crypto").length]].map(([l, v]) => (
@@ -295,20 +362,35 @@ Return ONLY a JSON object with these exact fields, no markdown:
             </div>
           )}
         </div>
-        <footer style={{ borderTop: "3px solid #111827", background: "#111827", padding: "32px", marginTop: 48 }}>
+        <footer style={{ borderTop: "3px solid #111827", background: "#111827", padding: "40px 32px", marginTop: 48 }}>
           <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-            <div style={{ fontFamily: "Georgia, serif", fontSize: 24, color: "#fff", marginBottom: 8 }}>NewsOracle</div>
-            <p style={{ color: "#6b7280", fontSize: 12, maxWidth: 700, lineHeight: 1.6, margin: 0 }}>All analysis and forward-looking statements on NewsOracle are provided for informational purposes only. They do not constitute financial, investment, or betting advice. © {new Date().getFullYear()} NewsOracle. All rights reserved.</p>
+            <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 40, marginBottom: 32 }}>
+              <div>
+                <div style={{ fontFamily: "Georgia, serif", fontSize: 24, color: "#fff", marginBottom: 12 }}>NewsOracle</div>
+                <p style={{ color: "#6b7280", fontSize: 13, lineHeight: 1.7, margin: "0 0 12px" }}>NewsOracle aggregates and analyses publicly available sports and financial news. All original reporting is credited to source outlets. Our editorial analysis is independent.</p>
+                <p style={{ color: "#4b5563", fontSize: 12 }}>© {new Date().getFullYear()} NewsOracle. All rights reserved.</p>
+              </div>
+              <div>
+                <div style={{ color: "#9ca3af", fontSize: 12, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 12 }}>Coverage</div>
+                {["Sports Predictions", "Stock Markets", "Crypto Analysis", "Forex"].map(l => <div key={l} style={{ color: "#6b7280", fontSize: 13, marginBottom: 8 }}>{l}</div>)}
+              </div>
+              <div>
+                <div style={{ color: "#9ca3af", fontSize: 12, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 12 }}>Sources</div>
+                {["ESPN", "BBC Sport", "Reuters", "CoinDesk"].map(l => <div key={l} style={{ color: "#6b7280", fontSize: 13, marginBottom: 8 }}>{l}</div>)}
+              </div>
+            </div>
+            <div style={{ borderTop: "1px solid #1f2937", paddingTop: 20 }}>
+              <p style={{ color: "#374151", fontSize: 11, lineHeight: 1.6, margin: 0 }}>⚠️ DISCLAIMER: All analysis and predictions on NewsOracle are for informational and entertainment purposes only. They do not constitute financial, investment, or betting advice. Always consult a qualified professional before making any financial or betting decisions. NewsOracle accepts no liability for any decisions made based on content published on this site. © {new Date().getFullYear()} NewsOracle.</p>
+            </div>
           </div>
         </footer>
       </div>
     </>
   );
 
-  // DASHBOARD
   return (
     <>
-      <Head><title>NewsOracle — Newsroom</title></Head>
+      <Head><title>NewsOracle — Newsroom</title><meta name="robots" content="noindex" /></Head>
       <div style={{ minHeight: "100vh", background: "#f3f4f6" }}>
         <div style={{ background: "#111827", padding: "0 32px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 56, borderBottom: "3px solid #CC0000" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
@@ -375,24 +457,25 @@ Return ONLY a JSON object with these exact fields, no markdown:
             </div>
             <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderTop: "none", maxHeight: 460, overflowY: "auto" }}>
               {filteredDash.length === 0 ? <div style={{ padding: "48px 20px", textAlign: "center", color: "#9ca3af" }}><p style={{ fontFamily: "Georgia, serif", fontSize: 18, marginBottom: 8 }}>Nothing published yet</p></div> :
-                filteredDash.map(post => (
-                  <div key={post.id} style={{ padding: "16px 20px", borderBottom: "1px solid #f3f4f6" }}>
-                    <div style={{ display: "flex", gap: 6, marginBottom: 6, alignItems: "center" }}>
-                      <span style={{ background: post.category === "Sports" ? "#1a56db" : post.category === "Crypto" ? "#b45309" : "#166534", color: "#fff", fontSize: 9, fontWeight: 800, padding: "2px 6px" }}>{post.category.toUpperCase()}</span>
-                      <span style={{ color: "#9ca3af", fontSize: 11 }}>{post.tag}</span>
-                      <span style={{ color: "#9ca3af", fontSize: 11 }}>· {timeAgo(post.postedAt)}</span>
-                      {post.sentiment && <span style={{ color: post.sentiment === "bullish" || post.sentiment === "home_win" ? "#166534" : post.sentiment === "bearish" ? "#CC0000" : "#374151", fontSize: 10, fontWeight: 700, marginLeft: "auto", textTransform: "uppercase" }}>{post.sentiment.replace("_", " ")}</span>}
+                filteredDash.map((post, i) => (
+                  <div key={post.id} style={{ padding: "16px 20px", borderBottom: "1px solid #f3f4f6", display: "flex", gap: 12 }}>
+                    <img src={post.image || getImage(post.category, i)} alt={post.title} style={{ width: 64, height: 48, objectFit: "cover", flexShrink: 0 }} onError={e => e.target.src = getImage(post.category, i)} />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: "flex", gap: 6, marginBottom: 4, alignItems: "center" }}>
+                        <span style={{ background: post.category === "Sports" ? "#1a56db" : post.category === "Crypto" ? "#b45309" : "#166534", color: "#fff", fontSize: 9, fontWeight: 800, padding: "2px 6px" }}>{post.category.toUpperCase()}</span>
+                        <span style={{ color: "#9ca3af", fontSize: 11 }}>{timeAgo(post.postedAt)}</span>
+                        {post.sentiment && <span style={{ color: post.sentiment === "bullish" || post.sentiment === "home_win" ? "#166534" : post.sentiment === "bearish" ? "#CC0000" : "#374151", fontSize: 10, fontWeight: 700, marginLeft: "auto", textTransform: "uppercase" }}>{post.sentiment.replace("_", " ")}</span>}
+                      </div>
+                      <p style={{ fontFamily: "Georgia, serif", color: "#111827", fontSize: 13, fontWeight: 700, margin: "0 0 4px", lineHeight: 1.4 }}>{post.title}</p>
+                      {post.confidence && <span style={{ color: "#6b7280", fontSize: 11 }}>Confidence: <strong style={{ color: "#111" }}>{post.confidence}%</strong></span>}
                     </div>
-                    <p style={{ fontFamily: "Georgia, serif", color: "#111827", fontSize: 14, fontWeight: 700, margin: "0 0 6px", lineHeight: 1.4 }}>{post.title}</p>
-                    <p style={{ color: "#6b7280", fontSize: 12, margin: "0 0 8px", lineHeight: 1.5 }}>{post.summary?.slice(0, 120)}…</p>
-                    {post.confidence && <span style={{ color: "#6b7280", fontSize: 11 }}>Confidence: <strong style={{ color: "#111" }}>{post.confidence}%</strong></span>}
                   </div>
                 ))
               }
             </div>
             <div style={{ background: "#fff", border: "1px solid #e5e7eb", marginTop: 20, padding: 20 }}>
               <div style={{ fontFamily: "Georgia, serif", fontSize: 16, fontWeight: 700, borderBottom: "2px solid #111827", paddingBottom: 8, marginBottom: 14 }}>Auto Mode</div>
-              <p style={{ color: "#6b7280", fontSize: 13, lineHeight: 1.6, margin: "0 0 14px" }}>When enabled, fetches and publishes new stories automatically every 30 minutes — around the clock.</p>
+              <p style={{ color: "#6b7280", fontSize: 13, lineHeight: 1.6, margin: "0 0 14px" }}>When enabled, fetches and publishes new stories with images and SEO data automatically every 30 minutes.</p>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
                 {[["30 min", "refresh"], ["7 sources", "feeds"], ["24/7", "auto"]].map(([v,l]) => (
                   <div key={l} style={{ background: "#f9fafb", border: "1px solid #e5e7eb", padding: "10px 12px", textAlign: "center" }}>
