@@ -6,29 +6,30 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY
 
 const RSS_SOURCES = {
   finance: [
+    'https://feeds.reuters.com/reuters/topNews',
     'https://feeds.reuters.com/reuters/businessNews',
-    'https://finance.yahoo.com/news/rssindex',
     'https://feeds.reuters.com/reuters/technologyNews',
     'https://www.cnbc.com/id/100003114/device/rss/rss.html',
+    'https://finance.yahoo.com/news/rssindex',
   ],
   sports: [
     'https://www.espn.com/espn/rss/news',
+    'https://sports.yahoo.com/rss/',
     'https://feeds.bbci.co.uk/sport/rss.xml',
     'https://feeds.bbci.co.uk/sport/football/rss.xml',
     'https://feeds.bbci.co.uk/sport/cricket/rss.xml',
-    'https://feeds.bbci.co.uk/sport/tennis/rss.xml',
-    'https://www.skysports.com/rss/12040',
+    'https://feeds.skysports.com/feeds/rss/home.xml',
   ],
   politics: [
+    'https://feeds.bbci.co.uk/news/rss.xml',
+    'https://rss.cnn.com/rss/edition.rss',
+    'https://feeds.skynews.com/feeds/rss/home.xml',
     'https://feeds.reuters.com/Reuters/PoliticsNews',
     'https://feeds.reuters.com/reuters/worldNews',
     'https://feeds.bbci.co.uk/news/world/rss.xml',
     'https://feeds.bbci.co.uk/news/politics/rss.xml',
-    'https://rss.nytimes.com/services/xml/rss/nyt/Politics.xml',
-    'https://rss.nytimes.com/services/xml/rss/nyt/World.xml',
   ]
 };
-
 const FALLBACK_IMAGES = {
   finance: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&q=80',
   sports: 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=800&q=80',
@@ -143,7 +144,24 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'No RSS feeds returned data' });
     }
 
-    const { error } = await supabase.from('articles').insert(results);
+    const filteredResults = [];
+for (const article of results) {
+  const { data: existing } = await supabase
+    .from('articles')
+    .select('id')
+    .ilike('title', `%${article.title.substring(0, 30)}%`)
+    .limit(1);
+  
+  if (!existing || existing.length === 0) {
+    filteredResults.push(article);
+  }
+}
+
+if (filteredResults.length === 0) {
+  return res.status(200).json({ message: 'No new articles to publish' });
+}
+
+const { error } = await supabase.from('articles').insert(filteredResults);
     if (error) throw error;
 
     return res.status(200).json({
