@@ -151,8 +151,11 @@ export default function ArticlePage() {
               <span style={{ fontSize: "13px", color: "#999" }}>
                 {new Date(article.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
               </span>
-              <span style={{ fontSize: "13px", color: "#999" }}>
+             <span style={{ fontSize: "13px", color: "#999" }}>
                 {new Date(article.created_at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })} GMT
+              </span>
+              <span style={{ fontSize: "13px", color: "#999" }}>
+                📖 {Math.ceil((article.summary?.length || 500) / 200)} min read
               </span>
             </div>
 
