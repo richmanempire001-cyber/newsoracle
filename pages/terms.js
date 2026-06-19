@@ -47,7 +47,7 @@ export default function Terms() {
             <p style={{ lineHeight: "1.8", color: "#444" }}>We reserve the right to modify these terms at any time. Continued use of our website after changes constitutes acceptance of the new terms.</p>
 
             <h2 style={{ fontSize: "20px", fontWeight: "700", margin: "24px 0 12px" }}>8. Contact</h2>
-            <p style={{ lineHeight: "1.8", color: "#444" }}>For questions about these terms, contact us at: <strong>contact@newsoracle.online</strong></p>
+            <p style={{ lineHeight: "1.8", color: "#444" }}>For questions about these terms, contact us at: <strong>news.oracle.official@gmail.com</strong></p>
           </div>
         </div>
 
