@@ -87,7 +87,33 @@ function acceptCookies() {
 
       <div style={{ fontFamily: "'Arial', sans-serif", background: "#f4f4f4", minHeight: "100vh" }}>
 
-        {/* Top Bar */}
+        {/* Breaking News Ticker */}
+<div style={{ background: "#cc0000", color: "#fff", padding: "8px 0", overflow: "hidden" }}>
+  <div style={{ display: "flex", alignItems: "center" }}>
+    <span style={{ background: "#fff", color: "#cc0000", fontWeight: "900", fontSize: "11px", padding: "4px 12px", whiteSpace: "nowrap", marginRight: "16px", letterSpacing: "1px" }}>
+      BREAKING
+    </span>
+    <div style={{ overflow: "hidden", whiteSpace: "nowrap" }}>
+      <span style={{ display: "inline-block", animation: "ticker 30s linear infinite", fontSize: "13px", fontWeight: "500" }}>
+        {articles.slice(0, 5).map((a, i) => (
+          <span key={a.id}>
+            <Link href={`/article/${a.id}`} style={{ color: "#fff", textDecoration: "none" }}>
+              {a.title}
+            </Link>
+            <span style={{ margin: "0 32px", opacity: 0.5 }}>●</span>
+          </span>
+        ))}
+      </span>
+    </div>
+  </div>
+</div>
+
+<style>{`
+  @keyframes ticker {
+    0% { transform: translateX(100vw); }
+    100% { transform: translateX(-100%); }
+  }
+`}</style>{/* Top Bar */}
         <div style={{ background: "#cc0000", color: "#fff", padding: "6px 0", fontSize: "12px" }}>
           <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 20px", display: "flex", justifyContent: "space-between" }}>
             <span>{new Date().toLocaleDateString("en-GB", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</span>
