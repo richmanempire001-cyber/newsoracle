@@ -94,7 +94,7 @@ export default function Home() {
                   NEWS<span style={{ color: "#cc0000" }}>ORACLE</span>
                 </h1>
                 <p style={{ margin: "2px 0 0", fontSize: "11px", color: "#999", letterSpacing: "3px", textTransform: "uppercase" }}>
-                  Sports & Finance Intelligence
+                  Sports · Finance · Politics · Intelligence
                 </p>
               </div>
               <nav style={{ display: "flex", gap: "4px" }}>
