@@ -47,7 +47,17 @@ function timeAgo(date) {
 export default function Home() {
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState("all");
+  const [filter, setFilter] = useState("all");const [cookieAccepted, setCookieAccepted] = useState(false);
+
+useEffect(() => {
+  const accepted = localStorage.getItem('cookieAccepted');
+  if (accepted) setCookieAccepted(true);
+}, []);
+
+function acceptCookies() {
+  localStorage.setItem('cookieAccepted', 'true');
+  setCookieAccepted(true);
+}
 
   useEffect(() => {
     fetchArticles();
@@ -209,7 +219,24 @@ export default function Home() {
         </main>
 
         {/* Footer */}
-        <footer style={{ background: "#111", color: "#999", padding: "40px 20px", marginTop: "40px" }}>
+        {/* Cookie Banner */}
+{!cookieAccepted && (
+  <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: "#111", color: "#fff", padding: "16px 20px", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
+    <p style={{ margin: 0, fontSize: "13px", color: "#ccc", maxWidth: "700px" }}>
+      We use cookies to improve your experience and show relevant ads. By continuing to use NewsOracle, you agree to our{" "}
+      <Link href="/privacy-policy" style={{ color: "#cc0000" }}>Privacy Policy</Link>{" "}and{" "}
+      <Link href="/terms" style={{ color: "#cc0000" }}>Terms of Service</Link>.
+    </p>
+    <div style={{ display: "flex", gap: "10px" }}>
+      <button onClick={acceptCookies} style={{ background: "#cc0000", color: "#fff", border: "none", padding: "10px 24px", fontSize: "13px", fontWeight: "700", cursor: "pointer" }}>
+        Accept All
+      </button>
+      <button onClick={acceptCookies} style={{ background: "transparent", color: "#999", border: "1px solid #555", padding: "10px 24px", fontSize: "13px", cursor: "pointer" }}>
+        Accept Necessary
+      </button>
+    </div>
+  </div>
+)}<footer style={{ background: "#111", color: "#999", padding: "40px 20px", marginTop: "40px" }}>
           <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #333", paddingBottom: "20px", marginBottom: "20px" }}>
               <h2 style={{ color: "#fff", margin: 0, fontSize: "24px", fontWeight: "900" }}>
