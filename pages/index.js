@@ -24,7 +24,6 @@ const IMAGES = {
     "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=800&q=80",
   ],
 };
-};
 
 function getImage(article) {
   const imgs = IMAGES[article.category] || IMAGES.finance;
