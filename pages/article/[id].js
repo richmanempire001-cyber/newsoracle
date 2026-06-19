@@ -186,7 +186,15 @@ export default function ArticlePage() {
               </div>
             </div>
 
-            {/* Disclaimer */}
+            {/* Share Buttons */}
+<div style={{ margin: "32px 0", paddingTop: "24px", borderTop: "1px solid #eee" }}>
+  <p style={{ fontSize: "13px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px", color: "#666", marginBottom: "12px" }}>Share this article</p>
+  <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+    <a href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(article.title)}&url=${encodeURIComponent('https://newsoracle.online/article/' + article.id)}`} target="_blank" rel="noopener noreferrer" style={{ background: "#000", color: "#fff", padding: "10px 20px", fontSize: "13px", fontWeight: "600", textDecoration: "none", display: "inline-block" }}>𝕏 Twitter</a>
+    <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://newsoracle.online/article/' + article.id)}`} target="_blank" rel="noopener noreferrer" style={{ background: "#1877f2", color: "#fff", padding: "10px 20px", fontSize: "13px", fontWeight: "600", textDecoration: "none", display: "inline-block" }}>Facebook</a>
+    <a href={`https://wa.me/?text=${encodeURIComponent(article.title + ' https://newsoracle.online/article/' + article.id)}`} target="_blank" rel="noopener noreferrer" style={{ background: "#25d366", color: "#fff", padding: "10px 20px", fontSize: "13px", fontWeight: "600", textDecoration: "none", display: "inline-block" }}>WhatsApp</a>
+  </div>
+</div>{/* Disclaimer */}
             <div style={{ background: "#fffbf0", border: "1px solid #ffe082", padding: "16px", marginTop: "32px" }}>
               <p style={{ margin: 0, fontSize: "12px", color: "#888", lineHeight: "1.6" }}>
                 <strong>Disclaimer:</strong> {article.disclaimer}
