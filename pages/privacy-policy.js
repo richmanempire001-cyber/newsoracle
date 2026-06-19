@@ -44,7 +44,7 @@ export default function PrivacyPolicy() {
             <p style={{ lineHeight: "1.8", color: "#444" }}>You have the right to access, correct, or delete your personal information. You may also opt out of certain data collection by adjusting your browser settings or contacting us directly.</p>
 
             <h2 style={{ fontSize: "20px", fontWeight: "700", margin: "24px 0 12px" }}>7. Contact Us</h2>
-            <p style={{ lineHeight: "1.8", color: "#444" }}>If you have questions about this Privacy Policy, please contact us at: <strong>contact@newsoracle.online</strong></p>
+            <p style={{ lineHeight: "1.8", color: "#444" }}>If you have questions about this Privacy Policy, please contact us at: <strong>news.oracle.official@gmail.com</strong></p>
           </div>
         </div>
 
