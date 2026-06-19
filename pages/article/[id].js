@@ -116,7 +116,7 @@ export default function ArticlePage() {
         </header>
 
         {/* Article Content */}
-        <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "32px 20px", display: "grid", gridTemplateColumns: "1fr 340px", gap: "32px" }}>
+        <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "32px 20px", display: "grid", gridTemplateColumns: "min(100%, 1fr)", gap: "32px" }}>
 
           {/* Main Article */}
           <article style={{ background: "#fff", padding: "40px" }}>
