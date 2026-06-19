@@ -26,9 +26,15 @@ const IMAGES = {
 };
 
 function getImage(article) {
-  if (article.image) return article.image;
-  const imgs = IMAGES[article.category] || IMAGES.finance;
-  return imgs[article.id % imgs.length];
+  if (article.image && !article.image.includes('source.unsplash')) return article.image;
+  const keywords = {
+    finance: "1611974789855-9c2a0a7236a3",
+    sports: "1461896836934-ffe607ba8211",
+    crypto: "1579621970563-ebec7560ff3e",
+    markets: "1444653614773-995cb1ef9efa",
+  };
+  const key = keywords[article.category] || keywords.finance;
+  return `https://images.unsplash.com/photo-${key}?w=800&q=80`;
 }
 function timeAgo(date) {
   const seconds = Math.floor((new Date() - new Date(date)) / 1000);
