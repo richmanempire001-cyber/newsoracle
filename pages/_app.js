@@ -16,7 +16,7 @@ export default function App({ Component, pageProps }) {
 
   return (
     <>
-      <script async src="https://www.googletagmanager.com/gtag/js?id=G-SBF43ZKBYK" />
+      <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7254557456911114" crossOrigin="anonymous" /><script async src="https://www.googletagmanager.com/gtag/js?id=G-SBF43ZKBYK" />
       <script dangerouslySetInnerHTML={{
         __html: `
           window.dataLayer = window.dataLayer || [];
