@@ -15,12 +15,13 @@ export default async function handler(req, res) {
       max_tokens: 1024,
       messages: [{
         role: 'user',
-        content: 'Write a short sports or finance news article with a prediction. Return JSON only with fields: title, summary, prediction, category (sports or finance), tag, sentiment (positive/negative/neutral), confidence (1-100), disclaimer.'
+        content: 'Write a short sports or finance news article with a prediction. Return ONLY a JSON object with NO extra text, markdown, or backticks. Fields: title, summary, prediction, category (sports or finance), tag, sentiment (positive/negative/neutral), confidence (number 1-100), disclaimer.'
       }]
     });
 
     const text = message.content[0].text;
-    const article = JSON.parse(text);
+    const clean = text.replace(/```json/g, '').replace(/```/g, '').trim();
+    const article = JSON.parse(clean);
 
     const { error } = await supabase.from('articles').insert([{
       title: article.title,
