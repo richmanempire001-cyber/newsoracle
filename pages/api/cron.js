@@ -31,19 +31,20 @@ const RSS_SOURCES = {
     'https://feeds.reuters.com/Reuters/domesticNews',
   ]
 };
+
 async function fetchRSS(url) {
   try {
     const res = await fetch(url);
     const text = await res.text();
-    const titles = [...text.matchAll(/<title><!\[CDATA\[(.*?)\]\]><\/title>|<title>(.*?)<\/title>/g)]
-      .map(m => m[1] || m[2])
-      .filter(t => t && !t.includes('RSS') && !t.includes('Feed') && t.length > 10)
-      .slice(0, 5);
-    const descs = [...text.matchAll(/<description><!\[CDATA\[(.*?)\]\]><\/description>|<description>(.*?)<\/description>/g)]
-      .map(m => m[1] || m[2])
-      .filter(d => d && d.length > 20)
-      .slice(0, 5);
-    return { title: titles[0] || '', description: descs[0] || '' };
+    const items = [...text.matchAll(/<item[\s\S]*?<\/item>/g)].slice(0, 10);
+    if (items.length === 0) return null;
+    const randomItem = items[Math.floor(Math.random() * Math.min(5, items.length))];
+    const titleMatch = randomItem[0].match(/<title><!\[CDATA\[(.*?)\]\]><\/title>|<title>(.*?)<\/title>/);
+    const descMatch = randomItem[0].match(/<description><!\[CDATA\[(.*?)\]\]><\/description>|<description>(.*?)<\/description>/);
+    const title = titleMatch ? (titleMatch[1] || titleMatch[2]).trim() : '';
+    const description = descMatch ? (descMatch[1] || descMatch[2]).replace(/<[^>]*>/g, '').trim() : '';
+    if (!title || title.length < 10) return null;
+    return { title, description };
   } catch {
     return null;
   }
@@ -55,24 +56,24 @@ async function generateArticle(headline, description, category) {
     max_tokens: 1024,
     messages: [{
       role: 'user',
-      content: `You are a senior journalist at Bloomberg or Reuters.
+      content: `You are a senior journalist at Reuters or BBC News.
 Based on this real news headline and description, write a professional news article.
 Headline: "${headline}"
 Description: "${description}"
 Rewrite this completely in your own words. Do NOT copy the original text.
-Write professionally like Bloomberg/Reuters.
+Write professionally like Reuters/BBC.
 Do NOT mention AI, Claude, or that this was rewritten.
 Return ONLY a JSON object with NO extra text or markdown.
 Fields:
-- title: (compelling headline, max 12 words)
+- title: (compelling headline, max 12 words, attention grabbing)
 - summary: (3-4 sentences, professional journalism style, 100-150 words)
-- prediction: (market outlook or match prediction, written as analyst view, 50 words)
+- prediction: (future outlook or analysis, written as expert view, 50 words)
 - category: ("${category}")
-- tag: (specific tag like "NFL", "S&P 500", "Premier League", "Crypto", "Tesla", "NBA")
-- image_keyword: (2-3 words for finding relevant image e.g. "stock market chart", "football stadium")
+- tag: (specific tag like "Trump", "Trade War", "NATO", "S&P 500", "Premier League", "NBA", "Crypto")
+- image_keyword: (2-3 words for finding relevant image e.g. "white house politics", "stock market", "football match")
 - sentiment: (either "positive", "negative", or "neutral")
 - confidence: (number between 60-95)
-- disclaimer: ("This article is for informational purposes only and does not constitute financial or betting advice.")`
+- disclaimer: ("This article is for informational purposes only.")`
     }]
   });
 
@@ -89,57 +90,78 @@ export default async function handler(req, res) {
   try {
     const financeSource = RSS_SOURCES.finance[Math.floor(Math.random() * RSS_SOURCES.finance.length)];
     const sportsSource = RSS_SOURCES.sports[Math.floor(Math.random() * RSS_SOURCES.sports.length)];
+    const politicsSource = RSS_SOURCES.politics[Math.floor(Math.random() * RSS_SOURCES.politics.length)];
 
-    const [financeRSS, sportsRSS] = await Promise.all([
+    const [financeRSS, sportsRSS, politicsRSS] = await Promise.all([
       fetchRSS(financeSource),
-      fetchRSS(sportsSource)
+      fetchRSS(sportsSource),
+      fetchRSS(politicsSource)
     ]);
 
-    if (!financeRSS || !sportsRSS) {
-      return res.status(500).json({ error: 'Failed to fetch RSS feeds' });
+    const results = [];
+
+    if (financeRSS) {
+      const article = await generateArticle(financeRSS.title, financeRSS.description, 'finance');
+      results.push({
+        title: article.title,
+        summary: article.summary,
+        prediction: article.prediction,
+        category: article.category,
+        tag: article.tag,
+        image: `https://source.unsplash.com/800x500/?${encodeURIComponent(article.image_keyword)}`,
+        sentiment: article.sentiment,
+        confidence: article.confidence,
+        disclaimer: article.disclaimer,
+        pub_date: new Date().toISOString(),
+        posted_at: new Date().toISOString()
+      });
     }
 
-    const [financeArticle, sportsArticle] = await Promise.all([
-      generateArticle(financeRSS.title, financeRSS.description, 'finance'),
-      generateArticle(sportsRSS.title, sportsRSS.description, 'sports')
-    ]);
+    if (sportsRSS) {
+      const article = await generateArticle(sportsRSS.title, sportsRSS.description, 'sports');
+      results.push({
+        title: article.title,
+        summary: article.summary,
+        prediction: article.prediction,
+        category: article.category,
+        tag: article.tag,
+        image: `https://source.unsplash.com/800x500/?${encodeURIComponent(article.image_keyword)}`,
+        sentiment: article.sentiment,
+        confidence: article.confidence,
+        disclaimer: article.disclaimer,
+        pub_date: new Date().toISOString(),
+        posted_at: new Date().toISOString()
+      });
+    }
 
-    const now = new Date().toISOString();
+    if (politicsRSS) {
+      const article = await generateArticle(politicsRSS.title, politicsRSS.description, 'politics');
+      results.push({
+        title: article.title,
+        summary: article.summary,
+        prediction: article.prediction,
+        category: article.category,
+        tag: article.tag,
+        image: `https://source.unsplash.com/800x500/?${encodeURIComponent(article.image_keyword)}`,
+        sentiment: article.sentiment,
+        confidence: article.confidence,
+        disclaimer: article.disclaimer,
+        pub_date: new Date().toISOString(),
+        posted_at: new Date().toISOString()
+      });
+    }
 
-    const { error } = await supabase.from('articles').insert([
-      {
-        title: financeArticle.title,
-        summary: financeArticle.summary,
-        prediction: financeArticle.prediction,
-        category: financeArticle.category,
-        tag: financeArticle.tag,
-        image: `https://source.unsplash.com/800x500/?${encodeURIComponent(financeArticle.image_keyword)}`,
-        sentiment: financeArticle.sentiment,
-        confidence: financeArticle.confidence,
-        disclaimer: financeArticle.disclaimer,
-        pub_date: now,
-        posted_at: now
-      },
-      {
-        title: sportsArticle.title,
-        summary: sportsArticle.summary,
-        prediction: sportsArticle.prediction,
-        category: sportsArticle.category,
-        tag: sportsArticle.tag,
-        image: `https://source.unsplash.com/800x500/?${encodeURIComponent(sportsArticle.image_keyword)}`,
-        sentiment: sportsArticle.sentiment,
-        confidence: sportsArticle.confidence,
-        disclaimer: sportsArticle.disclaimer,
-        pub_date: now,
-        posted_at: now
-      }
-    ]);
+    if (results.length === 0) {
+      return res.status(500).json({ error: 'No RSS feeds returned data' });
+    }
 
+    const { error } = await supabase.from('articles').insert(results);
     if (error) throw error;
 
-    return res.status(200).json({ 
-      success: true, 
-      published: [financeArticle.title, sportsArticle.title]
+    return res.status(200).json({
+      success: true,
+      count: results.length,
+      published: results.map(a => a.title)
     });
 
   } catch (err) {
