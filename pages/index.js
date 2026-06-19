@@ -81,7 +81,7 @@ export default function Home() {
         <div style={{ background: "#cc0000", color: "#fff", padding: "6px 0", fontSize: "12px" }}>
           <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 20px", display: "flex", justifyContent: "space-between" }}>
             <span>{new Date().toLocaleDateString("en-GB", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</span>
-            <span>Sports · Finance · Markets · Analysis</span>
+            <span>Sports · Finance · Markets · Politics · Analysis</span>
           </div>
         </div>
 
