@@ -9,7 +9,6 @@ const RSS_SOURCES = {
     'https://feeds.reuters.com/reuters/businessNews',
     'https://finance.yahoo.com/news/rssindex',
     'https://feeds.reuters.com/reuters/technologyNews',
-    'https://feeds.reuters.com/reuters/companyNews',
     'https://www.cnbc.com/id/100003114/device/rss/rss.html',
     'https://www.cnbc.com/id/10000664/device/rss/rss.html',
   ],
@@ -21,10 +20,17 @@ const RSS_SOURCES = {
     'https://feeds.bbci.co.uk/sport/tennis/rss.xml',
     'https://feeds.bbci.co.uk/sport/boxing/rss.xml',
     'https://www.skysports.com/rss/12040',
-    'https://www.skysports.com/rss/11095',
+  ],
+  politics: [
+    'https://feeds.reuters.com/Reuters/PoliticsNews',
+    'https://feeds.reuters.com/reuters/worldNews',
+    'https://feeds.bbci.co.uk/news/world/rss.xml',
+    'https://feeds.bbci.co.uk/news/politics/rss.xml',
+    'https://rss.nytimes.com/services/xml/rss/nyt/Politics.xml',
+    'https://rss.nytimes.com/services/xml/rss/nyt/World.xml',
+    'https://feeds.reuters.com/Reuters/domesticNews',
   ]
 };
-
 async function fetchRSS(url) {
   try {
     const res = await fetch(url);
