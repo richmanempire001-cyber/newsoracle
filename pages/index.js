@@ -177,7 +177,7 @@ function acceptCookies() {
               {/* Featured Article */}
               {featured && (
                 <Link href={`/article/${featured.id}`} style={{ textDecoration: "none" }}>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0", background: "#fff", marginBottom: "24px", cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "0", background: "#fff", marginBottom: "24px", cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
                     <div style={{ position: "relative", overflow: "hidden" }}>
                       <img
                         src={getImage(featured)}
@@ -210,7 +210,7 @@ function acceptCookies() {
               )}
 
               {/* Article Grid */}
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "20px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "20px" }}>
                 {rest.map(article => (
                   <Link key={article.id} href={`/article/${article.id}`} style={{ textDecoration: "none" }}>
                     <div style={{ background: "#fff", cursor: "pointer", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", transition: "transform 0.2s" }}
