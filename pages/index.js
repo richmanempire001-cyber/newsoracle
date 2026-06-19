@@ -11,18 +11,19 @@ const supabase = createClient(
 const IMAGES = {
   finance: [
     "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&q=80",
-    "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=800&q=80",
-    "https://images.unsplash.com/photo-1526304640581-d334cdbbf43e?w=800&q=80",
-    "https://images.unsplash.com/photo-1535320903710-d993d3d77d29?w=800&q=80",
-    "https://images.unsplash.com/photo-1553729459-efe14ef6055d?w=800&q=80",
+    "https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=800&q=80",
+    "https://images.unsplash.com/photo-1444653614773-995cb1ef9efa?w=800&q=80",
+    "https://images.unsplash.com/photo-1559526324-593bc073d938?w=800&q=80",
+    "https://images.unsplash.com/photo-1563986768494-4dee2763ff3f?w=800&q=80",
   ],
   sports: [
     "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=800&q=80",
-    "https://images.unsplash.com/photo-1560272564-c83b66b1ad12?w=800&q=80",
-    "https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=800&q=80",
-    "https://images.unsplash.com/photo-1517649763962-0c623066013b?w=800&q=80",
-    "https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=800&q=80",
+    "https://images.unsplash.com/photo-1540747913346-19212a4b423f?w=800&q=80",
+    "https://images.unsplash.com/photo-1587280501635-68a0e82cd5ff?w=800&q=80",
+    "https://images.unsplash.com/photo-1546519638-68e109498ffc?w=800&q=80",
+    "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=800&q=80",
   ],
+};
 };
 
 function getImage(article) {
