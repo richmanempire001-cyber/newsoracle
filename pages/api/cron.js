@@ -10,7 +10,6 @@ const RSS_SOURCES = {
     'https://finance.yahoo.com/news/rssindex',
     'https://feeds.reuters.com/reuters/technologyNews',
     'https://www.cnbc.com/id/100003114/device/rss/rss.html',
-    'https://www.cnbc.com/id/10000664/device/rss/rss.html',
   ],
   sports: [
     'https://www.espn.com/espn/rss/news',
@@ -18,7 +17,6 @@ const RSS_SOURCES = {
     'https://feeds.bbci.co.uk/sport/football/rss.xml',
     'https://feeds.bbci.co.uk/sport/cricket/rss.xml',
     'https://feeds.bbci.co.uk/sport/tennis/rss.xml',
-    'https://feeds.bbci.co.uk/sport/boxing/rss.xml',
     'https://www.skysports.com/rss/12040',
   ],
   politics: [
@@ -28,8 +26,13 @@ const RSS_SOURCES = {
     'https://feeds.bbci.co.uk/news/politics/rss.xml',
     'https://rss.nytimes.com/services/xml/rss/nyt/Politics.xml',
     'https://rss.nytimes.com/services/xml/rss/nyt/World.xml',
-    'https://feeds.reuters.com/Reuters/domesticNews',
   ]
+};
+
+const FALLBACK_IMAGES = {
+  finance: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&q=80',
+  sports: 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=800&q=80',
+  politics: 'https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=800&q=80'
 };
 
 async function fetchRSS(url) {
@@ -38,13 +41,27 @@ async function fetchRSS(url) {
     const text = await res.text();
     const items = [...text.matchAll(/<item[\s\S]*?<\/item>/g)].slice(0, 10);
     if (items.length === 0) return null;
+
     const randomItem = items[Math.floor(Math.random() * Math.min(5, items.length))];
-    const titleMatch = randomItem[0].match(/<title><!\[CDATA\[(.*?)\]\]><\/title>|<title>(.*?)<\/title>/);
-    const descMatch = randomItem[0].match(/<description><!\[CDATA\[(.*?)\]\]><\/description>|<description>(.*?)<\/description>/);
+    const itemText = randomItem[0];
+
+    const titleMatch = itemText.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>|<title>(.*?)<\/title>/);
+    const descMatch = itemText.match(/<description><!\[CDATA\[(.*?)\]\]><\/description>|<description>(.*?)<\/description>/);
+
+    const imageMatch =
+      itemText.match(/url="([^"]+\.(jpg|jpeg|png|webp)[^"]*)"/) ||
+      itemText.match(/<media:content[^>]+url="([^"]+)"/) ||
+      itemText.match(/<media:thumbnail[^>]+url="([^"]+)"/) ||
+      itemText.match(/<enclosure[^>]+url="([^"]+\.(jpg|jpeg|png|webp)[^"]*)"/) ||
+      itemText.match(/https?:\/\/[^\s"'<>]+\.(jpg|jpeg|png|webp)/i);
+
     const title = titleMatch ? (titleMatch[1] || titleMatch[2]).trim() : '';
     const description = descMatch ? (descMatch[1] || descMatch[2]).replace(/<[^>]*>/g, '').trim() : '';
+    const image = imageMatch ? (imageMatch[1] || imageMatch[0]) : null;
+
     if (!title || title.length < 10) return null;
-    return { title, description };
+
+    return { title, description, image };
   } catch {
     return null;
   }
@@ -70,7 +87,6 @@ Fields:
 - prediction: (future outlook or analysis, written as expert view, 50 words)
 - category: ("${category}")
 - tag: (specific tag like "Trump", "Trade War", "NATO", "S&P 500", "Premier League", "NBA", "Crypto")
-- image_keyword: (2-3 words for finding relevant image e.g. "white house politics", "stock market", "football match")
 - sentiment: (either "positive", "negative", or "neutral")
 - confidence: (number between 60-95)
 - disclaimer: ("This article is for informational purposes only.")`
@@ -99,55 +115,27 @@ export default async function handler(req, res) {
     ]);
 
     const results = [];
+    const now = new Date().toISOString();
 
-    if (financeRSS) {
-      const article = await generateArticle(financeRSS.title, financeRSS.description, 'finance');
+    for (const [rss, category] of [
+      [financeRSS, 'finance'],
+      [sportsRSS, 'sports'],
+      [politicsRSS, 'politics']
+    ]) {
+      if (!rss) continue;
+      const article = await generateArticle(rss.title, rss.description, category);
       results.push({
         title: article.title,
         summary: article.summary,
         prediction: article.prediction,
         category: article.category,
         tag: article.tag,
-        image: `https://source.unsplash.com/800x500/?${encodeURIComponent(article.image_keyword)}`,
+        image: rss.image || FALLBACK_IMAGES[category],
         sentiment: article.sentiment,
         confidence: article.confidence,
         disclaimer: article.disclaimer,
-        pub_date: new Date().toISOString(),
-        posted_at: new Date().toISOString()
-      });
-    }
-
-    if (sportsRSS) {
-      const article = await generateArticle(sportsRSS.title, sportsRSS.description, 'sports');
-      results.push({
-        title: article.title,
-        summary: article.summary,
-        prediction: article.prediction,
-        category: article.category,
-        tag: article.tag,
-        image: `https://source.unsplash.com/800x500/?${encodeURIComponent(article.image_keyword)}`,
-        sentiment: article.sentiment,
-        confidence: article.confidence,
-        disclaimer: article.disclaimer,
-        pub_date: new Date().toISOString(),
-        posted_at: new Date().toISOString()
-      });
-    }
-
-    if (politicsRSS) {
-      const article = await generateArticle(politicsRSS.title, politicsRSS.description, 'politics');
-      results.push({
-        title: article.title,
-        summary: article.summary,
-        prediction: article.prediction,
-        category: article.category,
-        tag: article.tag,
-        image: `https://source.unsplash.com/800x500/?${encodeURIComponent(article.image_keyword)}`,
-        sentiment: article.sentiment,
-        confidence: article.confidence,
-        disclaimer: article.disclaimer,
-        pub_date: new Date().toISOString(),
-        posted_at: new Date().toISOString()
+        pub_date: now,
+        posted_at: now
       });
     }
 
@@ -161,7 +149,7 @@ export default async function handler(req, res) {
     return res.status(200).json({
       success: true,
       count: results.length,
-      published: results.map(a => a.title)
+      published: results.map(a => ({ title: a.title, image: a.image }))
     });
 
   } catch (err) {
