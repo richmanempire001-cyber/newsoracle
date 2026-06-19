@@ -98,7 +98,7 @@ export default function Home() {
                 </p>
               </div>
               <nav style={{ display: "flex", gap: "4px" }}>
-                {["all", "sports", "finance"].map(cat => (
+                {["all", "sports", "finance", "politics"].map(cat => (
                   <button
                     key={cat}
                     onClick={() => setFilter(cat)}
