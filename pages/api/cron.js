@@ -34,7 +34,21 @@ const FALLBACK_IMAGES = {
   finance: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&q=80',
   sports: 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=800&q=80',
   politics: 'https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=800&q=80'
-};
+};async function getPexelsImage(query) {
+  try {
+    const res = await fetch(`https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=5&orientation=landscape`, {
+      headers: { Authorization: process.env.PEXELS_API_KEY }
+    });
+    const data = await res.json();
+    if (data.photos && data.photos.length > 0) {
+      const random = data.photos[Math.floor(Math.random() * data.photos.length)];
+      return random.src.large2x;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
 
 async function fetchRSS(url) {
   try {
@@ -131,7 +145,7 @@ export default async function handler(req, res) {
         prediction: article.prediction,
         category: article.category,
         tag: article.tag,
-        image: rss.image || FALLBACK_IMAGES[category],
+        image: await getPexelsImage(article.tag || article.category) || rss.image || FALLBACK_IMAGES[category],
         sentiment: article.sentiment,
         confidence: article.confidence,
         disclaimer: article.disclaimer,
