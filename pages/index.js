@@ -134,7 +134,10 @@ function acceptCookies() {
                 </p>
               </div>
               <nav style={{ display: "flex", gap: "4px" }}>
-                {["all", "sports", "finance", "politics"].map(cat => (
+                <div style={{ display: "flex", gap: "20px", marginRight: "20px" }}>
+  <Link href="/about" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600" }}>About</Link>
+  <Link href="/contact" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600" }}>Contact</Link>
+</div>{["all", "sports", "finance", "politics"].map(cat => (
                   <button
                     key={cat}
                     onClick={() => setFilter(cat)}
