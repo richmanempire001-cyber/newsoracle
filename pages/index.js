@@ -26,10 +26,10 @@ const IMAGES = {
 };
 
 function getImage(article) {
+  if (article.image) return article.image;
   const imgs = IMAGES[article.category] || IMAGES.finance;
   return imgs[article.id % imgs.length];
 }
-
 function timeAgo(date) {
   const seconds = Math.floor((new Date() - new Date(date)) / 1000);
   if (seconds < 60) return "Just now";
