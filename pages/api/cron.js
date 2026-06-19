@@ -8,10 +8,20 @@ const RSS_SOURCES = {
   finance: [
     'https://feeds.reuters.com/reuters/businessNews',
     'https://finance.yahoo.com/news/rssindex',
+    'https://feeds.reuters.com/reuters/technologyNews',
+    'https://feeds.reuters.com/reuters/companyNews',
+    'https://www.cnbc.com/id/100003114/device/rss/rss.html',
+    'https://www.cnbc.com/id/10000664/device/rss/rss.html',
   ],
   sports: [
     'https://www.espn.com/espn/rss/news',
     'https://feeds.bbci.co.uk/sport/rss.xml',
+    'https://feeds.bbci.co.uk/sport/football/rss.xml',
+    'https://feeds.bbci.co.uk/sport/cricket/rss.xml',
+    'https://feeds.bbci.co.uk/sport/tennis/rss.xml',
+    'https://feeds.bbci.co.uk/sport/boxing/rss.xml',
+    'https://www.skysports.com/rss/12040',
+    'https://www.skysports.com/rss/11095',
   ]
 };
 
