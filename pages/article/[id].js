@@ -27,8 +27,15 @@ const IMAGES = {
 };
 
 function getImage(article) {
-  const imgs = IMAGES[article.category] || IMAGES.finance;
-  return imgs[article.id % imgs.length];
+  if (article.image && !article.image.includes('source.unsplash')) return article.image;
+  const keywords = {
+    finance: "1611974789855-9c2a0a7236a3",
+    sports: "1461896836934-ffe607ba8211",
+    crypto: "1579621970563-ebec7560ff3e",
+    markets: "1444653614773-995cb1ef9efa",
+  };
+  const key = keywords[article.category] || keywords.finance;
+  return `https://images.unsplash.com/photo-${key}?w=1200&q=80`;
 }
 
 export default function ArticlePage() {
