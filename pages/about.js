@@ -43,7 +43,7 @@ export default function About() {
             <p style={{ lineHeight: "1.8", color: "#444" }}>All content on NewsOracle is produced to the highest journalistic standards. We are committed to accuracy, fairness, and transparency in everything we publish.</p>
 
             <h2 style={{ fontSize: "20px", fontWeight: "700", margin: "24px 0 12px" }}>Contact Us</h2>
-            <p style={{ lineHeight: "1.8", color: "#444" }}>We welcome feedback, tips, and enquiries. Reach us at: <strong>contact@newsoracle.online</strong></p>
+            <p style={{ lineHeight: "1.8", color: "#444" }}>We welcome feedback, tips, and enquiries. Reach us at: <strong>news.oracle.official@gmail.com</strong></p>
           </div>
         </div>
 
