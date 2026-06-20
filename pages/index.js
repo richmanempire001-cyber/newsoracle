@@ -270,7 +270,10 @@ function acceptCookies() {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #333", paddingBottom: "20px", marginBottom: "20px" }}>
               <h2 style={{ color: "#fff", margin: 0, fontSize: "24px", fontWeight: "900" }}>
                 NEWS<span style={{ color: "#cc0000" }}>ORACLE</span>
-              </h2>
+              </h2><div style={{ display: "flex", gap: "16px", justifyContent: "center", margin: "16px 0" }}>
+  <a href="https://t.me/NewsOracleOfficial" target="_blank" rel="noopener noreferrer" style={{ color: "#fff", fontSize: "13px", textDecoration: "none", background: "#0088cc", padding: "8px 16px" }}>Telegram</a>
+  <a href="https://www.facebook.com/profile.php?id=61591337781640" target="_blank" rel="noopener noreferrer" style={{ color: "#fff", fontSize: "13px", textDecoration: "none", background: "#1877f2", padding: "8px 16px" }}>Facebook</a>
+</div>
               <div style={{ display: "flex", gap: "20px" }}>
                 <span style={{ fontSize: "13px", cursor: "pointer" }}>Sports</span>
                 <span style={{ fontSize: "13px", cursor: "pointer" }}>Finance</span>
