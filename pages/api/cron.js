@@ -1,4 +1,18 @@
-import Anthropic from '@anthropic-ai/sdk';async function postToTelegram(article) {
+import Anthropic from '@anthropic-ai/sdk';async function postToFacebook(article) {
+  try {
+    const message = `🔴 ${article.title}\n\n${article.summary?.substring(0, 200)}...\n\n🔗 Read more: https://newsoracle.online`;
+    await fetch(`https://graph.facebook.com/${process.env.FACEBOOK_PAGE_ID}/feed`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: message,
+        access_token: process.env.FACEBOOK_PAGE_TOKEN
+      })
+    });
+  } catch (err) {
+    console.error('Facebook error:', err);
+  }
+}async function postToTelegram(article) {
   try {
     const message = `🔴 *${article.title}*\n\n${article.summary?.substring(0, 200)}...\n\n🔗 Read more: https://newsoracle.online`;
     await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
@@ -191,7 +205,7 @@ if (filteredResults.length === 0) {
 }
 
 const { error } = await supabase.from('articles').insert(filteredResults);for (const article of filteredResults) {
-  await postToTelegram(article);
+  await postToTelegram(article);await postToFacebook(article);
 }
     if (error) throw error;
 
