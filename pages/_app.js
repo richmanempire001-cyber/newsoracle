@@ -16,7 +16,7 @@ export default function App({ Component, pageProps }) {
 
   return (
     <>
-      <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7254557456911114" crossOrigin="anonymous" /><link rel="icon" href="/ChatGPT Image Jun 20, 2026, 01_55_20 PM.png" /><script async src="https://www.googletagmanager.com/gtag/js?id=G-SBF43ZKBYK" />
+      <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7254557456911114" crossOrigin="anonymous" /><link rel="icon" href="/ChatGPT%20Image%20Jun%2020%2C%202026%2C%2001_55_20%20PM.png" /><script async src="https://www.googletagmanager.com/gtag/js?id=G-SBF43ZKBYK" />
       <script dangerouslySetInnerHTML={{
         __html: `
           window.dataLayer = window.dataLayer || [];
