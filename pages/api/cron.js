@@ -1,4 +1,19 @@
-import Anthropic from '@anthropic-ai/sdk';
+import Anthropic from '@anthropic-ai/sdk';async function postToTelegram(article) {
+  try {
+    const message = `🔴 *${article.title}*\n\n${article.summary?.substring(0, 200)}...\n\n🔗 Read more: https://newsoracle.online`;
+    await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: process.env.TELEGRAM_CHAT_ID,
+        text: message,
+        parse_mode: 'Markdown'
+      })
+    });
+  } catch (err) {
+    console.error('Telegram error:', err);
+  }
+}
 import { createClient } from '@supabase/supabase-js';
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -175,7 +190,9 @@ if (filteredResults.length === 0) {
   return res.status(200).json({ message: 'No new articles to publish' });
 }
 
-const { error } = await supabase.from('articles').insert(filteredResults);
+const { error } = await supabase.from('articles').insert(filteredResults);for (const article of filteredResults) {
+  await postToTelegram(article);
+}
     if (error) throw error;
 
     return res.status(200).json({
