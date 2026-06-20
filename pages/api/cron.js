@@ -205,7 +205,37 @@ if (filteredResults.length === 0) {
 }
 
 const { error } = await supabase.from('articles').insert(filteredResults);for (const article of filteredResults) {
-  await postToTelegram(article);await postToFacebook(article);
+  await postToTelegram(article);await postToFacebookasync function postToInstagram(article) {
+  try {
+    const imageUrl = article.image;
+    const caption = `🔴 ${article.title}\n\n${article.summary?.substring(0, 200)}...\n\n🔗 Read more: https://newsoracle.online`;
+
+    // Step 1: Create media container
+    const containerRes = await fetch(`https://graph.instagram.com/v21.0/${process.env.INSTAGRAM_USER_ID}/media`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        image_url: imageUrl,
+        caption: caption,
+        access_token: process.env.INSTAGRAM_ACCESS_TOKEN
+      })
+    });
+    const container = await containerRes.json();
+    if (!container.id) return;
+
+    // Step 2: Publish the container
+    await fetch(`https://graph.instagram.com/v21.0/${process.env.INSTAGRAM_USER_ID}/media_publish`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        creation_id: container.id,
+        access_token: process.env.INSTAGRAM_ACCESS_TOKEN
+      })
+    });
+  } catch (err) {
+    console.error('Instagram error:', err);
+  }
+}(article);
 }
     if (error) throw error;
 
