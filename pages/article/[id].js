@@ -189,7 +189,12 @@ export default function ArticlePage() {
               </div>
             </div>
 
-            {/* Share Buttons */}
+            {/* Sources */}
+<div style={{ padding: "12px 0", borderTop: "1px solid #eee", marginTop: "24px" }}>
+  <p style={{ margin: 0, fontSize: "12px", color: "#999", lineHeight: "1.6" }}>
+    📰 <strong>Sources:</strong> Based on reporting from international news sources including Reuters, BBC News, ESPN, CNN and Sky News.
+  </p>
+</div>{/* Share Buttons */}
 <div style={{ margin: "32px 0", paddingTop: "24px", borderTop: "1px solid #eee" }}>
   <p style={{ fontSize: "13px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px", color: "#666", marginBottom: "12px" }}>Share this article</p>
   <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
