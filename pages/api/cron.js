@@ -55,6 +55,7 @@ import Anthropic from '@anthropic-ai/sdk';async function postToFacebook(article)
   } catch (err) {
     console.error('Threads error:', err);
   }
+}
 async function postToInstagram(article) {
   try {
     const imageUrl = article.image;
