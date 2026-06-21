@@ -92,6 +92,7 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY
 const RSS_SOURCES = {
   finance: [
     'https://cointelegraph.com/rss',
+    'https://feeds.marketwatch.com/marketwatch/topstories/',
   ],
   sports: [
     'https://www.espn.com/espn/rss/news',
