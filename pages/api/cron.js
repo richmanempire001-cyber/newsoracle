@@ -146,7 +146,7 @@ async function fetchRSS(url) {
 
     if (!title || title.length < 10) return null;
 
-    return { title, description, image };
+    return { title, description, image, sourceUrl: url };
   } catch {
     return null;
   }
@@ -210,6 +210,7 @@ export default async function handler(req, res) {
       if (!rss) continue;
       const article = await generateArticle(rss.title, rss.description, category);
       results.push({
+        link: rss.sourceUrl,
         title: article.title,
         summary: article.summary,
         prediction: article.prediction,
@@ -233,7 +234,7 @@ for (const article of results) {
   const { data: existing } = await supabase
     .from('articles')
     .select('id')
-    .ilike('title', `%${article.title.substring(0, 30)}%`)
+    .ilike('title', `%${article.title.substring(0, 40)}%`)
     .limit(1);
   
   if (!existing || existing.length === 0) {
