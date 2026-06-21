@@ -240,7 +240,7 @@ async function postToInstagram(article) {
   } catch (err) {
     console.error('Instagram error:', err);
   }
-}(article);
+}
 }
     if (error) throw error;
 
