@@ -1,12 +1,11 @@
 import Anthropic from '@anthropic-ai/sdk';async function postToFacebook(article) {
   try {
     const message = `🔴 ${article.title}\n\n${article.summary?.substring(0, 200)}...\n\n🔗 Read more: https://newsoracle.online`;
-    await fetch(`https://graph.facebook.com/${process.env.FACEBOOK_PAGE_ID}/photos`, {
+    await fetch(`https://graph.facebook.com/${process.env.FACEBOOK_PAGE_ID}/feed`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         message: message,
-        url: article.image,
         access_token: process.env.FACEBOOK_PAGE_TOKEN
       })
     });
