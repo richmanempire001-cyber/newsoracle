@@ -205,7 +205,12 @@ if (filteredResults.length === 0) {
 }
 
 const { error } = await supabase.from('articles').insert(filteredResults);for (const article of filteredResults) {
-  await postToTelegram(article);await postToFacebookasync function postToInstagram(article) {
+  await postToTelegram(article);
+await postToFacebook(article);
+await postToInstagram(article);
+}
+
+async function postToInstagram(article) {
   try {
     const imageUrl = article.image;
     const caption = `🔴 ${article.title}\n\n${article.summary?.substring(0, 200)}...\n\n🔗 Read more: https://newsoracle.online`;
