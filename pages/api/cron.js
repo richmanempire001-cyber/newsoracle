@@ -234,10 +234,11 @@ export default async function handler(req, res) {
 
     const filteredResults = [];
 for (const article of results) {
+  const titleWords = article.title.toLowerCase().split(' ').filter(w => w.length > 4).slice(0, 3).join('%');
   const { data: existing } = await supabase
     .from('articles')
     .select('id')
-    .eq('link', article.link)
+    .or(`link.eq.${article.link},title.ilike.%${titleWords}%`)
     .limit(1);
   
   if (!existing || existing.length === 0) {
