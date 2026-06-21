@@ -55,7 +55,7 @@ import Anthropic from '@anthropic-ai/sdk';async function postToFacebook(article)
   } catch (err) {
     console.error('Threads error:', err);
   }
-}async function postToInstagram(article) {
+async function postToInstagram(article) {
   try {
     const imageUrl = article.image;
     const caption = `🔴 ${article.title}\n\n${article.summary?.substring(0, 200)}...\n\n🔗 Read more: https://newsoracle.online`;
@@ -70,6 +70,7 @@ import Anthropic from '@anthropic-ai/sdk';async function postToFacebook(article)
     });
     const container = await containerRes.json();
     if (!container.id) return;
+    await new Promise(resolve => setTimeout(resolve, 5000));
     await fetch(`https://graph.instagram.com/v21.0/${process.env.INSTAGRAM_USER_ID}/media_publish`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
