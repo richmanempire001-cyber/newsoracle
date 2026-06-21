@@ -27,6 +27,31 @@ import Anthropic from '@anthropic-ai/sdk';async function postToFacebook(article)
   } catch (err) {
     console.error('Telegram error:', err);
   }
+}async function postToThreads(article) {
+  try {
+    const text = `🔴 ${article.title}\n\n${article.summary?.substring(0, 200)}...\n\n🔗 Read more: https://newsoracle.online`;
+    const containerRes = await fetch(`https://graph.threads.net/v1.0/${process.env.THREADS_USER_ID}/threads`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        media_type: 'TEXT',
+        text: text,
+        access_token: process.env.THREADS_ACCESS_TOKEN
+      })
+    });
+    const container = await containerRes.json();
+    if (!container.id) return;
+    await fetch(`https://graph.threads.net/v1.0/${process.env.THREADS_USER_ID}/threads_publish`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        creation_id: container.id,
+        access_token: process.env.THREADS_ACCESS_TOKEN
+      })
+    });
+  } catch (err) {
+    console.error('Threads error:', err);
+  }
 }async function postToInstagram(article) {
   try {
     const imageUrl = article.image;
@@ -234,6 +259,7 @@ const { error } = await supabase.from('articles').insert(filteredResults);for (c
   await postToTelegram(article);
 await postToFacebook(article);
 await postToInstagram(article);
+await postToThreads(article);
 }
     if (error) throw error;
 
