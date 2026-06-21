@@ -89,28 +89,15 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY
 
 const RSS_SOURCES = {
   finance: [
-    'https://feeds.reuters.com/reuters/topNews',
     'https://feeds.reuters.com/reuters/businessNews',
-    'https://feeds.reuters.com/reuters/technologyNews',
-    'https://www.cnbc.com/id/100003114/device/rss/rss.html',
-    'https://finance.yahoo.com/news/rssindex',
+    'https://cointelegraph.com/rss',
   ],
   sports: [
     'https://www.espn.com/espn/rss/news',
-    'https://sports.yahoo.com/rss/',
-    'https://feeds.bbci.co.uk/sport/rss.xml',
-    'https://feeds.bbci.co.uk/sport/football/rss.xml',
-    'https://feeds.bbci.co.uk/sport/cricket/rss.xml',
-    'https://feeds.skysports.com/feeds/rss/home.xml',
   ],
   politics: [
-    'https://feeds.bbci.co.uk/news/rss.xml',
-    'https://rss.cnn.com/rss/edition.rss',
-    'https://feeds.skynews.com/feeds/rss/home.xml',
+    'https://feeds.washingtonpost.com/rss/politics',
     'https://feeds.reuters.com/Reuters/PoliticsNews',
-    'https://feeds.reuters.com/reuters/worldNews',
-    'https://feeds.bbci.co.uk/news/world/rss.xml',
-    'https://feeds.bbci.co.uk/news/politics/rss.xml',
   ]
 };
 const FALLBACK_IMAGES = {
