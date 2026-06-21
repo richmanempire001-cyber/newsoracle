@@ -131,6 +131,8 @@ async function fetchRSS(url) {
     const randomItem = items[Math.floor(Math.random() * Math.min(5, items.length))];
     const itemText = randomItem[0];
 
+    const linkMatch = itemText.match(/<link>(.*?)<\/link>|<link[^>]*href="([^"]+)"/);
+    const itemLink = linkMatch ? (linkMatch[1] || linkMatch[2] || '').trim() : '';
     const titleMatch = itemText.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>|<title>(.*?)<\/title>/);
     const descMatch = itemText.match(/<description><!\[CDATA\[(.*?)\]\]><\/description>|<description>(.*?)<\/description>/);
 
@@ -147,7 +149,7 @@ async function fetchRSS(url) {
 
     if (!title || title.length < 10) return null;
 
-    return { title, description, image, sourceUrl: url, originalTitle: title };
+    return { title, description, image, sourceUrl: url, originalTitle: title, itemLink: itemLink || title };
   } catch {
     return null;
   }
@@ -211,7 +213,7 @@ export default async function handler(req, res) {
       if (!rss) continue;
       const article = await generateArticle(rss.title, rss.description, category);
       results.push({
-        link: rss.originalTitle,
+        link: rss.itemLink,
         title: article.title,
         summary: article.summary,
         prediction: article.prediction,
