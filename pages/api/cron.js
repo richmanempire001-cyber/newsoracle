@@ -1,11 +1,12 @@
 import Anthropic from '@anthropic-ai/sdk';async function postToFacebook(article) {
   try {
     const message = `🔴 ${article.title}\n\n${article.summary?.substring(0, 200)}...\n\n🔗 Read more: https://newsoracle.online`;
-    await fetch(`https://graph.facebook.com/${process.env.FACEBOOK_PAGE_ID}/feed`, {
+    await fetch(`https://graph.facebook.com/${process.env.FACEBOOK_PAGE_ID}/photos`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         message: message,
+        url: article.image,
         access_token: process.env.FACEBOOK_PAGE_TOKEN
       })
     });
@@ -14,13 +15,14 @@ import Anthropic from '@anthropic-ai/sdk';async function postToFacebook(article)
   }
 }async function postToTelegram(article) {
   try {
-    const message = `🔴 *${article.title}*\n\n${article.summary?.substring(0, 200)}...\n\n🔗 Read more: https://newsoracle.online`;
-    await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+    const caption = `🔴 *${article.title}*\n\n${article.summary?.substring(0, 200)}...\n\n🔗 Read more: https://newsoracle.online`;
+    await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendPhoto`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         chat_id: process.env.TELEGRAM_CHAT_ID,
-        text: message,
+        photo: article.image,
+        caption: caption,
         parse_mode: 'Markdown'
       })
     });
@@ -34,7 +36,8 @@ import Anthropic from '@anthropic-ai/sdk';async function postToFacebook(article)
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        media_type: 'TEXT',
+        media_type: 'IMAGE',
+        image_url: article.image,
         text: text,
         access_token: process.env.THREADS_ACCESS_TOKEN
       })
