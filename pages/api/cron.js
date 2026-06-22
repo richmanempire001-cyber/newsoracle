@@ -259,7 +259,6 @@ const { error } = await supabase.from('articles').insert(filteredResults);for (c
   await postToTelegram(article);
 await postToFacebook(article);
 await postToInstagram(article);
-await postToThreads(article);
 }
     if (error) throw error;
 
