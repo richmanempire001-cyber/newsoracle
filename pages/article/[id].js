@@ -192,7 +192,7 @@ export default function ArticlePage() {
             {/* Sources */}
 <div style={{ padding: "12px 0", borderTop: "1px solid #eee", marginTop: "24px" }}>
   <p style={{ margin: 0, fontSize: "12px", color: "#999", lineHeight: "1.6" }}>
-    📰 <strong>Sources:</strong> Based on reporting from international news sources including ESPN, Washington Post, Al Jazeera, MarketWatch and CoinTelegraph.
+    📰 <strong>Sources:</strong> {article.source ? `Based on reporting from ${article.source} and other international news sources.` : 'Based on reporting from international news sources via Google News and leading global publications.'}
   </p>
 </div>{/* Share Buttons */}
 <div style={{ margin: "32px 0", paddingTop: "24px", borderTop: "1px solid #eee" }}>
