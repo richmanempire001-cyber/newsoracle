@@ -245,28 +245,14 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'No RSS feeds returned data' });
     }
 
-    const filteredResults = [];
-for (const article of results) {
-  const titleWords = article.title.toLowerCase().split(' ').filter(w => w.length > 4).slice(0, 3).join('%');
-  const { data: existing } = await supabase
-    .from('articles')
-    .select('id')
-    .or(`link.eq.${article.link},title.ilike.%${titleWords}%`)
-    .limit(1);
-  
-  if (!existing || existing.length === 0) {
-    filteredResults.push(article);
-  }
-}
-
-if (filteredResults.length === 0) {
+    if (results.length === 0) {
   return res.status(200).json({ message: 'No new articles to publish' });
 }
 
-const { error } = await supabase.from('articles').insert(filteredResults);
+const { error } = await supabase.from('articles').insert(results);
 if (error) throw error;
 
-for (const article of filteredResults) {
+for (const article of results) {
   await Promise.all([
     postToTelegram(article),
     postToFacebook(article),
