@@ -261,7 +261,8 @@ if (error) throw error;
 for (const article of filteredResults) {
   await Promise.all([
     postToTelegram(article),
-    postToFacebook(article)
+    postToFacebook(article),
+    postToThreads(article)
   ]);
 }
 
