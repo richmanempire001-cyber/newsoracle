@@ -91,14 +91,15 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY
 
 const RSS_SOURCES = {
   finance: [
+    'https://news.google.com/rss/search?q=bitcoin+OR+crypto+OR+stocks+OR+nasdaq&ceid=US:en&hl=en-US&gl=US',
     'https://cointelegraph.com/rss',
-    'https://feeds.marketwatch.com/marketwatch/topstories/',
   ],
   sports: [
+    'https://news.google.com/rss/search?q=NFL+OR+NBA+OR+soccer+OR+cricket+OR+tennis&ceid=US:en&hl=en-US&gl=US',
     'https://www.espn.com/espn/rss/news',
   ],
   politics: [
-    'https://feeds.washingtonpost.com/rss/politics',
+    'https://news.google.com/rss/search?q=Trump+OR+Congress+OR+White+House+OR+elections&ceid=US:en&hl=en-US&gl=US',
     'https://www.aljazeera.com/xml/rss/all.xml',
   ]
 };
@@ -147,10 +148,12 @@ async function fetchRSS(url) {
     const title = titleMatch ? (titleMatch[1] || titleMatch[2]).trim() : '';
     const description = descMatch ? (descMatch[1] || descMatch[2]).replace(/<[^>]*>/g, '').trim() : '';
     const image = imageMatch ? (imageMatch[1] || imageMatch[0]) : null;
+    const sourceMatch = itemText.match(/<source[^>]*>(.*?)<\/source>/);
+    const sourceName = sourceMatch ? sourceMatch[1].trim() : '';
 
     if (!title || title.length < 10) return null;
 
-    return { title, description, image, sourceUrl: url, originalTitle: title, itemLink: itemLink || title };
+    return { title, description, image, sourceUrl: url, originalTitle: title, itemLink: itemLink || title, sourceName };
   } catch {
     return null;
   }
@@ -215,6 +218,7 @@ export default async function handler(req, res) {
       const article = await generateArticle(rss.title, rss.description, category);
       results.push({
         link: rss.itemLink,
+        source: rss.sourceName || '',
         title: article.title,
         summary: article.summary,
         prediction: article.prediction,
