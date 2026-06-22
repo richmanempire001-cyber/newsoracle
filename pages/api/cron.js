@@ -255,12 +255,16 @@ if (filteredResults.length === 0) {
   return res.status(200).json({ message: 'No new articles to publish' });
 }
 
-const { error } = await supabase.from('articles').insert(filteredResults);for (const article of filteredResults) {
-  await postToTelegram(article);
-await postToFacebook(article);
-await postToInstagram(article);
+const { error } = await supabase.from('articles').insert(filteredResults);
+if (error) throw error;
+
+for (const article of filteredResults) {
+  await Promise.all([
+    postToTelegram(article),
+    postToFacebook(article),
+    postToInstagram(article)
+  ]);
 }
-    if (error) throw error;
 
     return res.status(200).json({
       success: true,
