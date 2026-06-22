@@ -215,6 +215,15 @@ export default async function handler(req, res) {
       [politicsRSS, 'politics']
     ]) {
       if (!rss) continue;
+
+      const titleWords = rss.title.toLowerCase().split(' ').filter(w => w.length > 4).slice(0, 3).join('%');
+      const { data: existing } = await supabase
+        .from('articles')
+        .select('id')
+        .or(`link.eq.${rss.itemLink},title.ilike.%${titleWords}%`)
+        .limit(1);
+      if (existing && existing.length > 0) continue;
+
       const article = await generateArticle(rss.title, rss.description, category);
       results.push({
         link: rss.itemLink,
@@ -232,7 +241,6 @@ export default async function handler(req, res) {
         posted_at: now
       });
     }
-
     if (results.length === 0) {
       return res.status(500).json({ error: 'No RSS feeds returned data' });
     }
