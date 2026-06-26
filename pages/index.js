@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+#import { useEffect, useState } from "react";
 import Head from "next/head";
 import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
@@ -7,23 +7,6 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
   process.env.NEXT_PUBLIC_SUPABASE_KEY
 );
-
-const IMAGES = {
-  finance: [
-    "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&q=80",
-    "https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=800&q=80",
-    "https://images.unsplash.com/photo-1444653614773-995cb1ef9efa?w=800&q=80",
-    "https://images.unsplash.com/photo-1559526324-593bc073d938?w=800&q=80",
-    "https://images.unsplash.com/photo-1563986768494-4dee2763ff3f?w=800&q=80",
-  ],
-  sports: [
-    "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=800&q=80",
-    "https://images.unsplash.com/photo-1540747913346-19212a4b423f?w=800&q=80",
-    "https://images.unsplash.com/photo-1587280501635-68a0e82cd5ff?w=800&q=80",
-    "https://images.unsplash.com/photo-1546519638-68e109498ffc?w=800&q=80",
-    "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=800&q=80",
-  ],
-};
 
 function getImage(article) {
   if (article.image && !article.image.includes('source.unsplash')) return article.image;
@@ -36,6 +19,7 @@ function getImage(article) {
   const key = keywords[article.category] || keywords.finance;
   return `https://images.unsplash.com/photo-${key}?w=800&q=80`;
 }
+
 function timeAgo(date) {
   const seconds = Math.floor((new Date() - new Date(date)) / 1000);
   if (seconds < 60) return "Just now";
@@ -44,33 +28,19 @@ function timeAgo(date) {
   return `${Math.floor(seconds / 86400)}d ago`;
 }
 
-export default function Home() {
-  const [articles, setArticles] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState("all");const [cookieAccepted, setCookieAccepted] = useState(false);
-
-useEffect(() => {
-  const accepted = localStorage.getItem('cookieAccepted');
-  if (accepted) setCookieAccepted(true);
-}, []);
-
-function acceptCookies() {
-  localStorage.setItem('cookieAccepted', 'true');
-  setCookieAccepted(true);
-}
+export default function Home({ initialArticles }) {
+  const [articles, setArticles] = useState(initialArticles || []);
+  const [filter, setFilter] = useState("all");
+  const [cookieAccepted, setCookieAccepted] = useState(false);
 
   useEffect(() => {
-    fetchArticles();
+    const accepted = localStorage.getItem('cookieAccepted');
+    if (accepted) setCookieAccepted(true);
   }, []);
 
-  async function fetchArticles() {
-    const { data } = await supabase
-      .from("articles")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(100);
-    if (data) setArticles(data);
-    setLoading(false);
+  function acceptCookies() {
+    localStorage.setItem('cookieAccepted', 'true');
+    setCookieAccepted(true);
   }
 
   const filtered = filter === "all" ? articles : articles.filter(a => a.category === filter);
@@ -80,52 +50,54 @@ function acceptCookies() {
   return (
     <>
       <Head>
-  <title>NewsOracle — Sports, Finance & Politics News</title>
-  <meta name="description" content="NewsOracle delivers the latest sports, finance, crypto and politics news with AI-powered analysis and market predictions. Updated every 4 hours." />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="robots" content="index, follow" />
-  <meta property="og:title" content="NewsOracle — Sports, Finance & Politics News" />
-  <meta property="og:description" content="Latest sports, finance, crypto and politics news with AI-powered analysis. Updated every 4 hours." />
-  <meta property="og:image" content="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=1200&q=80" />
-  <meta property="og:url" content="https://newsoracle.online" />
-  <meta property="og:type" content="website" />
-  <meta property="og:site_name" content="NewsOracle" />
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="NewsOracle — Sports, Finance & Politics News" />
-  <meta name="twitter:description" content="Latest sports, finance and politics news with AI-powered analysis." />
-  <meta name="twitter:image" content="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=1200&q=80" />
-  <link rel="canonical" href="https://newsoracle.online" />
-</Head>
+        <title>NewsOracle — Sports, Finance & Politics News</title>
+        <meta name="description" content="NewsOracle delivers the latest sports, finance, crypto and politics news with AI-powered analysis and market predictions. Updated every 4 hours." />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="robots" content="index, follow" />
+        <meta property="og:title" content="NewsOracle — Sports, Finance & Politics News" />
+        <meta property="og:description" content="Latest sports, finance, crypto and politics news with AI-powered analysis. Updated every 4 hours." />
+        <meta property="og:image" content="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=1200&q=80" />
+        <meta property="og:url" content="https://newsoracle.online" />
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="NewsOracle" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="NewsOracle — Sports, Finance & Politics News" />
+        <meta name="twitter:description" content="Latest sports, finance and politics news with AI-powered analysis." />
+        <meta name="twitter:image" content="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=1200&q=80" />
+        <link rel="canonical" href="https://newsoracle.online" />
+      </Head>
 
       <div style={{ fontFamily: "'Arial', sans-serif", background: "#f4f4f4", minHeight: "100vh" }}>
 
         {/* Breaking News Ticker */}
-<div style={{ background: "#cc0000", color: "#fff", padding: "8px 0", overflow: "hidden" }}>
-  <div style={{ display: "flex", alignItems: "center" }}>
-    <span style={{ background: "#fff", color: "#cc0000", fontWeight: "900", fontSize: "11px", padding: "4px 12px", whiteSpace: "nowrap", marginRight: "16px", letterSpacing: "1px" }}>
-      BREAKING
-    </span>
-    <div style={{ overflow: "hidden", whiteSpace: "nowrap" }}>
-      <span style={{ display: "inline-block", animation: "ticker 30s linear infinite", fontSize: "13px", fontWeight: "500" }}>
-        {articles.slice(0, 5).map((a, i) => (
-          <span key={a.id}>
-            <Link href={`/article/${a.id}`} style={{ color: "#fff", textDecoration: "none" }}>
-              {a.title}
-            </Link>
-            <span style={{ margin: "0 32px", opacity: 0.5 }}>●</span>
-          </span>
-        ))}
-      </span>
-    </div>
-  </div>
-</div>
+        <div style={{ background: "#cc0000", color: "#fff", padding: "8px 0", overflow: "hidden" }}>
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <span style={{ background: "#fff", color: "#cc0000", fontWeight: "900", fontSize: "11px", padding: "4px 12px", whiteSpace: "nowrap", marginRight: "16px", letterSpacing: "1px" }}>
+              BREAKING
+            </span>
+            <div style={{ overflow: "hidden", whiteSpace: "nowrap" }}>
+              <span style={{ display: "inline-block", animation: "ticker 30s linear infinite", fontSize: "13px", fontWeight: "500" }}>
+                {articles.slice(0, 5).map((a) => (
+                  <span key={a.id}>
+                    <Link href={`/article/${a.id}`} style={{ color: "#fff", textDecoration: "none" }}>
+                      {a.title}
+                    </Link>
+                    <span style={{ margin: "0 32px", opacity: 0.5 }}>●</span>
+                  </span>
+                ))}
+              </span>
+            </div>
+          </div>
+        </div>
 
-<style>{`
-  @keyframes ticker {
-    0% { transform: translateX(100vw); }
-    100% { transform: translateX(-100%); }
-  }
-`}</style>{/* Top Bar */}
+        <style>{`
+          @keyframes ticker {
+            0% { transform: translateX(100vw); }
+            100% { transform: translateX(-100%); }
+          }
+        `}</style>
+
+        {/* Top Bar */}
         <div style={{ background: "#cc0000", color: "#fff", padding: "6px 0", fontSize: "12px" }}>
           <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 20px", display: "flex", justifyContent: "space-between" }}>
             <span>{new Date().toLocaleDateString("en-GB", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</span>
@@ -147,9 +119,10 @@ function acceptCookies() {
               </div>
               <nav style={{ display: "flex", gap: "4px" }}>
                 <div style={{ display: "flex", gap: "20px", marginRight: "20px" }}>
-  <Link href="/about" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600" }}>About</Link>
-  <Link href="/contact" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600" }}>Contact</Link>
-</div>{["all", "sports", "finance", "politics"].map(cat => (
+                  <Link href="/about" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600" }}>About</Link>
+                  <Link href="/contact" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600" }}>Contact</Link>
+                </div>
+                {["all", "sports", "finance", "politics"].map(cat => (
                   <button
                     key={cat}
                     onClick={() => setFilter(cat)}
@@ -175,12 +148,7 @@ function acceptCookies() {
 
         {/* Main Content */}
         <main style={{ maxWidth: "1200px", margin: "0 auto", padding: "24px 20px" }}>
-
-          {loading ? (
-            <div style={{ textAlign: "center", padding: "80px", color: "#999" }}>
-              <p style={{ fontSize: "18px" }}>Loading latest news...</p>
-            </div>
-          ) : articles.length === 0 ? (
+          {articles.length === 0 ? (
             <div style={{ textAlign: "center", padding: "80px", color: "#999" }}>
               <p style={{ fontSize: "18px" }}>No articles yet. Check back soon.</p>
             </div>
@@ -259,33 +227,36 @@ function acceptCookies() {
           )}
         </main>
 
-        {/* Footer */}
         {/* Cookie Banner */}
-{!cookieAccepted && (
-  <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: "#111", color: "#fff", padding: "16px 20px", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
-    <p style={{ margin: 0, fontSize: "13px", color: "#ccc", maxWidth: "700px" }}>
-      We use cookies to improve your experience and show relevant ads. By continuing to use NewsOracle, you agree to our{" "}
-      <Link href="/privacy-policy" style={{ color: "#cc0000" }}>Privacy Policy</Link>{" "}and{" "}
-      <Link href="/terms" style={{ color: "#cc0000" }}>Terms of Service</Link>.
-    </p>
-    <div style={{ display: "flex", gap: "10px" }}>
-      <button onClick={acceptCookies} style={{ background: "#cc0000", color: "#fff", border: "none", padding: "10px 24px", fontSize: "13px", fontWeight: "700", cursor: "pointer" }}>
-        Accept All
-      </button>
-      <button onClick={acceptCookies} style={{ background: "transparent", color: "#999", border: "1px solid #555", padding: "10px 24px", fontSize: "13px", cursor: "pointer" }}>
-        Accept Necessary
-      </button>
-    </div>
-  </div>
-)}<footer style={{ background: "#111", color: "#999", padding: "40px 20px", marginTop: "40px" }}>
+        {!cookieAccepted && (
+          <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: "#111", color: "#fff", padding: "16px 20px", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
+            <p style={{ margin: 0, fontSize: "13px", color: "#ccc", maxWidth: "700px" }}>
+              We use cookies to improve your experience and show relevant ads. By continuing to use NewsOracle, you agree to our{" "}
+              <Link href="/privacy-policy" style={{ color: "#cc0000" }}>Privacy Policy</Link>{" "}and{" "}
+              <Link href="/terms" style={{ color: "#cc0000" }}>Terms of Service</Link>.
+            </p>
+            <div style={{ display: "flex", gap: "10px" }}>
+              <button onClick={acceptCookies} style={{ background: "#cc0000", color: "#fff", border: "none", padding: "10px 24px", fontSize: "13px", fontWeight: "700", cursor: "pointer" }}>
+                Accept All
+              </button>
+              <button onClick={acceptCookies} style={{ background: "transparent", color: "#999", border: "1px solid #555", padding: "10px 24px", fontSize: "13px", cursor: "pointer" }}>
+                Accept Necessary
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Footer */}
+        <footer style={{ background: "#111", color: "#999", padding: "40px 20px", marginTop: "40px" }}>
           <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #333", paddingBottom: "20px", marginBottom: "20px" }}>
               <h2 style={{ color: "#fff", margin: 0, fontSize: "24px", fontWeight: "900" }}>
                 NEWS<span style={{ color: "#cc0000" }}>ORACLE</span>
-              </h2><div style={{ display: "flex", gap: "16px", justifyContent: "center", margin: "16px 0" }}>
-  <a href="https://t.me/NewsOracleOfficial" target="_blank" rel="noopener noreferrer" style={{ color: "#fff", fontSize: "13px", textDecoration: "none", background: "#0088cc", padding: "8px 16px" }}>Telegram</a>
-  <a href="https://www.facebook.com/profile.php?id=61591337781640" target="_blank" rel="noopener noreferrer" style={{ color: "#fff", fontSize: "13px", textDecoration: "none", background: "#1877f2", padding: "8px 16px" }}>Facebook</a>
-</div>
+              </h2>
+              <div style={{ display: "flex", gap: "16px", justifyContent: "center", margin: "16px 0" }}>
+                <a href="https://t.me/NewsOracleOfficial" target="_blank" rel="noopener noreferrer" style={{ color: "#fff", fontSize: "13px", textDecoration: "none", background: "#0088cc", padding: "8px 16px" }}>Telegram</a>
+                <a href="https://www.facebook.com/profile.php?id=61591337781640" target="_blank" rel="noopener noreferrer" style={{ color: "#fff", fontSize: "13px", textDecoration: "none", background: "#1877f2", padding: "8px 16px" }}>Facebook</a>
+              </div>
               <div style={{ display: "flex", gap: "20px" }}>
                 <span style={{ fontSize: "13px", cursor: "pointer" }}>Sports</span>
                 <span style={{ fontSize: "13px", cursor: "pointer" }}>Finance</span>
@@ -293,18 +264,37 @@ function acceptCookies() {
               </div>
             </div>
             <div style={{ display: "flex", justifyContent: "center", gap: "20px", marginBottom: "16px", flexWrap: "wrap" }}>
-  <Link href="/about" style={{ color: "#999", textDecoration: "none", fontSize: "13px" }}>About Us</Link>
-  <Link href="/contact" style={{ color: "#999", textDecoration: "none", fontSize: "13px" }}>Contact</Link>
-  <Link href="/privacy-policy" style={{ color: "#999", textDecoration: "none", fontSize: "13px" }}>Privacy Policy</Link>
-  <Link href="/terms" style={{ color: "#999", textDecoration: "none", fontSize: "13px" }}>Terms of Service</Link>
-</div>
-<p style={{ margin: 0, fontSize: "12px", textAlign: "center" }}>
-  © 2026 NewsOracle. All content is for informational purposes only and does not constitute financial or betting advice.
-</p>
+              <Link href="/about" style={{ color: "#999", textDecoration: "none", fontSize: "13px" }}>About Us</Link>
+              <Link href="/contact" style={{ color: "#999", textDecoration: "none", fontSize: "13px" }}>Contact</Link>
+              <Link href="/privacy-policy" style={{ color: "#999", textDecoration: "none", fontSize: "13px" }}>Privacy Policy</Link>
+              <Link href="/terms" style={{ color: "#999", textDecoration: "none", fontSize: "13px" }}>Terms of Service</Link>
+            </div>
+            <p style={{ margin: 0, fontSize: "12px", textAlign: "center" }}>
+              © 2026 NewsOracle. All content is for informational purposes only and does not constitute financial or betting advice.
+            </p>
           </div>
         </footer>
 
       </div>
     </>
   );
+}
+
+export async function getServerSideProps() {
+  const supabaseServer = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_KEY
+  );
+
+  const { data } = await supabaseServer
+    .from("articles")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(100);
+
+  return {
+    props: {
+      initialArticles: data || [],
+    },
+  };
 }
