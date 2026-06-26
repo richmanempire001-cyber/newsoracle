@@ -85,6 +85,15 @@ export default function ArticlePage({ ogData }) {
         <meta name="twitter:title" content={ogData?.title || "NewsOracle"} />
         <meta name="twitter:description" content={ogData?.summary || ""} />
         <meta name="twitter:image" content={ogData?.image || ""} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "NewsArticle",
+          "headline": ogData?.title || "",
+          "description": ogData?.summary || "",
+          "image": ogData?.image || "",
+          "url": ogData?.url || "",
+          "publisher": { "@type": "Organization", "name": "NewsOracle", "url": "https://newsoracle.online" }
+        })}} />
       </Head>
       <div style={{ fontFamily: "Arial, sans-serif", textAlign: "center", padding: "100px", background: "#f4f4f4", minHeight: "100vh" }}>
         <p style={{ color: "#666", fontSize: "18px" }}>Loading...</p>
@@ -102,19 +111,28 @@ export default function ArticlePage({ ogData }) {
   return (
     <>
       <Head>
-  <title>{ogData?.title || "NewsOracle"} — NewsOracle</title>
-  <meta name="description" content={ogData?.summary || ""} />
-  <meta property="og:title" content={ogData?.title || "NewsOracle"} />
-  <meta property="og:description" content={ogData?.summary || ""} />
-  <meta property="og:image" content={ogData?.image || ""} />
-  <meta property="og:url" content={ogData?.url || ""} />
-  <meta property="og:type" content="article" />
-  <meta property="og:site_name" content="NewsOracle" />
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content={ogData?.title || "NewsOracle"} />
-  <meta name="twitter:description" content={ogData?.summary || ""} />
-  <meta name="twitter:image" content={ogData?.image || ""} />
-</Head>
+        <title>{ogData?.title || "NewsOracle"} — NewsOracle</title>
+        <meta name="description" content={ogData?.summary || ""} />
+        <meta property="og:title" content={ogData?.title || "NewsOracle"} />
+        <meta property="og:description" content={ogData?.summary || ""} />
+        <meta property="og:image" content={ogData?.image || ""} />
+        <meta property="og:url" content={ogData?.url || ""} />
+        <meta property="og:type" content="article" />
+        <meta property="og:site_name" content="NewsOracle" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={ogData?.title || "NewsOracle"} />
+        <meta name="twitter:description" content={ogData?.summary || ""} />
+        <meta name="twitter:image" content={ogData?.image || ""} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "NewsArticle",
+          "headline": ogData?.title || "",
+          "description": ogData?.summary || "",
+          "image": ogData?.image || "",
+          "url": ogData?.url || "",
+          "publisher": { "@type": "Organization", "name": "NewsOracle", "url": "https://newsoracle.online" }
+        })}} />
+      </Head>
 
       <div style={{ fontFamily: "Arial, sans-serif", background: "#f4f4f4", minHeight: "100vh" }}>
 
@@ -280,6 +298,7 @@ export default function ArticlePage({ ogData }) {
     </>
   );
 }
+
 export async function getServerSideProps({ params }) {
   const supabaseServer = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
