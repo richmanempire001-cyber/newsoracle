@@ -38,7 +38,7 @@ function getImage(article) {
   return `https://images.unsplash.com/photo-${key}?w=1200&q=80`;
 }
 
-export default function ArticlePage() {
+export default function ArticlePage({ ogData }) {
   const router = useRouter();
   const { id } = router.query;
   const [article, setArticle] = useState(null);
@@ -86,19 +86,19 @@ export default function ArticlePage() {
   return (
     <>
       <Head>
-        <title>{article.title} — NewsOracle</title>
-        <meta name="description" content={article.summary} />
-        <meta property="og:title" content={article.title} />
-        <meta property="og:description" content={article.summary?.substring(0, 200)} />
-        <meta property="og:image" content={getImage(article)} />
-        <meta property="og:url" content={`https://newsoracle.online/article/${article.id}`} />
-        <meta property="og:type" content="article" />
-        <meta property="og:site_name" content="NewsOracle" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={article.title} />
-        <meta name="twitter:description" content={article.summary?.substring(0, 200)} />
-        <meta name="twitter:image" content={getImage(article)} />
-      </Head>
+  <title>{ogData?.title || "NewsOracle"} — NewsOracle</title>
+  <meta name="description" content={ogData?.summary || ""} />
+  <meta property="og:title" content={ogData?.title || "NewsOracle"} />
+  <meta property="og:description" content={ogData?.summary || ""} />
+  <meta property="og:image" content={ogData?.image || ""} />
+  <meta property="og:url" content={ogData?.url || ""} />
+  <meta property="og:type" content="article" />
+  <meta property="og:site_name" content="NewsOracle" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content={ogData?.title || "NewsOracle"} />
+  <meta name="twitter:description" content={ogData?.summary || ""} />
+  <meta name="twitter:image" content={ogData?.image || ""} />
+</Head>
 
       <div style={{ fontFamily: "Arial, sans-serif", background: "#f4f4f4", minHeight: "100vh" }}>
 
@@ -263,4 +263,27 @@ export default function ArticlePage() {
       </div>
     </>
   );
+}
+export async function getServerSideProps({ params }) {
+  const supabaseServer = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_KEY
+  );
+
+  const { data: article } = await supabaseServer
+    .from("articles")
+    .select("*")
+    .eq("id", params.id)
+    .single();
+
+  return {
+    props: {
+      ogData: article ? {
+        title: article.title || "",
+        summary: article.summary?.substring(0, 200) || "",
+        image: article.image || "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=1200&q=80",
+        url: `https://newsoracle.online/article/${article.id}`,
+      } : null,
+    },
+  };
 }
