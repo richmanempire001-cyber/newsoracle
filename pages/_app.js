@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/router';
+import Head from 'next/head';
 
 export default function App({ Component, pageProps }) {
   const router = useRouter();
@@ -16,15 +17,19 @@ export default function App({ Component, pageProps }) {
 
   return (
     <>
-      <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7254557456911114" crossOrigin="anonymous" /><link rel="icon" href="/ChatGPT%20Image%20Jun%2020%2C%202026%2C%2001_55_20%20PM.png" /><script async src="https://www.googletagmanager.com/gtag/js?id=G-SBF43ZKBYK" />
-      <script dangerouslySetInnerHTML={{
-        __html: `
-          window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
-          gtag('js', new Date());
-          gtag('config', 'G-SBF43ZKBYK');
-        `
-      }} />
+      <Head>
+        <link rel="icon" href="/ChatGPT%20Image%20Jun%2020%2C%202026%2C%2001_55_20%20PM.png" />
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-SBF43ZKBYK" />
+        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7254557456911114" crossOrigin="anonymous" />
+        <script dangerouslySetInnerHTML={{
+          __html: `
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-SBF43ZKBYK');
+          `
+        }} />
+      </Head>
       <Component {...pageProps} />
     </>
   );
