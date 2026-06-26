@@ -80,10 +80,22 @@ function acceptCookies() {
   return (
     <>
       <Head>
-        <title>NewsOracle — Sports & Finance News</title>
-        <meta name="description" content="Latest sports and finance news, analysis and market insights" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-      </Head>
+  <title>NewsOracle — Sports, Finance & Politics News</title>
+  <meta name="description" content="NewsOracle delivers the latest sports, finance, crypto and politics news with AI-powered analysis and market predictions. Updated every 4 hours." />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="index, follow" />
+  <meta property="og:title" content="NewsOracle — Sports, Finance & Politics News" />
+  <meta property="og:description" content="Latest sports, finance, crypto and politics news with AI-powered analysis. Updated every 4 hours." />
+  <meta property="og:image" content="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=1200&q=80" />
+  <meta property="og:url" content="https://newsoracle.online" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="NewsOracle" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="NewsOracle — Sports, Finance & Politics News" />
+  <meta name="twitter:description" content="Latest sports, finance and politics news with AI-powered analysis." />
+  <meta name="twitter:image" content="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=1200&q=80" />
+  <link rel="canonical" href="https://newsoracle.online" />
+</Head>
 
       <div style={{ fontFamily: "'Arial', sans-serif", background: "#f4f4f4", minHeight: "100vh" }}>
 
