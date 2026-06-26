@@ -71,9 +71,25 @@ export default function ArticlePage({ ogData }) {
   }
 
   if (loading) return (
-    <div style={{ fontFamily: "Arial, sans-serif", textAlign: "center", padding: "100px", background: "#f4f4f4", minHeight: "100vh" }}>
-      <p style={{ color: "#666", fontSize: "18px" }}>Loading...</p>
-    </div>
+    <>
+      <Head>
+        <title>{ogData?.title || "NewsOracle"} — NewsOracle</title>
+        <meta name="description" content={ogData?.summary || ""} />
+        <meta property="og:title" content={ogData?.title || "NewsOracle"} />
+        <meta property="og:description" content={ogData?.summary || ""} />
+        <meta property="og:image" content={ogData?.image || ""} />
+        <meta property="og:url" content={ogData?.url || ""} />
+        <meta property="og:type" content="article" />
+        <meta property="og:site_name" content="NewsOracle" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={ogData?.title || "NewsOracle"} />
+        <meta name="twitter:description" content={ogData?.summary || ""} />
+        <meta name="twitter:image" content={ogData?.image || ""} />
+      </Head>
+      <div style={{ fontFamily: "Arial, sans-serif", textAlign: "center", padding: "100px", background: "#f4f4f4", minHeight: "100vh" }}>
+        <p style={{ color: "#666", fontSize: "18px" }}>Loading...</p>
+      </div>
+    </>
   );
 
   if (!article) return (
