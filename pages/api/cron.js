@@ -174,7 +174,7 @@ Write professionally like Reuters/BBC.
 Do NOT mention AI, Claude, or that this was rewritten.
 Return ONLY a JSON object with NO extra text or markdown.
 Fields:
-- title: (compelling headline, max 12 words, attention grabbing)
+- title: (SEO-optimized headline, max 12 words, include the main keyword people would search for on Google, be specific with names, numbers, and locations e.g. "Bitcoin Drops 10% as Fed Raises Interest Rates 2026")
 - summary: (3-4 sentences, professional journalism style, 100-150 words)
 - prediction: (future outlook or analysis, written as expert view, 50 words)
 - category: ("${category}")
