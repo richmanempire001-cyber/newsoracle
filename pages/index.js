@@ -64,7 +64,7 @@ export default function Home({ initialArticles }) {
         <meta name="twitter:title" content="NewsOracle — Sports, Finance & Politics News" />
         <meta name="twitter:description" content="Latest sports, finance and politics news with AI-powered analysis." />
         <meta name="twitter:image" content="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=1200&q=80" />
-        <link rel="canonical" href="https://newsoracle.online" />
+        <link rel="canonical" href="https://www.newsoracle.online" />
       </Head>
 
       <div style={{ fontFamily: "'Arial', sans-serif", background: "#f4f4f4", minHeight: "100vh" }}>
