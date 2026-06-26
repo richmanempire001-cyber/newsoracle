@@ -88,6 +88,16 @@ export default function ArticlePage() {
       <Head>
         <title>{article.title} — NewsOracle</title>
         <meta name="description" content={article.summary} />
+        <meta property="og:title" content={article.title} />
+        <meta property="og:description" content={article.summary?.substring(0, 200)} />
+        <meta property="og:image" content={getImage(article)} />
+        <meta property="og:url" content={`https://newsoracle.online/article/${article.id}`} />
+        <meta property="og:type" content="article" />
+        <meta property="og:site_name" content="NewsOracle" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={article.title} />
+        <meta name="twitter:description" content={article.summary?.substring(0, 200)} />
+        <meta name="twitter:image" content={getImage(article)} />
       </Head>
 
       <div style={{ fontFamily: "Arial, sans-serif", background: "#f4f4f4", minHeight: "100vh" }}>
