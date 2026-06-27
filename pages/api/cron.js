@@ -260,6 +260,23 @@ for (const article of results) {
   ]);
 }
 
+// IndexNow ping — notify Bing and Google instantly
+try {
+  const urls = results.map(a => `https://www.newsoracle.online/article/${a.id}`);
+  await fetch('https://api.indexnow.org/indexnow', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      host: 'www.newsoracle.online',
+      key: 'newsoracle2026bing',
+      keyLocation: 'https://www.newsoracle.online/newsoracle2026bing.txt',
+      urlList: urls
+    })
+  });
+} catch (err) {
+  console.error('IndexNow error:', err);
+}
+
     return res.status(200).json({
       success: true,
       count: results.length,
