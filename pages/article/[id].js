@@ -246,11 +246,24 @@ export default function ArticlePage({ ogData }) {
     <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://newsoracle.online/article/' + article.id)}`} target="_blank" rel="noopener noreferrer" style={{ background: "#1877f2", color: "#fff", padding: "10px 20px", fontSize: "13px", fontWeight: "600", textDecoration: "none", display: "inline-block" }}>Facebook</a>
     <a href={`https://wa.me/?text=${encodeURIComponent(article.title + ' https://newsoracle.online/article/' + article.id)}`} target="_blank" rel="noopener noreferrer" style={{ background: "#25d366", color: "#fff", padding: "10px 20px", fontSize: "13px", fontWeight: "600", textDecoration: "none", display: "inline-block" }}>WhatsApp</a>
   </div>
-</div>{/* Disclaimer */}
+{/* Disclaimer */}
             <div style={{ background: "#fffbf0", border: "1px solid #ffe082", padding: "16px", marginTop: "32px" }}>
               <p style={{ margin: 0, fontSize: "12px", color: "#888", lineHeight: "1.6" }}>
                 <strong>Disclaimer:</strong> {article.disclaimer}
               </p>
+            </div>
+
+            {/* Author Bio */}
+            <div style={{ background: "#f8f9fa", border: "1px solid #eee", padding: "20px", marginTop: "32px", display: "flex", gap: "16px", alignItems: "flex-start" }}>
+              <div style={{ width: "48px", height: "48px", background: "#cc0000", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <span style={{ color: "#fff", fontWeight: "900", fontSize: "18px" }}>N</span>
+              </div>
+              <div>
+                <p style={{ margin: "0 0 6px", fontSize: "14px", fontWeight: "700", color: "#111" }}>NewsOracle Editorial</p>
+                <p style={{ margin: 0, fontSize: "13px", color: "#666", lineHeight: "1.6" }}>
+                  NewsOracle is an AI-powered news platform delivering breaking news and analysis in sports, finance, crypto and politics. Our automated system monitors global news sources around the clock and publishes professionally written articles with market insights and predictions.
+                </p>
+              </div>
             </div>
 
           </article>
