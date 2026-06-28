@@ -162,26 +162,31 @@ async function fetchRSS(url) {
 async function generateArticle(headline, description, category) {
   const message = await anthropic.messages.create({
     model: 'claude-haiku-4-5',
-    max_tokens: 1024,
+    max_tokens: 2048 ,
     messages: [{
       role: 'user',
-      content: `You are a senior journalist at Reuters or BBC News.
-Based on this real news headline and description, write a professional news article.
+      content: `You are a professional news writer. Based on this real news headline and description, write an engaging news article that people want to read and share.
 Headline: "${headline}"
 Description: "${description}"
-Rewrite this completely in your own words. Do NOT copy the original text.
-Write professionally like Reuters/BBC.
-Do NOT mention AI, Claude, or that this was rewritten.
+
+Rules:
+- Write ONLY based on the facts in the headline and description above
+- Do NOT invent quotes, statistics, or details not mentioned
+- Do NOT mention AI, Claude, or that this was rewritten
+- Write in an engaging, easy-to-read style that attracts readers
+- Use active voice and strong verbs
+- Make it feel urgent and relevant
+
 Return ONLY a JSON object with NO extra text or markdown.
 Fields:
-- title: (SEO-optimized headline, max 12 words, include the main keyword people would search for on Google, be specific with names, numbers, and locations e.g. "Bitcoin Drops 10% as Fed Raises Interest Rates 2026")
-- summary: (3-4 sentences, professional journalism style, 100-150 words)
-- prediction: (future outlook or analysis, written as expert view, 50 words)
+- title: (SEO-optimized headline, max 12 words, include the main keyword people would search for on Google, be specific with names, numbers, and locations)
+- summary: (a full news article, 4-6 paragraphs, 350-500 words total, written in engaging journalism style. Start with a strong opening sentence that hooks the reader. Cover the who, what, when, where, why. End with context or background. Use paragraph breaks between each paragraph using \\n\\n)
+- prediction: (future outlook or analysis, written as expert view, 60-80 words)
 - category: ("${category}")
 - tag: (specific tag like "Trump", "Trade War", "NATO", "S&P 500", "Premier League", "NBA", "Crypto")
 - sentiment: (either "positive", "negative", or "neutral")
 - confidence: (number between 60-95)
-- disclaimer: ("This article is for informational purposes only.")`
+- disclaimer: ("This article is for informational purposes only. Content is based on publicly available news sources.")`
     }]
   });
 
