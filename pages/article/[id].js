@@ -154,7 +154,8 @@ export default function ArticlePage({ ogData }) {
             </Link>
             <nav style={{ display: "flex", gap: "20px" }}>
               <Link href="/?cat=sports" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600", textTransform: "uppercase" }}>Sports</Link>
-              <Link href="/?cat=finance" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600", textTransform: "uppercase" }}>Finance</Link><Link href="/?cat=politics" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600", textTransform: "uppercase" }}>Politics</Link>
+              <Link href="/?cat=finance" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600", textTransform: "uppercase" }}>Finance</Link>
+              <Link href="/?cat=politics" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600", textTransform: "uppercase" }}>Politics</Link>
             </nav>
           </div>
         </header>
@@ -191,11 +192,11 @@ export default function ArticlePage({ ogData }) {
 
             {/* Meta */}
             <div style={{ display: "flex", gap: "20px", padding: "14px 0", borderTop: "1px solid #eee", borderBottom: "1px solid #eee", marginBottom: "28px" }}>
-              <span style={{ fontSize: "13px", color: "#666" }}>By <strong>NewsOracle Staff</strong></span>
+              <span style={{ fontSize: "13px", color: "#666" }}>By <strong>NewsOracle Editorial</strong></span>
               <span style={{ fontSize: "13px", color: "#999" }}>
                 {new Date(article.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
               </span>
-             <span style={{ fontSize: "13px", color: "#999" }}>
+              <span style={{ fontSize: "13px", color: "#999" }}>
                 {new Date(article.created_at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })} GMT
               </span>
               <span style={{ fontSize: "13px", color: "#999" }}>
@@ -234,19 +235,23 @@ export default function ArticlePage({ ogData }) {
             </div>
 
             {/* Sources */}
-<div style={{ padding: "12px 0", borderTop: "1px solid #eee", marginTop: "24px" }}>
-  <p style={{ margin: 0, fontSize: "12px", color: "#999", lineHeight: "1.6" }}>
-    📰 <strong>Sources:</strong> {article.source ? `Based on reporting from ${article.source} and other international news sources.` : 'Based on reporting from international news sources via Google News and leading global publications.'}
-  </p>
-</div>{/* Share Buttons */}
-<div style={{ margin: "32px 0", paddingTop: "24px", borderTop: "1px solid #eee" }}>
-  <p style={{ fontSize: "13px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px", color: "#666", marginBottom: "12px" }}>Share this article</p>
-  <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-    <a href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(article.title)}&url=${encodeURIComponent('https://newsoracle.online/article/' + article.id)}`} target="_blank" rel="noopener noreferrer" style={{ background: "#000", color: "#fff", padding: "10px 20px", fontSize: "13px", fontWeight: "600", textDecoration: "none", display: "inline-block" }}>𝕏 Twitter</a>
-    <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://newsoracle.online/article/' + article.id)}`} target="_blank" rel="noopener noreferrer" style={{ background: "#1877f2", color: "#fff", padding: "10px 20px", fontSize: "13px", fontWeight: "600", textDecoration: "none", display: "inline-block" }}>Facebook</a>
-    <a href={`https://wa.me/?text=${encodeURIComponent(article.title + ' https://newsoracle.online/article/' + article.id)}`} target="_blank" rel="noopener noreferrer" style={{ background: "#25d366", color: "#fff", padding: "10px 20px", fontSize: "13px", fontWeight: "600", textDecoration: "none", display: "inline-block" }}>WhatsApp</a>
-  </div>
-{/* Disclaimer */}
+            <div style={{ padding: "12px 0", borderTop: "1px solid #eee", marginTop: "24px" }}>
+              <p style={{ margin: 0, fontSize: "12px", color: "#999", lineHeight: "1.6" }}>
+                📰 <strong>Sources:</strong> {article.source ? `Based on reporting from ${article.source} and other international news sources.` : 'Based on reporting from international news sources via Google News and leading global publications.'}
+              </p>
+            </div>
+
+            {/* Share Buttons */}
+            <div style={{ margin: "32px 0", paddingTop: "24px", borderTop: "1px solid #eee" }}>
+              <p style={{ fontSize: "13px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px", color: "#666", marginBottom: "12px" }}>Share this article</p>
+              <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                <a href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(article.title)}&url=${encodeURIComponent('https://newsoracle.online/article/' + article.id)}`} target="_blank" rel="noopener noreferrer" style={{ background: "#000", color: "#fff", padding: "10px 20px", fontSize: "13px", fontWeight: "600", textDecoration: "none", display: "inline-block" }}>𝕏 Twitter</a>
+                <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://newsoracle.online/article/' + article.id)}`} target="_blank" rel="noopener noreferrer" style={{ background: "#1877f2", color: "#fff", padding: "10px 20px", fontSize: "13px", fontWeight: "600", textDecoration: "none", display: "inline-block" }}>Facebook</a>
+                <a href={`https://wa.me/?text=${encodeURIComponent(article.title + ' https://newsoracle.online/article/' + article.id)}`} target="_blank" rel="noopener noreferrer" style={{ background: "#25d366", color: "#fff", padding: "10px 20px", fontSize: "13px", fontWeight: "600", textDecoration: "none", display: "inline-block" }}>WhatsApp</a>
+              </div>
+            </div>
+
+            {/* Disclaimer */}
             <div style={{ background: "#fffbf0", border: "1px solid #ffe082", padding: "16px", marginTop: "32px" }}>
               <p style={{ margin: 0, fontSize: "12px", color: "#888", lineHeight: "1.6" }}>
                 <strong>Disclaimer:</strong> {article.disclaimer}
@@ -260,9 +265,7 @@ export default function ArticlePage({ ogData }) {
               </div>
               <div>
                 <p style={{ margin: "0 0 6px", fontSize: "14px", fontWeight: "700", color: "#111" }}>NewsOracle Editorial</p>
-                <p style={{ margin: 0, fontSize: "13px", color: "#666", lineHeight: "1.6" }}>
-                  NewsOracle is an AI-powered news platform delivering breaking news and analysis in sports, finance, crypto and politics. Our automated system monitors global news sources around the clock and publishes professionally written articles with market insights and predictions.
-                </p>
+                <p style={{ margin: 0, fontSize: "13px", color: "#666", lineHeight: "1.6" }}>NewsOracle is an AI-powered news platform delivering breaking news and analysis in sports, finance, crypto and politics. Our automated system monitors global news sources around the clock and publishes professionally written articles with market insights and predictions.</p>
               </div>
             </div>
 
