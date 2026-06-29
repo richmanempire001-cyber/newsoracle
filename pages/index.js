@@ -64,7 +64,8 @@ export default function Home({ initialArticles }) {
         <meta name="twitter:title" content="NewsOracle — Sports, Finance & Politics News" />
         <meta name="twitter:description" content="Latest sports, finance and politics news with AI-powered analysis." />
         <meta name="twitter:image" content="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=1200&q=80" />
-        <link rel="canonical" href="https://www.newsoracle.online" /><meta name="msvalidate.01" content="4FDF3AAFAD2785FF5FD15E9D2AF5EC67" />
+        <link rel="canonical" href="https://www.newsoracle.online" />
+        <meta name="msvalidate.01" content="4FDF3AAFAD2785FF5FD15E9D2AF5EC67" />
       </Head>
 
       <div style={{ fontFamily: "'Arial', sans-serif", background: "#f4f4f4", minHeight: "100vh" }}>
@@ -95,21 +96,30 @@ export default function Home({ initialArticles }) {
             0% { transform: translateX(100vw); }
             100% { transform: translateX(-100%); }
           }
+          @media (max-width: 600px) {
+            .desktop-nav { display: none !important; }
+            .header-inner { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; }
+            .logo h1 { font-size: 28px !important; }
+            .logo p { font-size: 9px !important; }
+            .mobile-filters { display: flex !important; }
+            .top-bar-right { display: none !important; }
+          }
+          .mobile-filters { display: none; gap: 6px; flex-wrap: wrap; }
         `}</style>
 
         {/* Top Bar */}
         <div style={{ background: "#cc0000", color: "#fff", padding: "6px 0", fontSize: "12px" }}>
           <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 20px", display: "flex", justifyContent: "space-between" }}>
             <span>{new Date().toLocaleDateString("en-GB", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</span>
-            <span>Sports · Finance · Markets · Politics · Analysis</span>
+            <span className="top-bar-right">Sports · Finance · Markets · Politics · Analysis</span>
           </div>
         </div>
 
         {/* Header */}
         <header style={{ background: "#fff", borderBottom: "3px solid #cc0000", padding: "16px 0" }}>
           <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 20px" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <div>
+            <div className="header-inner" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div className="logo">
                 <h1 style={{ fontSize: "42px", fontWeight: "900", margin: 0, color: "#111", letterSpacing: "-1px" }}>
                   NEWS<span style={{ color: "#cc0000" }}>ORACLE</span>
                 </h1>
@@ -117,7 +127,7 @@ export default function Home({ initialArticles }) {
                   Sports · Finance · Politics · Intelligence
                 </p>
               </div>
-              <nav style={{ display: "flex", gap: "4px" }}>
+              <nav className="desktop-nav" style={{ display: "flex", gap: "4px" }}>
                 <div style={{ display: "flex", gap: "20px", marginRight: "20px" }}>
                   <Link href="/about" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600" }}>About</Link>
                   <Link href="/contact" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600" }}>Contact</Link>
@@ -142,6 +152,13 @@ export default function Home({ initialArticles }) {
                   </button>
                 ))}
               </nav>
+              <div className="mobile-filters">
+                {["all", "sports", "finance", "politics"].map(cat => (
+                  <button key={cat} onClick={() => setFilter(cat)} style={{ padding: "6px 14px", background: filter === cat ? "#cc0000" : "transparent", color: filter === cat ? "#fff" : "#333", border: "1px solid #ddd", cursor: "pointer", fontSize: "12px", fontWeight: "600", textTransform: "uppercase" }}>
+                    {cat}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </header>
