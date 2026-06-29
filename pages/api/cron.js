@@ -254,7 +254,7 @@ export default async function handler(req, res) {
   return res.status(200).json({ message: 'No new articles to publish' });
 }
 
-const { error } = await supabase.from('articles').insert(results);
+const { data: insertedArticles, error } = await supabase.from('articles').insert(results).select();
 if (error) throw error;
 
 for (const article of results) {
@@ -267,7 +267,7 @@ for (const article of results) {
 
 // IndexNow ping — notify Bing and Google instantly
 try {
-  const urls = results.map(a => `https://www.newsoracle.online/article/${a.id}`);
+  const urls = (insertedArticles || []).map(a => `https://www.newsoracle.online/article/${a.id}`);
   await fetch('https://api.indexnow.org/indexnow', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
