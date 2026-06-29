@@ -159,6 +159,12 @@ export default function ArticlePage({ ogData }) {
             </nav>
           </div>
         </header>
+        <style>{`
+          @media (max-width: 600px) {
+            nav { display: none !important; }
+            header h1 { font-size: 28px !important; }
+          }
+        `}</style>
 
         {/* Article Content */}
         <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "32px 20px", display: "grid", gridTemplateColumns: "min(100%, 1fr)", gap: "32px" }}>
