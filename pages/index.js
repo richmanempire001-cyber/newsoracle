@@ -28,9 +28,10 @@ function timeAgo(date) {
   return `${Math.floor(seconds / 86400)}d ago`;
 }
 
-export default function Home({ initialArticles }) {
+export default function Home({ initialArticles, featuredSports, featuredFinance, featuredPolitics }) {
   const [articles, setArticles] = useState(initialArticles || []);
   const [filter, setFilter] = useState("all");
+  const [visible, setVisible] = useState(20);
   const [cookieAccepted, setCookieAccepted] = useState(false);
 
   useEffect(() => {
@@ -44,8 +45,8 @@ export default function Home({ initialArticles }) {
   }
 
   const filtered = filter === "all" ? articles : articles.filter(a => a.category === filter);
-  const featured = filtered[0];
-  const rest = filtered.slice(1);
+  const visibleArticles = filtered.slice(0, visible);
+  const hasMore = filtered.length > visible;
 
   return (
     <>
@@ -103,6 +104,7 @@ export default function Home({ initialArticles }) {
             .logo p { font-size: 9px !important; }
             .mobile-filters { display: flex !important; }
             .top-bar-right { display: none !important; }
+            .featured-grid { grid-template-columns: 1fr !important; }
           }
           .mobile-filters { display: none; gap: 6px; flex-wrap: wrap; }
         `}</style>
@@ -135,7 +137,7 @@ export default function Home({ initialArticles }) {
                 {["all", "sports", "finance", "politics"].map(cat => (
                   <button
                     key={cat}
-                    onClick={() => setFilter(cat)}
+                    onClick={() => { setFilter(cat); setVisible(20); }}
                     style={{
                       padding: "8px 18px",
                       background: filter === cat ? "#cc0000" : "transparent",
@@ -154,7 +156,7 @@ export default function Home({ initialArticles }) {
               </nav>
               <div className="mobile-filters">
                 {["all", "sports", "finance", "politics"].map(cat => (
-                  <button key={cat} onClick={() => setFilter(cat)} style={{ padding: "6px 14px", background: filter === cat ? "#cc0000" : "transparent", color: filter === cat ? "#fff" : "#333", border: "1px solid #ddd", cursor: "pointer", fontSize: "12px", fontWeight: "600", textTransform: "uppercase" }}>
+                  <button key={cat} onClick={() => { setFilter(cat); setVisible(20); }} style={{ padding: "6px 14px", background: filter === cat ? "#cc0000" : "transparent", color: filter === cat ? "#fff" : "#333", border: "1px solid #ddd", cursor: "pointer", fontSize: "12px", fontWeight: "600", textTransform: "uppercase" }}>
                     {cat}
                   </button>
                 ))}
@@ -171,44 +173,48 @@ export default function Home({ initialArticles }) {
             </div>
           ) : (
             <>
-              {/* Featured Article */}
-              {featured && (
-                <Link href={`/article/${featured.id}`} style={{ textDecoration: "none" }}>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "0", background: "#fff", marginBottom: "24px", cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
-                    <div style={{ position: "relative", overflow: "hidden" }}>
-                      <img
-                        src={getImage(featured)}
-                        alt={featured.title}
-                        style={{ width: "100%", height: "380px", objectFit: "cover", display: "block" }}
-                      />
-                      <span style={{ position: "absolute", top: "16px", left: "16px", background: "#cc0000", color: "#fff", padding: "4px 12px", fontSize: "11px", fontWeight: "700", letterSpacing: "1px", textTransform: "uppercase" }}>
-                        {featured.category}
-                      </span>
-                    </div>
-                    <div style={{ padding: "32px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
-                      <span style={{ fontSize: "11px", color: "#cc0000", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px" }}>
-                        Top Story
-                      </span>
-                      <h2 style={{ fontSize: "28px", fontWeight: "900", lineHeight: "1.2", margin: "12px 0 16px", color: "#111" }}>
-                        {featured.title}
-                      </h2>
-                      <p style={{ color: "#555", fontSize: "15px", lineHeight: "1.7", margin: "0 0 20px" }}>
-                        {featured.summary?.substring(0, 180)}...
-                      </p>
-                      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                        <span style={{ fontSize: "12px", color: "#999" }}>{timeAgo(featured.created_at)}</span>
-                        <span style={{ background: featured.sentiment === "positive" ? "#e8f5e9" : featured.sentiment === "negative" ? "#ffebee" : "#f5f5f5", color: featured.sentiment === "positive" ? "#2e7d32" : featured.sentiment === "negative" ? "#c62828" : "#666", padding: "3px 10px", fontSize: "11px", fontWeight: "600", borderRadius: "3px", textTransform: "uppercase" }}>
-                          {featured.sentiment}
-                        </span>
-                      </div>
-                    </div>
+              {/* Featured Stories — 3 cards, one per category */}
+              {filter === "all" && (
+                <>
+                  <div style={{ marginBottom: "12px" }}>
+                    <span style={{ fontSize: "11px", color: "#cc0000", fontWeight: "700", textTransform: "uppercase", letterSpacing: "2px" }}>Top Stories</span>
                   </div>
-                </Link>
+                  <div className="featured-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "20px", marginBottom: "40px" }}>
+                    {[featuredSports, featuredFinance, featuredPolitics].filter(Boolean).map(article => (
+                      <Link key={article.id} href={`/article/${article.id}`} style={{ textDecoration: "none" }}>
+                        <div style={{ background: "#fff", boxShadow: "0 2px 8px rgba(0,0,0,0.08)", cursor: "pointer", height: "100%" }}>
+                          <div style={{ position: "relative", overflow: "hidden" }}>
+                            <img
+                              src={getImage(article)}
+                              alt={article.title}
+                              style={{ width: "100%", height: "200px", objectFit: "cover", display: "block" }}
+                            />
+                            <span style={{ position: "absolute", top: "12px", left: "12px", background: "#cc0000", color: "#fff", padding: "3px 10px", fontSize: "10px", fontWeight: "700", letterSpacing: "1px", textTransform: "uppercase" }}>
+                              {article.category}
+                            </span>
+                          </div>
+                          <div style={{ padding: "16px" }}>
+                            <h2 style={{ fontSize: "16px", fontWeight: "800", lineHeight: "1.3", margin: "0 0 10px", color: "#111" }}>
+                              {article.title}
+                            </h2>
+                            <p style={{ color: "#666", fontSize: "13px", lineHeight: "1.5", margin: "0 0 12px" }}>
+                              {article.summary?.substring(0, 100)}...
+                            </p>
+                            <span style={{ fontSize: "11px", color: "#999" }}>{timeAgo(article.created_at)}</span>
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                  <div style={{ borderBottom: "2px solid #cc0000", marginBottom: "24px", paddingBottom: "8px" }}>
+                    <span style={{ fontSize: "11px", color: "#cc0000", fontWeight: "700", textTransform: "uppercase", letterSpacing: "2px" }}>Latest News</span>
+                  </div>
+                </>
               )}
 
               {/* Article Grid */}
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "20px" }}>
-                {rest.map(article => (
+                {visibleArticles.map(article => (
                   <Link key={article.id} href={`/article/${article.id}`} style={{ textDecoration: "none" }}>
                     <div style={{ background: "#fff", cursor: "pointer", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", transition: "transform 0.2s" }}
                       onMouseEnter={e => e.currentTarget.style.transform = "translateY(-2px)"}
@@ -240,6 +246,18 @@ export default function Home({ initialArticles }) {
                   </Link>
                 ))}
               </div>
+
+              {/* Load More Button */}
+              {hasMore && (
+                <div style={{ textAlign: "center", marginTop: "40px" }}>
+                  <button
+                    onClick={() => setVisible(v => v + 20)}
+                    style={{ background: "#cc0000", color: "#fff", border: "none", padding: "14px 40px", fontSize: "14px", fontWeight: "700", cursor: "pointer", letterSpacing: "1px", textTransform: "uppercase" }}
+                  >
+                    Load More
+                  </button>
+                </div>
+              )}
             </>
           )}
         </main>
@@ -309,9 +327,18 @@ export async function getServerSideProps() {
     .order("created_at", { ascending: false })
     .limit(100);
 
+  const articles = data || [];
+
+  const featuredSports = articles.find(a => a.category === "sports") || null;
+  const featuredFinance = articles.find(a => a.category === "finance") || null;
+  const featuredPolitics = articles.find(a => a.category === "politics") || null;
+
   return {
     props: {
-      initialArticles: data || [],
+      initialArticles: articles,
+      featuredSports,
+      featuredFinance,
+      featuredPolitics,
     },
   };
 }
