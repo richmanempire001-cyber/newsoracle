@@ -38,16 +38,33 @@ function getImage(article) {
   return `https://images.unsplash.com/photo-${key}?w=1200&q=80`;
 }
 
+function getReadTime(text) {
+  const words = text?.trim().split(/\s+/).length || 0;
+  return Math.ceil(words / 200);
+}
+
 export default function ArticlePage({ ogData }) {
   const router = useRouter();
   const { id } = router.query;
   const [article, setArticle] = useState(null);
   const [related, setRelated] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [scrollProgress, setScrollProgress] = useState(0);
 
   useEffect(() => {
     if (id) fetchArticle();
   }, [id]);
+
+  useEffect(() => {
+    function handleScroll() {
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+      setScrollProgress(progress);
+    }
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   async function fetchArticle() {
     const { data } = await supabase
@@ -108,6 +125,10 @@ export default function ArticlePage({ ogData }) {
     </div>
   );
 
+  const paragraphs = article.summary?.split('\n\n') || [];
+  const lastPara = paragraphs[paragraphs.length - 1] || '';
+  const isWhyItMatters = lastPara.toLowerCase().startsWith('why this matters') || lastPara.toLowerCase().startsWith('why it matters');
+
   return (
     <>
       <Head>
@@ -133,6 +154,9 @@ export default function ArticlePage({ ogData }) {
           "publisher": { "@type": "Organization", "name": "NewsOracle", "url": "https://newsoracle.online" }
         })}} />
       </Head>
+
+      {/* Reading Progress Bar */}
+      <div style={{ position: "fixed", top: 0, left: 0, width: `${scrollProgress}%`, height: "3px", background: "#cc0000", zIndex: 9999, transition: "width 0.1s" }} />
 
       <div style={{ fontFamily: "Arial, sans-serif", background: "#f4f4f4", minHeight: "100vh" }}>
 
@@ -163,6 +187,7 @@ export default function ArticlePage({ ogData }) {
           @media (max-width: 600px) {
             nav { display: none !important; }
             header h1 { font-size: 28px !important; }
+            .article-box { padding: 16px !important; }
           }
         `}</style>
 
@@ -170,7 +195,7 @@ export default function ArticlePage({ ogData }) {
         <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "32px 20px", display: "grid", gridTemplateColumns: "min(100%, 1fr)", gap: "32px" }}>
 
           {/* Main Article */}
-          <article style={{ background: "#fff", padding: "40px" }}>
+          <article className="article-box" style={{ background: "#fff", padding: "40px" }}>
 
             {/* Breadcrumb */}
             <div style={{ marginBottom: "20px" }}>
@@ -197,7 +222,7 @@ export default function ArticlePage({ ogData }) {
             </h1>
 
             {/* Meta */}
-            <div style={{ display: "flex", gap: "20px", padding: "14px 0", borderTop: "1px solid #eee", borderBottom: "1px solid #eee", marginBottom: "28px" }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "20px", padding: "14px 0", borderTop: "1px solid #eee", borderBottom: "1px solid #eee", marginBottom: "28px" }}>
               <span style={{ fontSize: "13px", color: "#666" }}>By <strong>NewsOracle Editorial</strong></span>
               <span style={{ fontSize: "13px", color: "#999" }}>
                 {new Date(article.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
@@ -206,7 +231,7 @@ export default function ArticlePage({ ogData }) {
                 {new Date(article.created_at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })} GMT
               </span>
               <span style={{ fontSize: "13px", color: "#999" }}>
-                📖 {Math.ceil((article.summary?.length || 500) / 200)} min read
+                📖 {getReadTime(article.summary)} min read
               </span>
             </div>
 
@@ -221,7 +246,7 @@ export default function ArticlePage({ ogData }) {
             <div style={{ background: "#fff8f8", border: "1px solid #ffcccc", borderLeft: "4px solid #cc0000", padding: "20px 24px", marginBottom: "28px" }}>
               <h3 style={{ color: "#cc0000", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 16px" }}>🔴 Key Points</h3>
               <ul style={{ margin: 0, padding: "0 0 0 18px" }}>
-                {article.summary?.split('\n\n').slice(0, 3).map((para, i) => (
+                {paragraphs.slice(0, 3).map((para, i) => (
                   <li key={i} style={{ fontSize: "14px", color: "#333", lineHeight: "1.7", marginBottom: "12px" }}>
                     {para}
                   </li>
@@ -231,9 +256,18 @@ export default function ArticlePage({ ogData }) {
 
             {/* Article Body */}
             <div style={{ fontSize: "17px", lineHeight: "1.85", color: "#333", fontFamily: "Georgia, serif" }}>
-              {article.summary?.split('\n\n').slice(3).map((para, i) => (
-                <p key={i} style={{ marginTop: 0, marginBottom: "20px" }}>{para}</p>
-              ))}
+              {paragraphs.slice(3).map((para, i) => {
+                const isLast = i === paragraphs.slice(3).length - 1;
+                const isWhy = para.toLowerCase().startsWith('why this matters') || para.toLowerCase().startsWith('why it matters');
+                if (isLast && isWhyItMatters || isWhy) {
+                  return (
+                    <div key={i} style={{ background: "#f0f7ff", borderLeft: "4px solid #1565c0", padding: "16px 20px", margin: "28px 0", borderRadius: "2px" }}>
+                      <p style={{ margin: 0, fontSize: "16px", lineHeight: "1.8", color: "#1a1a1a", fontStyle: "italic", fontFamily: "Georgia, serif" }}>{para}</p>
+                    </div>
+                  );
+                }
+                return <p key={i} style={{ marginTop: 0, marginBottom: "20px" }}>{para}</p>;
+              })}
             </div>
 
             {/* Market Outlook Box */}
@@ -244,7 +278,7 @@ export default function ArticlePage({ ogData }) {
               <p style={{ fontSize: "16px", lineHeight: "1.7", color: "#333", margin: "0 0 16px", fontFamily: "Georgia, serif" }}>
                 {article.prediction}
               </p>
-              <div style={{ display: "flex", gap: "10px" }}>
+              <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
                 <span style={{ background: article.sentiment === "positive" ? "#e8f5e9" : article.sentiment === "negative" ? "#ffebee" : "#f5f5f5", color: article.sentiment === "positive" ? "#2e7d32" : article.sentiment === "negative" ? "#c62828" : "#666", padding: "5px 14px", fontSize: "12px", fontWeight: "600", textTransform: "uppercase" }}>
                   {article.sentiment}
                 </span>
