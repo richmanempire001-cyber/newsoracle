@@ -217,9 +217,23 @@ export default function ArticlePage({ ogData }) {
               style={{ width: "100%", height: "420px", objectFit: "cover", marginBottom: "28px", display: "block" }}
             />
 
+            {/* Key Points Box */}
+            <div style={{ background: "#fff8f8", border: "1px solid #ffcccc", borderLeft: "4px solid #cc0000", padding: "20px 24px", marginBottom: "28px" }}>
+              <h3 style={{ color: "#cc0000", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 12px" }}>🔴 Key Points</h3>
+              <ul style={{ margin: 0, padding: "0 0 0 18px" }}>
+                {article.summary?.split('\n\n').slice(0, 3).map((para, i) => (
+                  <li key={i} style={{ fontSize: "14px", color: "#333", lineHeight: "1.6", marginBottom: "6px" }}>
+                    {para.substring(0, 120)}{para.length > 120 ? '...' : ''}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
             {/* Article Body */}
             <div style={{ fontSize: "17px", lineHeight: "1.85", color: "#333", fontFamily: "Georgia, serif" }}>
-              <p style={{ marginTop: 0 }}>{article.summary}</p>
+              {article.summary?.split('\n\n').map((para, i) => (
+                <p key={i} style={{ marginTop: 0, marginBottom: "20px" }}>{para}</p>
+              ))}
             </div>
 
             {/* Market Outlook Box */}
