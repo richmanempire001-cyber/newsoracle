@@ -91,15 +91,15 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY
 
 const RSS_SOURCES = {
   finance: [
-    'https://news.google.com/rss/search?q=bitcoin+OR+crypto+OR+stocks+OR+nasdaq&ceid=US:en&hl=en-US&gl=US',
+    'https://news.google.com/rss/search?q=bitcoin+OR+crypto+OR+stocks+OR+nasdaq+OR+S%26P500+OR+inflation+OR+Fed&ceid=US:en&hl=en-US&gl=US',
     'https://cointelegraph.com/rss',
   ],
   sports: [
-    'https://news.google.com/rss/search?q=NFL+OR+NBA+OR+soccer+OR+cricket+OR+tennis&ceid=US:en&hl=en-US&gl=US',
+    'https://news.google.com/rss/search?q=NFL+OR+NBA+OR+soccer+OR+cricket+OR+tennis+OR+Premier+League+OR+UFC&ceid=US:en&hl=en-US&gl=US',
     'https://www.espn.com/espn/rss/news',
   ],
   politics: [
-    'https://news.google.com/rss/search?q=Trump+OR+Congress+OR+White+House+OR+elections&ceid=US:en&hl=en-US&gl=US',
+    'https://news.google.com/rss/search?q=Trump+OR+Congress+OR+White+House+OR+elections+OR+Supreme+Court+OR+Senate&ceid=US:en&hl=en-US&gl=US',
     'https://www.aljazeera.com/xml/rss/all.xml',
   ]
 };
@@ -123,6 +123,26 @@ const FALLBACK_IMAGES = {
   }
 }
 
+async function fetchFullArticle(url) {
+  try {
+    const res = await fetch(url, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; NewsOracleBot/1.0)' },
+      redirect: 'follow'
+    });
+    if (!res.ok) return null;
+    const html = await res.text();
+
+    const paragraphs = [...html.matchAll(/<p[^>]*>(.*?)<\/p>/gis)]
+      .map(m => m[1].replace(/<[^>]*>/g, '').trim())
+      .filter(p => p.length > 40);
+
+    const text = paragraphs.slice(0, 12).join(' ').substring(0, 3000);
+    return text.length > 150 ? text : null;
+  } catch {
+    return null;
+  }
+}
+
 async function fetchRSS(url) {
   try {
     const res = await fetch(url);
@@ -130,30 +150,33 @@ async function fetchRSS(url) {
     const items = [...text.matchAll(/<item[\s\S]*?<\/item>/g)].slice(0, 10);
     if (items.length === 0) return null;
 
-    const randomItem = items[Math.floor(Math.random() * Math.min(5, items.length))];
-    const itemText = randomItem[0];
+    for (let i = 0; i < Math.min(3, items.length); i++) {
+      const itemText = items[i][0];
 
-    const linkMatch = itemText.match(/<link>(.*?)<\/link>|<link[^>]*href="([^"]+)"/);
-    const itemLink = linkMatch ? (linkMatch[1] || linkMatch[2] || '').trim() : '';
-    const titleMatch = itemText.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>|<title>(.*?)<\/title>/);
-    const descMatch = itemText.match(/<description><!\[CDATA\[(.*?)\]\]><\/description>|<description>(.*?)<\/description>/);
+      const linkMatch = itemText.match(/<link>(.*?)<\/link>|<link[^>]*href="([^"]+)"/);
+      const itemLink = linkMatch ? (linkMatch[1] || linkMatch[2] || '').trim() : '';
+      const titleMatch = itemText.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>|<title>(.*?)<\/title>/);
+      const descMatch = itemText.match(/<description><!\[CDATA\[(.*?)\]\]><\/description>|<description>(.*?)<\/description>/);
 
-    const imageMatch =
-      itemText.match(/url="([^"]+\.(jpg|jpeg|png|webp)[^"]*)"/) ||
-      itemText.match(/<media:content[^>]+url="([^"]+)"/) ||
-      itemText.match(/<media:thumbnail[^>]+url="([^"]+)"/) ||
-      itemText.match(/<enclosure[^>]+url="([^"]+\.(jpg|jpeg|png|webp)[^"]*)"/) ||
-      itemText.match(/https?:\/\/[^\s"'<>]+\.(jpg|jpeg|png|webp)/i);
+      const imageMatch =
+        itemText.match(/url="([^"]+\.(jpg|jpeg|png|webp)[^"]*)"/) ||
+        itemText.match(/<media:content[^>]+url="([^"]+)"/) ||
+        itemText.match(/<media:thumbnail[^>]+url="([^"]+)"/) ||
+        itemText.match(/<enclosure[^>]+url="([^"]+\.(jpg|jpeg|png|webp)[^"]*)"/) ||
+        itemText.match(/https?:\/\/[^\s"'<>]+\.(jpg|jpeg|png|webp)/i);
 
-    const title = titleMatch ? (titleMatch[1] || titleMatch[2]).trim() : '';
-    const description = descMatch ? (descMatch[1] || descMatch[2]).replace(/<[^>]*>/g, '').trim() : '';
-    const image = imageMatch ? (imageMatch[1] || imageMatch[0]) : null;
-    const sourceMatch = itemText.match(/<source[^>]*>(.*?)<\/source>/);
-    const sourceName = sourceMatch ? sourceMatch[1].trim() : '';
+      const title = titleMatch ? (titleMatch[1] || titleMatch[2]).trim() : '';
+      const description = descMatch ? (descMatch[1] || descMatch[2]).replace(/<[^>]*>/g, '').trim() : '';
+      const image = imageMatch ? (imageMatch[1] || imageMatch[0]) : null;
+      const sourceMatch = itemText.match(/<source[^>]*>(.*?)<\/source>/);
+      const sourceName = sourceMatch ? sourceMatch[1].trim() : '';
 
-    if (!title || title.length < 10) return null;
+      if (!title || title.length < 10) continue;
+      if (!description || description.length < 100) continue;
 
-    return { title, description, image, sourceUrl: url, originalTitle: title, itemLink: itemLink || title, sourceName };
+      return { title, description, image, sourceUrl: url, originalTitle: title, itemLink: itemLink || title, sourceName };
+    }
+    return null;
   } catch {
     return null;
   }
@@ -162,25 +185,29 @@ async function fetchRSS(url) {
 async function generateArticle(headline, description, category) {
   const message = await anthropic.messages.create({
     model: 'claude-haiku-4-5',
-    max_tokens: 2048 ,
+    max_tokens: 2048,
     messages: [{
       role: 'user',
-      content: `You are a professional news writer. Based on this real news headline and description, write an engaging news article that people want to read and share.
+      content: `You are a professional news writer. Based on this real news headline and source material, write an engaging news article that people want to read and share.
 Headline: "${headline}"
-Description: "${description}"
+Source material: "${description}"
 
 Rules:
-- Write ONLY based on the facts in the headline and description above
+- Write ONLY based on the facts in the headline and source material above
 - Do NOT invent quotes, statistics, or details not mentioned
 - Do NOT mention AI, Claude, or that this was rewritten
-- Write in an engaging, easy-to-read style that attracts readers
+- Do NOT write generic background filler about how things "typically" work in general (e.g. explaining what an executive order is, how markets usually move). Only write about THIS specific event.
+- The opening sentence must state the single most important concrete fact from the source material — not a generic introduction.
+- Write in an engaging, easy-to-read style that attracts readers, mixing short punchy sentences with longer explanatory ones
 - Use active voice and strong verbs
 - Make it feel urgent and relevant
+- End with a short "why this matters" paragraph giving the reader real context, not a vague summary
+- Match the article length to how much real detail the source material actually supports — do not pad with filler to hit a word count
 
 Return ONLY a JSON object with NO extra text or markdown.
 Fields:
 - title: (SEO-optimized headline, max 12 words, include the main keyword people would search for on Google, be specific with names, numbers, and locations)
-- summary: (a full news article, 4-6 paragraphs, 350-500 words total, written in engaging journalism style. Start with a strong opening sentence that hooks the reader. Cover the who, what, when, where, why. End with context or background. Use paragraph breaks between each paragraph using \\n\\n)
+- summary: (a full news article, written in engaging journalism style, length matched to available facts (roughly 250-500 words). Start with the strongest concrete fact. Cover the who, what, when, where, why. End with a brief "why this matters" close. Use paragraph breaks between each paragraph using \\n\\n)
 - prediction: (future outlook or analysis, written as expert view, 60-80 words)
 - category: ("${category}")
 - tag: (specific tag like "Trump", "Trade War", "NATO", "S&P 500", "Premier League", "NBA", "Crypto")
@@ -229,7 +256,10 @@ export default async function handler(req, res) {
         .limit(1);
       if (existing && existing.length > 0) continue;
 
-      const article = await generateArticle(rss.title, rss.description, category);
+      const fullText = await fetchFullArticle(rss.itemLink);
+      const sourceMaterial = fullText || rss.description;
+
+      const article = await generateArticle(rss.title, sourceMaterial, category);
       results.push({
         link: rss.itemLink,
         source: rss.sourceName || '',
