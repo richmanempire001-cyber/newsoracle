@@ -219,11 +219,11 @@ export default function ArticlePage({ ogData }) {
 
             {/* Key Points Box */}
             <div style={{ background: "#fff8f8", border: "1px solid #ffcccc", borderLeft: "4px solid #cc0000", padding: "20px 24px", marginBottom: "28px" }}>
-              <h3 style={{ color: "#cc0000", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 12px" }}>🔴 Key Points</h3>
+              <h3 style={{ color: "#cc0000", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 16px" }}>🔴 Key Points</h3>
               <ul style={{ margin: 0, padding: "0 0 0 18px" }}>
                 {article.summary?.split('\n\n').slice(0, 3).map((para, i) => (
-                  <li key={i} style={{ fontSize: "14px", color: "#333", lineHeight: "1.6", marginBottom: "6px" }}>
-                    {para.substring(0, 120)}{para.length > 120 ? '...' : ''}
+                  <li key={i} style={{ fontSize: "14px", color: "#333", lineHeight: "1.7", marginBottom: "12px" }}>
+                    {para}
                   </li>
                 ))}
               </ul>
