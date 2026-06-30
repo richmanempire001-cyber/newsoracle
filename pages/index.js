@@ -33,6 +33,7 @@ export default function Home({ initialArticles, featuredSports, featuredFinance,
   const [filter, setFilter] = useState("all");
   const [visible, setVisible] = useState(20);
   const [cookieAccepted, setCookieAccepted] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     const accepted = localStorage.getItem('cookieAccepted');
@@ -44,7 +45,14 @@ export default function Home({ initialArticles, featuredSports, featuredFinance,
     setCookieAccepted(true);
   }
 
-  const filtered = filter === "all" ? articles : articles.filter(a => a.category === filter);
+  const categoryFiltered = filter === "all" ? articles : articles.filter(a => a.category === filter);
+  const filtered = searchQuery.trim()
+    ? categoryFiltered.filter(a =>
+        a.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        a.summary?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        a.tag?.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : categoryFiltered;
   const visibleArticles = filtered.slice(0, visible);
   const hasMore = filtered.length > visible;
 
@@ -162,6 +170,24 @@ export default function Home({ initialArticles, featuredSports, featuredFinance,
                 ))}
               </div>
             </div>
+            {/* Search Bar */}
+            <div style={{ marginTop: "16px" }}>
+              <input
+                type="text"
+                placeholder="Search news..."
+                value={searchQuery}
+                onChange={e => { setSearchQuery(e.target.value); setVisible(20); }}
+                style={{
+                  width: "100%",
+                  maxWidth: "400px",
+                  padding: "10px 16px",
+                  fontSize: "14px",
+                  border: "1px solid #ddd",
+                  outline: "none",
+                  boxSizing: "border-box"
+                }}
+              />
+            </div>
           </div>
         </header>
 
@@ -171,10 +197,14 @@ export default function Home({ initialArticles, featuredSports, featuredFinance,
             <div style={{ textAlign: "center", padding: "80px", color: "#999" }}>
               <p style={{ fontSize: "18px" }}>No articles yet. Check back soon.</p>
             </div>
+          ) : filtered.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "80px", color: "#999" }}>
+              <p style={{ fontSize: "18px" }}>No articles found for "{searchQuery}".</p>
+            </div>
           ) : (
             <>
               {/* Featured Stories — 3 cards, one per category */}
-              {filter === "all" && (
+              {filter === "all" && !searchQuery.trim() && (
                 <>
                   <div style={{ marginBottom: "12px" }}>
                     <span style={{ fontSize: "11px", color: "#cc0000", fontWeight: "700", textTransform: "uppercase", letterSpacing: "2px" }}>Top Stories</span>
