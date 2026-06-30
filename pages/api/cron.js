@@ -123,16 +123,46 @@ const FALLBACK_IMAGES = {
   }
 }
 
+async function extractRealUrlFromGoogleWrapper(html) {
+  const metaRefresh = html.match(/<meta[^>]+http-equiv=["']refresh["'][^>]+content=["'][^"']*url=([^"'>]+)["']/i);
+  if (metaRefresh) return metaRefresh[1];
+
+  const canonical = html.match(/<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i);
+  if (canonical && !canonical[1].includes('news.google.com')) return canonical[1];
+
+  const jsRedirect = html.match(/(?:window\.location|location\.href)\s*=\s*["']([^"']+)["']/i);
+  if (jsRedirect) return jsRedirect[1];
+
+  const dataNUrl = html.match(/data-n-au="([^"]+)"/i);
+  if (dataNUrl) return dataNUrl[1];
+
+  return null;
+}
+
+async function fetchHtml(url) {
+  const res = await fetch(url, {
+    headers: { 'User-Agent': 'Mozilla/5.0 (compatible; NewsOracleBot/1.0)' },
+    redirect: 'follow'
+  });
+  if (!res.ok) return null;
+  const html = await res.text();
+  return { html, finalUrl: res.url };
+}
+
 async function fetchFullArticle(url) {
   try {
-    const res = await fetch(url, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; NewsOracleBot/1.0)' },
-      redirect: 'follow'
-    });
-    if (!res.ok) return null;
-    const html = await res.text();
+    let result = await fetchHtml(url);
+    if (!result) return null;
 
-    const paragraphs = [...html.matchAll(/<p[^>]*>(.*?)<\/p>/gis)]
+    if (result.finalUrl.includes('news.google.com')) {
+      const realUrl = await extractRealUrlFromGoogleWrapper(result.html);
+      if (realUrl) {
+        const secondResult = await fetchHtml(realUrl);
+        if (secondResult) result = secondResult;
+      }
+    }
+
+    const paragraphs = [...result.html.matchAll(/<p[^>]*>(.*?)<\/p>/gis)]
       .map(m => m[1].replace(/<[^>]*>/g, '').trim())
       .filter(p => p.length > 40);
 
