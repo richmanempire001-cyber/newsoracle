@@ -231,7 +231,7 @@ export default function ArticlePage({ ogData }) {
 
             {/* Article Body */}
             <div style={{ fontSize: "17px", lineHeight: "1.85", color: "#333", fontFamily: "Georgia, serif" }}>
-              {article.summary?.split('\n\n').map((para, i) => (
+              {article.summary?.split('\n\n').slice(3).map((para, i) => (
                 <p key={i} style={{ marginTop: 0, marginBottom: "20px" }}>{para}</p>
               ))}
             </div>
