@@ -88,7 +88,7 @@ export default function AboutPage() {
               The world's news. Delivered fast. Updated around the clock. Every single day.
             </p>
             <div style={{ display: "flex", justifyContent: "center", gap: "40px", flexWrap: "wrap" }}>
-              {[["6", "Articles/Day"], ["24/7", "Coverage"], ["3", "Categories"], ["Always", "Fresh"]].map(([num, label]) => (
+              {[["📡", "Live Updates"], ["🌎", "Worldwide Sources"], ["✅", "Verified Reporting"], ["🏆", "Top Stories"]].map(([num, label]) => (
                 <div key={label} style={{ textAlign: "center" }}>
                   <div style={{ fontSize: "32px", fontWeight: "900", color: "#cc0000" }}>{num}</div>
                   <div style={{ fontSize: "12px", color: "#999", textTransform: "uppercase", letterSpacing: "1px" }}>{label}</div>
