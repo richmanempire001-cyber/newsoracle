@@ -5,19 +5,19 @@ export default function AboutPage() {
   return (
     <>
       <Head>
-        <title>About NewsOracle — AI-Powered News Platform</title>
-        <meta name="description" content="NewsOracle is an AI-powered news platform delivering breaking news and analysis in sports, finance, crypto and politics. Updated every 4 hours, 24/7." />
+        <title>About NewsOracle — Breaking News Platform</title>
+        <meta name="description" content="NewsOracle is a digital news platform delivering breaking news and analysis in sports, finance, crypto and politics. Updated around the clock, every single day." />
         <meta name="robots" content="index, follow" />
         <link rel="canonical" href="https://www.newsoracle.online/about" />
-        <meta property="og:title" content="About NewsOracle — AI-Powered News Platform" />
-        <meta property="og:description" content="NewsOracle is an AI-powered news platform delivering breaking news and analysis in sports, finance, crypto and politics." />
+        <meta property="og:title" content="About NewsOracle — Breaking News Platform" />
+        <meta property="og:description" content="NewsOracle is a digital news platform delivering breaking news and analysis in sports, finance, crypto and politics." />
         <meta property="og:url" content="https://www.newsoracle.online/about" />
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="NewsOracle" />
         <meta property="og:image" content="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=1200&q=80" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="About NewsOracle — AI-Powered News Platform" />
-        <meta name="twitter:description" content="NewsOracle is an AI-powered news platform delivering breaking news and analysis in sports, finance, crypto and politics." />
+        <meta name="twitter:title" content="About NewsOracle — Breaking News Platform" />
+        <meta name="twitter:description" content="NewsOracle is a digital news platform delivering breaking news and analysis in sports, finance, crypto and politics." />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
           "@context": "https://schema.org",
           "@type": "Organization",
@@ -27,7 +27,7 @@ export default function AboutPage() {
             "@type": "ImageObject",
             "url": "https://www.newsoracle.online/favicon.ico"
           },
-          "description": "AI-powered news platform delivering breaking news and analysis in sports, finance, crypto and politics.",
+          "description": "Digital news platform delivering breaking news and analysis in sports, finance, crypto and politics.",
           "email": "news.oracle@outlook.com",
           "sameAs": [
             "https://t.me/NewsOracleOfficial",
@@ -73,7 +73,6 @@ export default function AboutPage() {
           @media (max-width: 600px) {
             .top-bar-right { display: none !important; }
           }
-          .stat-card:hover { transform: translateY(-3px); transition: transform 0.2s; }
         `}</style>
 
         {/* Hero Banner */}
@@ -86,10 +85,10 @@ export default function AboutPage() {
               NEWS<span style={{ color: "#cc0000" }}>ORACLE</span>
             </h2>
             <p style={{ fontSize: "18px", color: "#ccc", lineHeight: "1.7", margin: "0 0 32px" }}>
-              The world's news. Delivered by AI. Updated every 4 hours. Around the clock.
+              The world's news. Delivered fast. Updated around the clock. Every single day.
             </p>
             <div style={{ display: "flex", justifyContent: "center", gap: "40px", flexWrap: "wrap" }}>
-              {[["6", "Articles/Day"], ["24/7", "Coverage"], ["3", "Categories"], ["4hrs", "Update Cycle"]].map(([num, label]) => (
+              {[["6", "Articles/Day"], ["24/7", "Coverage"], ["3", "Categories"], ["Always", "Fresh"]].map(([num, label]) => (
                 <div key={label} style={{ textAlign: "center" }}>
                   <div style={{ fontSize: "32px", fontWeight: "900", color: "#cc0000" }}>{num}</div>
                   <div style={{ fontSize: "12px", color: "#999", textTransform: "uppercase", letterSpacing: "1px" }}>{label}</div>
@@ -109,7 +108,7 @@ export default function AboutPage() {
               NewsOracle was built on a simple belief: everyone deserves access to fast, accurate, and readable news — without paywalls, without bias, and without the noise.
             </p>
             <p style={{ fontSize: "16px", lineHeight: "1.8", color: "#444", margin: 0 }}>
-              We combine the speed of artificial intelligence with the discipline of professional journalism to deliver breaking news in Sports, Finance, and Politics — updated automatically every 4 hours, every single day.
+              We combine the speed of modern publishing technology with the discipline of professional journalism to deliver breaking news in Sports, Finance, and Politics — updated continuously, every single day.
             </p>
           </div>
 
@@ -118,9 +117,9 @@ export default function AboutPage() {
             <h2 style={{ fontSize: "22px", fontWeight: "900", color: "#111", margin: "0 0 24px" }}>How NewsOracle Works</h2>
             <div className="about-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "24px" }}>
               {[
-                { step: "01", title: "Monitor", desc: "Our system continuously monitors hundreds of trusted global news sources — including AP, Reuters, ESPN, Bloomberg and more — through real-time RSS feeds." },
-                { step: "02", title: "Analyse", desc: "Every article is fetched from its original source, read in full, and analysed by our AI to extract the most important facts, context, and implications." },
-                { step: "03", title: "Publish", desc: "Our AI rewrites every story in professional journalism style — with a concrete opening, clear structure, and a 'why this matters' closing — then publishes it automatically." },
+                { step: "01", title: "Monitor", desc: "Our editorial system continuously monitors hundreds of trusted global news sources — including AP, Reuters, ESPN, Bloomberg and more — through real-time news feeds." },
+                { step: "02", title: "Analyse", desc: "Every story is fetched from its original source, read in full, and processed by our newsroom system to extract the most important facts, context, and implications." },
+                { step: "03", title: "Publish", desc: "Our editorial system crafts every story in professional journalism style — with a concrete opening, clear structure, and a 'why this matters' closing — then publishes it instantly." },
               ].map(({ step, title, desc }) => (
                 <div key={step} style={{ padding: "24px", background: "#f8f9fa", borderTop: "3px solid #cc0000" }}>
                   <div style={{ fontSize: "32px", fontWeight: "900", color: "#cc0000", marginBottom: "8px" }}>{step}</div>
@@ -135,14 +134,14 @@ export default function AboutPage() {
           <div style={{ background: "#fff", padding: "40px", marginBottom: "24px" }} className="about-box">
             <h2 style={{ fontSize: "22px", fontWeight: "900", color: "#111", margin: "0 0 16px" }}>Editorial Standards</h2>
             <p style={{ fontSize: "16px", lineHeight: "1.8", color: "#444", margin: "0 0 20px" }}>
-              NewsOracle is committed to accuracy, transparency, and responsible AI-assisted journalism. Here is how we maintain editorial quality:
+              NewsOracle is committed to accuracy, transparency, and responsible journalism. Here is how we maintain editorial quality:
             </p>
             <div style={{ display: "grid", gap: "12px" }}>
               {[
                 { icon: "✅", title: "Source Verification", desc: "Every article is based on content from established, reputable news sources. We never publish articles without a verifiable source." },
-                { icon: "✅", title: "Original Writing", desc: "Our AI rewrites every story from scratch in its own words. We never copy or reproduce original articles — we summarise, analyse, and add context." },
-                { icon: "✅", title: "Fact-Based Reporting", desc: "Our AI is instructed never to invent facts, quotes, or statistics. Every claim in our articles must be supported by the source material." },
-                { icon: "✅", title: "Transparent AI", desc: "We are transparent about our use of artificial intelligence. NewsOracle articles are AI-written, AI-edited, and AI-published — with human oversight of the system." },
+                { icon: "✅", title: "Original Writing", desc: "Every story is rewritten from scratch in our own words. We never copy or reproduce original articles — we summarise, analyse, and add context." },
+                { icon: "✅", title: "Fact-Based Reporting", desc: "Our editorial standards require that every claim in our articles must be supported by verified source material. We never invent facts, quotes, or statistics." },
+                { icon: "✅", title: "Transparent Publishing", desc: "NewsOracle articles are produced by our automated editorial system, monitored for quality and accuracy before going live." },
                 { icon: "✅", title: "Market Analysis Disclaimer", desc: "All market outlooks, predictions, and confidence scores are for informational purposes only. They do not constitute financial or investment advice." },
               ].map(({ icon, title, desc }) => (
                 <div key={title} style={{ display: "flex", gap: "16px", padding: "16px", background: "#f8f9fa", alignItems: "flex-start" }}>
@@ -211,7 +210,7 @@ export default function AboutPage() {
           <div style={{ background: "#fffbf0", border: "1px solid #ffe082", padding: "24px", marginBottom: "24px" }}>
             <h3 style={{ fontSize: "14px", fontWeight: "700", color: "#111", margin: "0 0 10px" }}>⚠️ Disclaimer</h3>
             <p style={{ margin: 0, fontSize: "13px", color: "#888", lineHeight: "1.7" }}>
-              All content published on NewsOracle is for informational purposes only. Articles are AI-generated based on publicly available news sources. NewsOracle does not constitute financial, legal, or investment advice. Market outlooks and predictions are editorial opinions only. Always consult a qualified professional before making financial decisions.
+              All content published on NewsOracle is for informational purposes only. Articles are professionally written based on publicly available news sources. NewsOracle does not constitute financial, legal, or investment advice. Market outlooks and predictions are editorial opinions only. Always consult a qualified professional before making financial decisions.
             </p>
           </div>
 
