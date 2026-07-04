@@ -66,7 +66,7 @@ export default function Home({ initialArticles, featuredSports, featuredFinance,
         <meta property="og:title" content="NewsOracle — Sports, Finance & Politics News" />
         <meta property="og:description" content="Latest sports, finance, crypto and politics news with AI-powered analysis. Updated every 4 hours." />
         <meta property="og:image" content="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=1200&q=80" />
-        <meta property="og:url" content="https://newsoracle.online" />
+        <meta property="og:url" content="https://www.newsoracle.online" />
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="NewsOracle" />
         <meta name="twitter:card" content="summary_large_image" />
