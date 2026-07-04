@@ -108,8 +108,27 @@ export default function ArticlePage({ ogData }) {
           "headline": ogData?.title || "",
           "description": ogData?.summary || "",
           "image": ogData?.image || "",
-          "url": ogData?.url || "",
-          "publisher": { "@type": "Organization", "name": "NewsOracle", "url": "https://newsoracle.online" }
+          "url": `https://www.newsoracle.online/article/${ogData?.id || ""}`,
+          "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": `https://www.newsoracle.online/article/${ogData?.id || ""}`
+          },
+          "datePublished": ogData?.datePublished || "",
+          "dateModified": ogData?.datePublished || "",
+          "author": {
+            "@type": "Organization",
+            "name": "NewsOracle Editorial",
+            "url": "https://www.newsoracle.online/about"
+          },
+          "publisher": {
+            "@type": "Organization",
+            "name": "NewsOracle",
+            "url": "https://www.newsoracle.online",
+            "logo": {
+              "@type": "ImageObject",
+              "url": "https://www.newsoracle.online/favicon.ico"
+            }
+          }
         })}} />
       </Head>
       <div style={{ fontFamily: "Arial, sans-serif", textAlign: "center", padding: "100px", background: "#f4f4f4", minHeight: "100vh" }}>
@@ -150,8 +169,27 @@ export default function ArticlePage({ ogData }) {
           "headline": ogData?.title || "",
           "description": ogData?.summary || "",
           "image": ogData?.image || "",
-          "url": ogData?.url || "",
-          "publisher": { "@type": "Organization", "name": "NewsOracle", "url": "https://newsoracle.online" }
+          "url": `https://www.newsoracle.online/article/${ogData?.id || ""}`,
+          "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": `https://www.newsoracle.online/article/${ogData?.id || ""}`
+          },
+          "datePublished": ogData?.datePublished || "",
+          "dateModified": ogData?.datePublished || "",
+          "author": {
+            "@type": "Organization",
+            "name": "NewsOracle Editorial",
+            "url": "https://www.newsoracle.online/about"
+          },
+          "publisher": {
+            "@type": "Organization",
+            "name": "NewsOracle",
+            "url": "https://www.newsoracle.online",
+            "logo": {
+              "@type": "ImageObject",
+              "url": "https://www.newsoracle.online/favicon.ico"
+            }
+          }
         })}} />
       </Head>
 
@@ -387,7 +425,9 @@ export async function getServerSideProps({ params }) {
         title: article.title || "",
         summary: article.summary?.substring(0, 200) || "",
         image: article.image || "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=1200&q=80",
-        url: `https://newsoracle.online/article/${article.id}`,
+        url: `https://www.newsoracle.online/article/${article.id}`,
+        id: article.id,
+        datePublished: article.created_at || "",
       } : null,
     },
   };
