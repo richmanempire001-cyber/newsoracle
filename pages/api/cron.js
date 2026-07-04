@@ -233,6 +233,9 @@ Rules:
 - Make it feel urgent and relevant
 - End with a short "why this matters" paragraph giving the reader real context, not a vague summary
 - Match the article length to how much real detail the source material actually supports — do not pad with filler to hit a word count
+- If the source material contains a specific score, percentage, number, or direct quote — that fact MUST appear in the first paragraph. Never bury a concrete fact.
+- Never explain what something generally is (e.g. what small-cap stocks are, how the Supreme Court works, what executive orders do). Only write about THIS specific event and its specific outcome.
+- If the source material contains no specific numbers, scores, quotes or named outcomes, write a focused 200-word article about the single most concrete fact available. Do NOT pad with general context to reach a word count.
 
 Return ONLY a JSON object with NO extra text or markdown.
 Fields:
