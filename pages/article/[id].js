@@ -404,23 +404,7 @@ export default function ArticlePage({ article, related }) {
               </div>
             </div>
 
-            {/* Newsletter Signup */}
-            <div style={{ background: "#111", padding: "32px", marginTop: "32px", textAlign: "center" }}>
-              <h3 style={{ color: "#fff", fontSize: "18px", fontWeight: "800", margin: "0 0 8px" }}>Get Breaking News in Your Inbox</h3>
-              <p style={{ color: "#999", fontSize: "13px", margin: "0 0 20px" }}>Stay informed with the stories that matter. No spam, unsubscribe anytime.</p>
-              <div style={{ display: "flex", gap: "8px", maxWidth: "400px", margin: "0 auto" }}>
-                <input
-                  type="email"
-                  placeholder="Enter your email"
-                  style={{ flex: 1, padding: "12px 16px", fontSize: "14px", border: "none", outline: "none", boxSizing: "border-box" }}
-                  readOnly
-                />
-                <button style={{ background: "#cc0000", color: "#fff", border: "none", padding: "12px 24px", fontSize: "13px", fontWeight: "700", cursor: "pointer", textTransform: "uppercase", letterSpacing: "1px", whiteSpace: "nowrap" }}>
-                  Subscribe
-                </button>
-              </div>
-              <p style={{ color: "#666", fontSize: "11px", margin: "12px 0 0" }}>Coming soon</p>
-            </div>
+            
 
           </article>
 
