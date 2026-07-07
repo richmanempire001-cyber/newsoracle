@@ -213,40 +213,75 @@ async function fetchRSS(url) {
 }
 
 async function generateArticle(headline, description, category) {
+  const categoryInstructions = {
+    sports: `
+- Start with a dateline in caps (e.g. "LONDON —", "NEW YORK —", "MIAMI —") based on where the event took place.
+- Focus on: final score, key player performances, decisive moments, what this means for standings/tournament.
+- Write like a CNN Sports or ESPN reporter — vivid, immediate, factual.
+- Do NOT generate prediction, sentiment, or confidence fields. Only return: title, summary, category, tag, disclaimer.`,
+    finance: `
+- Start with a dateline in caps (e.g. "NEW YORK —", "WASHINGTON —", "LONDON —") based on the market or institution involved.
+- Focus on: exact numbers (price, percentage move, market cap), who said what, what triggered the move, immediate market reaction.
+- Write like a Bloomberg or CNBC reporter — precise, data-driven, authoritative.
+- Include prediction, sentiment, and confidence fields.`,
+    politics: `
+- Start with a dateline in caps (e.g. "WASHINGTON —", "BRUSSELS —", "LONDON —") based on where the political event occurred.
+- Focus on: who did what, the specific policy or decision, direct consequences, who opposes it, what happens next.
+- Write like a CNN Politics or AP reporter — neutral, factual, no editorializing.
+- Include a prediction field. Do NOT generate sentiment or confidence fields.`
+  };
+
+  const fieldsInstruction = {
+    sports: `Return ONLY a JSON object with these fields:
+- title: (SEO headline, max 12 words, must include specific names/scores/teams people would search for)
+- summary: (full news article, 350-600 words, must contain at least 3 specific named facts from source — names, scores, stats, quotes. Start with dateline. Use \\n\\n between paragraphs. End with a "why this matters" paragraph.)
+- category: ("${category}")
+- tag: (specific tag like "Premier League", "NBA", "UFC", "Tennis", "Cricket")
+- disclaimer: ("This article is for informational purposes only. Content is based on publicly available news sources.")`,
+    finance: `Return ONLY a JSON object with these fields:
+- title: (SEO headline, max 12 words, must include specific names/numbers people would search for)
+- summary: (full news article, 350-600 words, must contain at least 3 specific named facts from source — prices, percentages, names, quotes. Start with dateline. Use \\n\\n between paragraphs. End with a "why this matters" paragraph.)
+- prediction: (future outlook or analysis, written as expert market view, 60-80 words)
+- category: ("${category}")
+- tag: (specific tag like "Bitcoin", "S&P 500", "Fed", "Inflation", "Crypto")
+- sentiment: (either "positive", "negative", or "neutral")
+- confidence: (number between 60-95)
+- disclaimer: ("This article is for informational purposes only. Content is based on publicly available news sources.")`,
+    politics: `Return ONLY a JSON object with these fields:
+- title: (SEO headline, max 12 words, must include specific names/policies people would search for)
+- summary: (full news article, 350-600 words, must contain at least 3 specific named facts from source — names, decisions, votes, quotes. Start with dateline. Use \\n\\n between paragraphs. End with a "why this matters" paragraph.)
+- prediction: (what happens next politically, written as neutral analysis, 60-80 words)
+- category: ("${category}")
+- tag: (specific tag like "Trump", "Congress", "Supreme Court", "NATO", "Senate")
+- disclaimer: ("This article is for informational purposes only. Content is based on publicly available news sources.")`
+  };
+
   const message = await anthropic.messages.create({
     model: 'claude-haiku-4-5',
     max_tokens: 2048,
     messages: [{
       role: 'user',
-      content: `You are a professional news writer. Based on this real news headline and source material, write an engaging news article that people want to read and share.
+      content: `You are a senior journalist at a major international newsroom like CNN, BBC, or Reuters. Based on this real news headline and source material, write a professional news article.
+
 Headline: "${headline}"
 Source material: "${description}"
 
-Rules:
-- Write ONLY based on the facts in the headline and source material above
-- Do NOT invent quotes, statistics, or details not mentioned
+ABSOLUTE RULES — violating any of these makes the article unpublishable:
+- Write ONLY based on facts in the headline and source material. Do NOT invent quotes, statistics, names, or details.
+- The first sentence MUST be a dateline followed by the single most important concrete fact. Example: "WASHINGTON — The Senate voted 52-48 on Thursday to confirm..."
+- The article MUST contain at least 3 specific named facts from the source material (names, numbers, scores, quotes, dates, locations). If the source doesn't have 3 facts, use every fact it does have and keep the article short.
+- NEVER write generic background explaining what something generally is (e.g. "Executive orders are a tool presidents use...", "Small-cap stocks are companies with...", "The Supreme Court is the highest court..."). Only explain THIS specific event.
+- NEVER start any sentence with these banned phrases: "In a move that", "This comes as", "It remains to be seen", "Only time will tell", "In today's", "In the world of", "The landscape of", "It's worth noting"
+- NEVER use the phrase "the question remains" or "all eyes are on" or "sent shockwaves"
+- Every paragraph must contain at least one specific fact — no paragraph should be pure commentary or filler
+- Match article length to available facts. If the source material is thin, write 250 words. Do NOT pad with filler to reach a word count.
+- End with a brief "why this matters" paragraph — one specific consequence, not a vague summary
 - Do NOT mention AI, Claude, or that this was rewritten
-- Do NOT write generic background filler about how things "typically" work in general (e.g. explaining what an executive order is, how markets usually move). Only write about THIS specific event.
-- The opening sentence must state the single most important concrete fact from the source material — not a generic introduction.
-- Write in an engaging, easy-to-read style that attracts readers, mixing short punchy sentences with longer explanatory ones
-- Use active voice and strong verbs
-- Make it feel urgent and relevant
-- End with a short "why this matters" paragraph giving the reader real context, not a vague summary
-- Match the article length to how much real detail the source material actually supports — do not pad with filler to hit a word count
-- If the source material contains a specific score, percentage, number, or direct quote — that fact MUST appear in the first paragraph. Never bury a concrete fact.
-- Never explain what something generally is (e.g. what small-cap stocks are, how the Supreme Court works, what executive orders do). Only write about THIS specific event and its specific outcome.
-- If the source material contains no specific numbers, scores, quotes or named outcomes, write a focused 200-word article about the single most concrete fact available. Do NOT pad with general context to reach a word count.
+${categoryInstructions[category]}
 
-Return ONLY a JSON object with NO extra text or markdown.
-Fields:
-- title: (SEO-optimized headline, max 12 words, include the main keyword people would search for on Google, be specific with names, numbers, and locations)
-- summary: (a full news article, written in engaging journalism style, length matched to available facts (roughly 250-500 words). Start with the strongest concrete fact. Cover the who, what, when, where, why. End with a brief "why this matters" close. Use paragraph breaks between each paragraph using \\n\\n)
-- prediction: (future outlook or analysis, written as expert view, 60-80 words)
-- category: ("${category}")
-- tag: (specific tag like "Trump", "Trade War", "NATO", "S&P 500", "Premier League", "NBA", "Crypto")
-- sentiment: (either "positive", "negative", or "neutral")
-- confidence: (number between 60-95)
-- disclaimer: ("This article is for informational purposes only. Content is based on publicly available news sources.")`
+${fieldsInstruction[category]}
+
+Return ONLY the JSON object. No markdown, no backticks, no extra text.`
     }]
   });
 
@@ -292,18 +327,32 @@ export default async function handler(req, res) {
       const fullText = await fetchFullArticle(rss.itemLink);
       const sourceMaterial = fullText || rss.description;
 
+      // QUALITY GATE 1: Skip if no full article AND RSS description is too thin
+      if (!fullText && rss.description.length < 300) {
+        console.log(`Skipped ${category}: thin source (${rss.description.length} chars, no full article)`);
+        continue;
+      }
+
       const article = await generateArticle(rss.title, sourceMaterial, category);
+
+      // QUALITY GATE 2: Skip if generated article is under 250 words
+      const wordCount = article.summary?.trim().split(/\s+/).length || 0;
+      if (wordCount < 250) {
+        console.log(`Skipped ${category}: article too short (${wordCount} words)`);
+        continue;
+      }
+
       results.push({
         link: rss.itemLink,
         source: rss.sourceName || '',
         title: article.title,
         summary: article.summary,
-        prediction: article.prediction,
+        prediction: article.prediction || null,
         category: article.category,
         tag: article.tag,
         image: await getPexelsImage(article.tag || article.category) || rss.image || FALLBACK_IMAGES[category],
-        sentiment: article.sentiment,
-        confidence: article.confidence,
+        sentiment: article.sentiment || null,
+        confidence: article.confidence || null,
         disclaimer: article.disclaimer,
         pub_date: now,
         posted_at: now
