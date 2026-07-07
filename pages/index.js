@@ -60,18 +60,18 @@ export default function Home({ initialArticles, featuredSports, featuredFinance,
     <>
       <Head>
         <title>NewsOracle — Sports, Finance & Politics News</title>
-        <meta name="description" content="NewsOracle delivers the latest sports, finance, crypto and politics news with AI-powered analysis and market predictions. Updated every 4 hours." />
+        <meta name="description" content="NewsOracle delivers the latest sports, finance, crypto and politics news with in-depth analysis and market predictions. Updated around the clock." />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="robots" content="index, follow" />
         <meta property="og:title" content="NewsOracle — Sports, Finance & Politics News" />
-        <meta property="og:description" content="Latest sports, finance, crypto and politics news with AI-powered analysis. Updated every 4 hours." />
+        <meta property="og:description" content="Latest sports, finance, crypto and politics news with expert analysis and market predictions. Updated around the clock." />
         <meta property="og:image" content="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=1200&q=80" />
         <meta property="og:url" content="https://www.newsoracle.online" />
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="NewsOracle" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="NewsOracle — Sports, Finance & Politics News" />
-        <meta name="twitter:description" content="Latest sports, finance and politics news with AI-powered analysis." />
+        <meta name="twitter:description" content="Latest sports, finance and politics news with expert analysis and market predictions." />
         <meta name="twitter:image" content="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=1200&q=80" />
         <link rel="canonical" href="https://www.newsoracle.online" />
         <meta name="msvalidate.01" content="4FDF3AAFAD2785FF5FD15E9D2AF5EC67" />
