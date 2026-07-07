@@ -1,30 +1,8 @@
-import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
 import Head from "next/head";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_KEY
-);
-
-const IMAGES = {
-  finance: [
-    "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=1200&q=80",
-    "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=1200&q=80",
-    "https://images.unsplash.com/photo-1526304640581-d334cdbbf43e?w=1200&q=80",
-    "https://images.unsplash.com/photo-1535320903710-d993d3d77d29?w=1200&q=80",
-    "https://images.unsplash.com/photo-1553729459-efe14ef6055d?w=1200&q=80",
-  ],
-  sports: [
-    "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=1200&q=80",
-    "https://images.unsplash.com/photo-1560272564-c83b66b1ad12?w=1200&q=80",
-    "https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=1200&q=80",
-    "https://images.unsplash.com/photo-1517649763962-0c623066013b?w=1200&q=80",
-    "https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=1200&q=80",
-  ],
-};
+import { slugify, articlePath, articleUrl } from "../../lib/slugify";
 
 function getImage(article) {
   if (article.image && !article.image.includes('source.unsplash')) return article.image;
@@ -43,17 +21,26 @@ function getReadTime(text) {
   return Math.ceil(words / 200);
 }
 
-export default function ArticlePage({ ogData }) {
-  const router = useRouter();
-  const { id } = router.query;
-  const [article, setArticle] = useState(null);
-  const [related, setRelated] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [scrollProgress, setScrollProgress] = useState(0);
+function timeAgo(date) {
+  const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+  if (seconds < 60) return "Just now";
+  if (seconds < 3600) return `${Math.floor(seconds / 60)} minutes ago`;
+  if (seconds < 86400) return `${Math.floor(seconds / 3600)} hours ago`;
+  return `${Math.floor(seconds / 86400)} days ago`;
+}
 
-  useEffect(() => {
-    if (id) fetchArticle();
-  }, [id]);
+function cleanMetaDescription(summary) {
+  if (!summary) return "";
+  const firstPara = summary.split('\n\n')[0] || summary;
+  const clean = firstPara.replace(/^[A-Z\s]+ — /, '');
+  if (clean.length <= 160) return clean;
+  const truncated = clean.substring(0, 157);
+  const lastSpace = truncated.lastIndexOf(' ');
+  return truncated.substring(0, lastSpace) + '...';
+}
+
+export default function ArticlePage({ article, related }) {
+  const [scrollProgress, setScrollProgress] = useState(0);
 
   useEffect(() => {
     function handleScroll() {
@@ -66,55 +53,57 @@ export default function ArticlePage({ ogData }) {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  async function fetchArticle() {
-    const { data } = await supabase
-      .from("articles")
-      .select("*")
-      .eq("id", id)
-      .single();
-    setArticle(data);
+  if (!article) return (
+    <div style={{ fontFamily: "Arial, sans-serif", textAlign: "center", padding: "100px" }}>
+      <p>Article not found.</p>
+      <Link href="/" style={{ color: "#cc0000" }}>← Back to Home</Link>
+    </div>
+  );
 
-    if (data) {
-      const { data: rel } = await supabase
-        .from("articles")
-        .select("*")
-        .eq("category", data.category)
-        .neq("id", id)
-        .order("created_at", { ascending: false })
-        .limit(3);
-      setRelated(rel || []);
-    }
-    setLoading(false);
-  }
+  const paragraphs = article.summary?.split('\n\n') || [];
+  const metaDesc = cleanMetaDescription(article.summary);
+  const canonicalUrl = articleUrl(article);
+  const imageUrl = getImage(article);
+  const wordCount = article.summary?.trim().split(/\s+/).length || 0;
 
-  if (loading) return (
+  const readNextArticles = related.slice(0, 2);
+  const sidebarArticles = related.slice(0, 3);
+
+  return (
     <>
       <Head>
-        <title>{ogData?.title || "NewsOracle"} — NewsOracle</title>
-        <meta name="description" content={ogData?.summary || ""} />
-        <meta property="og:title" content={ogData?.title || "NewsOracle"} />
-        <meta property="og:description" content={ogData?.summary || ""} />
-        <meta property="og:image" content={ogData?.image || ""} />
-        <meta property="og:url" content={ogData?.url || ""} />
+        <title>{article.title} — NewsOracle</title>
+        <meta name="description" content={metaDesc} />
+        <link rel="canonical" href={canonicalUrl} />
+        <meta property="og:title" content={article.title} />
+        <meta property="og:description" content={metaDesc} />
+        <meta property="og:image" content={imageUrl} />
+        <meta property="og:url" content={canonicalUrl} />
         <meta property="og:type" content="article" />
         <meta property="og:site_name" content="NewsOracle" />
+        <meta property="article:published_time" content={article.created_at} />
+        <meta property="article:section" content={article.category} />
+        {article.tag && <meta property="article:tag" content={article.tag} />}
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={ogData?.title || "NewsOracle"} />
-        <meta name="twitter:description" content={ogData?.summary || ""} />
-        <meta name="twitter:image" content={ogData?.image || ""} />
+        <meta name="twitter:title" content={article.title} />
+        <meta name="twitter:description" content={metaDesc} />
+        <meta name="twitter:image" content={imageUrl} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
           "@context": "https://schema.org",
           "@type": "NewsArticle",
-          "headline": ogData?.title || "",
-          "description": ogData?.summary || "",
-          "image": ogData?.image || "",
-          "url": `https://www.newsoracle.online/article/${ogData?.id || ""}`,
+          "headline": article.title,
+          "description": metaDesc,
+          "image": imageUrl,
+          "url": canonicalUrl,
+          "wordCount": wordCount,
+          "articleSection": article.category,
+          "keywords": article.tag || article.category,
           "mainEntityOfPage": {
             "@type": "WebPage",
-            "@id": `https://www.newsoracle.online/article/${ogData?.id || ""}`
+            "@id": canonicalUrl
           },
-          "datePublished": ogData?.datePublished || "",
-          "dateModified": ogData?.datePublished || "",
+          "datePublished": article.created_at,
+          "dateModified": article.created_at,
           "author": {
             "@type": "Organization",
             "name": "NewsOracle Editorial",
@@ -130,66 +119,14 @@ export default function ArticlePage({ ogData }) {
             }
           }
         })}} />
-      </Head>
-      <div style={{ fontFamily: "Arial, sans-serif", textAlign: "center", padding: "100px", background: "#f4f4f4", minHeight: "100vh" }}>
-        <p style={{ color: "#666", fontSize: "18px" }}>Loading...</p>
-      </div>
-    </>
-  );
-
-  if (!article) return (
-    <div style={{ fontFamily: "Arial, sans-serif", textAlign: "center", padding: "100px" }}>
-      <p>Article not found.</p>
-      <Link href="/" style={{ color: "#cc0000" }}>← Back to Home</Link>
-    </div>
-  );
-
-  const paragraphs = article.summary?.split('\n\n') || [];
-  const lastPara = paragraphs[paragraphs.length - 1] || '';
-  const isWhyItMatters = lastPara.toLowerCase().startsWith('why this matters') || lastPara.toLowerCase().startsWith('why it matters');
-
-  return (
-    <>
-      <Head>
-        <title>{ogData?.title || "NewsOracle"} — NewsOracle</title>
-        <meta name="description" content={ogData?.summary || ""} />
-        <meta property="og:title" content={ogData?.title || "NewsOracle"} />
-        <meta property="og:description" content={ogData?.summary || ""} />
-        <meta property="og:image" content={ogData?.image || ""} />
-        <meta property="og:url" content={ogData?.url || ""} />
-        <meta property="og:type" content="article" />
-        <meta property="og:site_name" content="NewsOracle" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={ogData?.title || "NewsOracle"} />
-        <meta name="twitter:description" content={ogData?.summary || ""} />
-        <meta name="twitter:image" content={ogData?.image || ""} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
           "@context": "https://schema.org",
-          "@type": "NewsArticle",
-          "headline": ogData?.title || "",
-          "description": ogData?.summary || "",
-          "image": ogData?.image || "",
-          "url": `https://www.newsoracle.online/article/${ogData?.id || ""}`,
-          "mainEntityOfPage": {
-            "@type": "WebPage",
-            "@id": `https://www.newsoracle.online/article/${ogData?.id || ""}`
-          },
-          "datePublished": ogData?.datePublished || "",
-          "dateModified": ogData?.datePublished || "",
-          "author": {
-            "@type": "Organization",
-            "name": "NewsOracle Editorial",
-            "url": "https://www.newsoracle.online/about"
-          },
-          "publisher": {
-            "@type": "Organization",
-            "name": "NewsOracle",
-            "url": "https://www.newsoracle.online",
-            "logo": {
-              "@type": "ImageObject",
-              "url": "https://www.newsoracle.online/favicon.ico"
-            }
-          }
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.newsoracle.online" },
+            { "@type": "ListItem", "position": 2, "name": article.category?.charAt(0).toUpperCase() + article.category?.slice(1), "item": `https://www.newsoracle.online/?cat=${article.category}` },
+            { "@type": "ListItem", "position": 3, "name": article.title }
+          ]
         })}} />
       </Head>
 
@@ -202,7 +139,7 @@ export default function ArticlePage({ ogData }) {
         <div style={{ background: "#cc0000", color: "#fff", padding: "6px 0", fontSize: "12px" }}>
           <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 20px", display: "flex", justifyContent: "space-between" }}>
             <span>{new Date().toLocaleDateString("en-GB", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</span>
-            <span>Sports · Finance · Markets · Analysis</span>
+            <span className="top-bar-right">Sports · Finance · Markets · Analysis</span>
           </div>
         </div>
 
@@ -226,11 +163,13 @@ export default function ArticlePage({ ogData }) {
             nav { display: none !important; }
             header h1 { font-size: 28px !important; }
             .article-box { padding: 16px !important; }
+            .article-layout { grid-template-columns: 1fr !important; }
+            .top-bar-right { display: none !important; }
           }
         `}</style>
 
         {/* Article Content */}
-        <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "32px 20px", display: "grid", gridTemplateColumns: "min(100%, 1fr)", gap: "32px" }}>
+        <div className="article-layout" style={{ maxWidth: "1200px", margin: "0 auto", padding: "32px 20px", display: "grid", gridTemplateColumns: "1fr 320px", gap: "32px" }}>
 
           {/* Main Article */}
           <article className="article-box" style={{ background: "#fff", padding: "40px" }}>
@@ -271,11 +210,23 @@ export default function ArticlePage({ ogData }) {
               <span style={{ fontSize: "13px", color: "#999" }}>
                 📖 {getReadTime(article.summary)} min read
               </span>
+              <span style={{ fontSize: "13px", color: "#cc0000", fontWeight: "600" }}>
+                Updated {timeAgo(article.created_at)}
+              </span>
             </div>
+
+            {/* Source Attribution */}
+            {article.source && (
+              <div style={{ marginBottom: "20px" }}>
+                <span style={{ fontSize: "12px", color: "#666", fontStyle: "italic" }}>
+                  Based on reporting from <strong>{article.source}</strong>
+                </span>
+              </div>
+            )}
 
             {/* Hero Image */}
             <img
-              src={getImage(article)}
+              src={imageUrl}
               alt={article.title}
               style={{ width: "100%", height: "420px", objectFit: "cover", marginBottom: "28px", display: "block" }}
             />
@@ -292,39 +243,83 @@ export default function ArticlePage({ ogData }) {
               </ul>
             </div>
 
-            {/* Article Body */}
+            {/* Article Body with Read Next after 2nd paragraph */}
             <div style={{ fontSize: "17px", lineHeight: "1.85", color: "#333", fontFamily: "Georgia, serif" }}>
               {paragraphs.slice(3).map((para, i) => {
-                const isLast = i === paragraphs.slice(3).length - 1;
                 const isWhy = para.toLowerCase().startsWith('why this matters') || para.toLowerCase().startsWith('why it matters');
-                if (isLast && isWhyItMatters || isWhy) {
-                  return (
+                const bodyParagraphs = paragraphs.slice(3);
+
+                const elements = [];
+
+                if (isWhy) {
+                  elements.push(
                     <div key={i} style={{ background: "#f0f7ff", borderLeft: "4px solid #1565c0", padding: "16px 20px", margin: "28px 0", borderRadius: "2px" }}>
                       <p style={{ margin: 0, fontSize: "16px", lineHeight: "1.8", color: "#1a1a1a", fontStyle: "italic", fontFamily: "Georgia, serif" }}>{para}</p>
                     </div>
                   );
+                } else {
+                  elements.push(<p key={i} style={{ marginTop: 0, marginBottom: "20px" }}>{para}</p>);
                 }
-                return <p key={i} style={{ marginTop: 0, marginBottom: "20px" }}>{para}</p>;
+
+                // Insert "Read Next" block after the 2nd body paragraph
+                if (i === 1 && readNextArticles.length >= 2) {
+                  elements.push(
+                    <div key="read-next" style={{ background: "#f8f9fa", border: "1px solid #eee", padding: "20px", margin: "28px 0" }}>
+                      <h4 style={{ fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "2px", color: "#cc0000", margin: "0 0 16px" }}>Read Next</h4>
+                      {readNextArticles.map(rel => (
+                        <Link key={rel.id} href={articlePath(rel)} style={{ textDecoration: "none" }}>
+                          <div style={{ display: "flex", gap: "12px", marginBottom: "12px", cursor: "pointer" }}>
+                            <img src={getImage(rel)} alt={rel.title} style={{ width: "80px", height: "56px", objectFit: "cover", flexShrink: 0 }} />
+                            <div>
+                              <p style={{ margin: 0, fontSize: "14px", fontWeight: "600", color: "#111", lineHeight: "1.4" }}>{rel.title}</p>
+                              <p style={{ margin: "4px 0 0", fontSize: "11px", color: "#999" }}>{timeAgo(rel.created_at)}</p>
+                            </div>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  );
+                }
+
+                return elements;
               })}
             </div>
 
-            {/* Market Outlook Box */}
-            <div style={{ background: "#f8f9fa", borderLeft: "4px solid #cc0000", padding: "24px", margin: "32px 0" }}>
-              <h3 style={{ color: "#cc0000", fontSize: "12px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 12px" }}>
-                Market Outlook
-              </h3>
-              <p style={{ fontSize: "16px", lineHeight: "1.7", color: "#333", margin: "0 0 16px", fontFamily: "Georgia, serif" }}>
-                {article.prediction}
-              </p>
-              <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-                <span style={{ background: article.sentiment === "positive" ? "#e8f5e9" : article.sentiment === "negative" ? "#ffebee" : "#f5f5f5", color: article.sentiment === "positive" ? "#2e7d32" : article.sentiment === "negative" ? "#c62828" : "#666", padding: "5px 14px", fontSize: "12px", fontWeight: "600", textTransform: "uppercase" }}>
-                  {article.sentiment}
-                </span>
-                <span style={{ background: "#e3f2fd", color: "#1565c0", padding: "5px 14px", fontSize: "12px", fontWeight: "600" }}>
-                  Analyst Confidence: {article.confidence}%
-                </span>
+            {/* Market Outlook Box — finance only */}
+            {article.category === 'finance' && article.prediction && (
+              <div style={{ background: "#f8f9fa", borderLeft: "4px solid #cc0000", padding: "24px", margin: "32px 0" }}>
+                <h3 style={{ color: "#cc0000", fontSize: "12px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 12px" }}>
+                  Market Outlook
+                </h3>
+                <p style={{ fontSize: "16px", lineHeight: "1.7", color: "#333", margin: "0 0 16px", fontFamily: "Georgia, serif" }}>
+                  {article.prediction}
+                </p>
+                <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                  {article.sentiment && (
+                    <span style={{ background: article.sentiment === "positive" ? "#e8f5e9" : article.sentiment === "negative" ? "#ffebee" : "#f5f5f5", color: article.sentiment === "positive" ? "#2e7d32" : article.sentiment === "negative" ? "#c62828" : "#666", padding: "5px 14px", fontSize: "12px", fontWeight: "600", textTransform: "uppercase" }}>
+                      {article.sentiment}
+                    </span>
+                  )}
+                  {article.confidence && (
+                    <span style={{ background: "#e3f2fd", color: "#1565c0", padding: "5px 14px", fontSize: "12px", fontWeight: "600" }}>
+                      Analyst Confidence: {article.confidence}%
+                    </span>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
+
+            {/* What Happens Next — politics only */}
+            {article.category === 'politics' && article.prediction && (
+              <div style={{ background: "#f8f9fa", borderLeft: "4px solid #2e7d32", padding: "24px", margin: "32px 0" }}>
+                <h3 style={{ color: "#2e7d32", fontSize: "12px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 12px" }}>
+                  What Happens Next
+                </h3>
+                <p style={{ fontSize: "16px", lineHeight: "1.7", color: "#333", margin: 0, fontFamily: "Georgia, serif" }}>
+                  {article.prediction}
+                </p>
+              </div>
+            )}
 
             {/* Sources */}
             <div style={{ padding: "12px 0", borderTop: "1px solid #eee", marginTop: "24px" }}>
@@ -337,9 +332,9 @@ export default function ArticlePage({ ogData }) {
             <div style={{ margin: "32px 0", paddingTop: "24px", borderTop: "1px solid #eee" }}>
               <p style={{ fontSize: "13px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px", color: "#666", marginBottom: "12px" }}>Share this article</p>
               <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-                <a href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(article.title)}&url=${encodeURIComponent('https://newsoracle.online/article/' + article.id)}`} target="_blank" rel="noopener noreferrer" style={{ background: "#000", color: "#fff", padding: "10px 20px", fontSize: "13px", fontWeight: "600", textDecoration: "none", display: "inline-block" }}>𝕏 Twitter</a>
-                <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://newsoracle.online/article/' + article.id)}`} target="_blank" rel="noopener noreferrer" style={{ background: "#1877f2", color: "#fff", padding: "10px 20px", fontSize: "13px", fontWeight: "600", textDecoration: "none", display: "inline-block" }}>Facebook</a>
-                <a href={`https://wa.me/?text=${encodeURIComponent(article.title + ' https://newsoracle.online/article/' + article.id)}`} target="_blank" rel="noopener noreferrer" style={{ background: "#25d366", color: "#fff", padding: "10px 20px", fontSize: "13px", fontWeight: "600", textDecoration: "none", display: "inline-block" }}>WhatsApp</a>
+                <a href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(article.title)}&url=${encodeURIComponent(canonicalUrl)}`} target="_blank" rel="noopener noreferrer" style={{ background: "#000", color: "#fff", padding: "10px 20px", fontSize: "13px", fontWeight: "600", textDecoration: "none", display: "inline-block" }}>𝕏 Twitter</a>
+                <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(canonicalUrl)}`} target="_blank" rel="noopener noreferrer" style={{ background: "#1877f2", color: "#fff", padding: "10px 20px", fontSize: "13px", fontWeight: "600", textDecoration: "none", display: "inline-block" }}>Facebook</a>
+                <a href={`https://wa.me/?text=${encodeURIComponent(article.title + ' ' + canonicalUrl)}`} target="_blank" rel="noopener noreferrer" style={{ background: "#25d366", color: "#fff", padding: "10px 20px", fontSize: "13px", fontWeight: "600", textDecoration: "none", display: "inline-block" }}>WhatsApp</a>
               </div>
             </div>
 
@@ -369,8 +364,8 @@ export default function ArticlePage({ ogData }) {
               <h3 style={{ fontSize: "14px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px", color: "#111", margin: "0 0 16px", paddingBottom: "10px", borderBottom: "2px solid #cc0000" }}>
                 Related Stories
               </h3>
-              {related.map(rel => (
-                <Link key={rel.id} href={`/article/${rel.id}`} style={{ textDecoration: "none" }}>
+              {sidebarArticles.map(rel => (
+                <Link key={rel.id} href={articlePath(rel)} style={{ textDecoration: "none" }}>
                   <div style={{ display: "flex", gap: "12px", marginBottom: "16px", paddingBottom: "16px", borderBottom: "1px solid #f0f0f0", cursor: "pointer" }}>
                     <img src={getImage(rel)} alt={rel.title} style={{ width: "80px", height: "60px", objectFit: "cover", flexShrink: 0 }} />
                     <div>
@@ -380,11 +375,6 @@ export default function ArticlePage({ ogData }) {
                   </div>
                 </Link>
               ))}
-            </div>
-
-            {/* Ad placeholder */}
-            <div style={{ background: "#f9f9f9", border: "1px dashed #ddd", padding: "40px 20px", textAlign: "center", color: "#bbb", fontSize: "13px" }}>
-              Advertisement
             </div>
           </aside>
 
@@ -407,28 +397,54 @@ export default function ArticlePage({ ogData }) {
   );
 }
 
-export async function getServerSideProps({ params }) {
+export async function getServerSideProps({ params, res }) {
   const supabaseServer = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
     process.env.NEXT_PUBLIC_SUPABASE_KEY
   );
 
+  // Extract numeric ID from slug URL (e.g. "153-argentina-beats-cape-verde" → 153)
+  const rawId = params.id;
+  const numericId = parseInt(rawId.split('-')[0], 10);
+
+  if (isNaN(numericId)) {
+    return { notFound: true };
+  }
+
   const { data: article } = await supabaseServer
     .from("articles")
     .select("*")
-    .eq("id", params.id)
+    .eq("id", numericId)
     .single();
+
+  if (!article) {
+    return { notFound: true };
+  }
+
+  // 301 redirect old numeric-only URLs to slug URLs
+  const expectedSlug = `${article.id}-${slugify(article.title)}`;
+  if (rawId !== expectedSlug) {
+    return {
+      redirect: {
+        destination: `/article/${expectedSlug}`,
+        permanent: true,
+      },
+    };
+  }
+
+  // Fetch 3 related articles from the same category
+  const { data: related } = await supabaseServer
+    .from("articles")
+    .select("*")
+    .eq("category", article.category)
+    .neq("id", article.id)
+    .order("created_at", { ascending: false })
+    .limit(3);
 
   return {
     props: {
-      ogData: article ? {
-        title: article.title || "",
-        summary: article.summary?.substring(0, 200) || "",
-        image: article.image || "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=1200&q=80",
-        url: `https://www.newsoracle.online/article/${article.id}`,
-        id: article.id,
-        datePublished: article.created_at || "",
-      } : null,
+      article,
+      related: related || [],
     },
   };
 }
