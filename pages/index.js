@@ -127,10 +127,11 @@ export default function Home({ initialArticles, featuredSports, featuredFinance,
         </div>
 
         {/* Header */}
-        <header style={{ background: "#fff", borderBottom: "3px solid #cc0000", padding: "16px 0" }}>
-          <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 20px" }}>
-            <div className="header-inner" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <div className="logo">
+        <header style={{ background: "#fff", borderBottom: "3px solid #cc0000" }}>
+          {/* Row 1 — Logo + Utility Links */}
+          <div style={{ borderBottom: "1px solid #eee", padding: "12px 0" }}>
+            <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div>
                 <h1 style={{ fontSize: "42px", fontWeight: "900", margin: 0, color: "#111", letterSpacing: "-1px" }}>
                   NEWS<span style={{ color: "#cc0000" }}>ORACLE</span>
                 </h1>
@@ -138,60 +139,76 @@ export default function Home({ initialArticles, featuredSports, featuredFinance,
                   Sports · Finance · Politics · Intelligence
                 </p>
               </div>
-              <nav className="desktop-nav" style={{ display: "flex", gap: "4px" }}>
-                <div style={{ display: "flex", gap: "20px", marginRight: "20px" }}>
-  <Link href="/about" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600" }}>About</Link>
-  <Link href="/contact" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600" }}>Contact</Link>
-  <Link href="/category/sports" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600" }}>Sports</Link>
-  <Link href="/category/finance" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600" }}>Finance</Link>
-  <Link href="/category/politics" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600" }}>Politics</Link>
-</div>
-                {["all", "sports", "finance", "politics"].map(cat => (
-                  <button
-                    key={cat}
-                    onClick={() => { setFilter(cat); setVisible(20); }}
-                    style={{
-                      padding: "8px 18px",
-                      background: filter === cat ? "#cc0000" : "transparent",
-                      color: filter === cat ? "#fff" : "#333",
-                      border: "1px solid #ddd",
-                      cursor: "pointer",
-                      fontSize: "13px",
-                      fontWeight: "600",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.5px"
-                    }}
-                  >
-                    {cat}
-                  </button>
-                ))}
-              </nav>
-              <div className="mobile-filters">
-                {["all", "sports", "finance", "politics"].map(cat => (
-                  <button key={cat} onClick={() => { setFilter(cat); setVisible(20); }} style={{ padding: "6px 14px", background: filter === cat ? "#cc0000" : "transparent", color: filter === cat ? "#fff" : "#333", border: "1px solid #ddd", cursor: "pointer", fontSize: "12px", fontWeight: "600", textTransform: "uppercase" }}>
-                    {cat}
-                  </button>
-                ))}
+              <div style={{ display: "flex", alignItems: "center", gap: "24px" }}>
+                <input
+                  type="text"
+                  placeholder="🔍 Search news..."
+                  value={searchQuery}
+                  onChange={e => { setSearchQuery(e.target.value); setVisible(20); }}
+                  style={{ padding: "8px 16px", fontSize: "13px", border: "1px solid #ddd", outline: "none", width: "220px", boxSizing: "border-box" }}
+                />
+                <div className="utility-nav" style={{ display: "flex", gap: "20px" }}>
+                  <Link href="/about" style={{ color: "#666", textDecoration: "none", fontSize: "13px" }}>About</Link>
+                  <Link href="/contact" style={{ color: "#666", textDecoration: "none", fontSize: "13px" }}>Contact</Link>
+                </div>
               </div>
             </div>
-            {/* Search Bar */}
-            <div style={{ marginTop: "16px" }}>
-              <input
-                type="text"
-                placeholder="Search news..."
-                value={searchQuery}
-                onChange={e => { setSearchQuery(e.target.value); setVisible(20); }}
-                style={{
-                  width: "100%",
-                  maxWidth: "400px",
-                  padding: "10px 16px",
-                  fontSize: "14px",
-                  border: "1px solid #ddd",
-                  outline: "none",
-                  boxSizing: "border-box"
-                }}
-              />
+          </div>
+          {/* Row 2 — Category Nav */}
+          <div className="category-nav-row" style={{ background: "#fff" }}>
+            <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 20px", display: "flex", alignItems: "center", gap: "0" }}>
+              {[
+                { label: "All News", value: "all", href: null },
+                { label: "Sports", value: "sports", href: "/category/sports" },
+                { label: "Finance", value: "finance", href: "/category/finance" },
+                { label: "Politics", value: "politics", href: "/category/politics" },
+              ].map(item => (
+                item.href ? (
+                  <Link key={item.value} href={item.href} style={{ textDecoration: "none" }}>
+                    <div style={{
+                      padding: "14px 24px",
+                      fontSize: "13px",
+                      fontWeight: "700",
+                      textTransform: "uppercase",
+                      letterSpacing: "1px",
+                      color: "#333",
+                      borderBottom: "3px solid transparent",
+                      cursor: "pointer",
+                      transition: "all 0.2s",
+                    }}
+                      onMouseEnter={e => { e.currentTarget.style.color = "#cc0000"; e.currentTarget.style.borderBottomColor = "#cc0000"; }}
+                      onMouseLeave={e => { e.currentTarget.style.color = "#333"; e.currentTarget.style.borderBottomColor = "transparent"; }}
+                    >
+                      {item.label}
+                    </div>
+                  </Link>
+                ) : (
+                  <div key={item.value}
+                    onClick={() => { setFilter(item.value); setVisible(20); }}
+                    style={{
+                      padding: "14px 24px",
+                      fontSize: "13px",
+                      fontWeight: "700",
+                      textTransform: "uppercase",
+                      letterSpacing: "1px",
+                      color: filter === item.value ? "#cc0000" : "#333",
+                      borderBottom: filter === item.value ? "3px solid #cc0000" : "3px solid transparent",
+                      cursor: "pointer",
+                    }}
+                  >
+                    {item.label}
+                  </div>
+                )
+              ))}
             </div>
+          </div>
+          {/* Mobile filters */}
+          <div className="mobile-filters" style={{ padding: "8px 20px", borderTop: "1px solid #eee" }}>
+            {["all", "sports", "finance", "politics"].map(cat => (
+              <button key={cat} onClick={() => { setFilter(cat); setVisible(20); }} style={{ padding: "6px 14px", background: filter === cat ? "#cc0000" : "transparent", color: filter === cat ? "#fff" : "#333", border: "1px solid #ddd", cursor: "pointer", fontSize: "12px", fontWeight: "600", textTransform: "uppercase" }}>
+                {cat}
+              </button>
+            ))}
           </div>
         </header>
 
