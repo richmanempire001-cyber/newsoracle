@@ -140,9 +140,12 @@ export default function Home({ initialArticles, featuredSports, featuredFinance,
               </div>
               <nav className="desktop-nav" style={{ display: "flex", gap: "4px" }}>
                 <div style={{ display: "flex", gap: "20px", marginRight: "20px" }}>
-                  <Link href="/about" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600" }}>About</Link>
-                  <Link href="/contact" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600" }}>Contact</Link>
-                </div>
+  <Link href="/about" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600" }}>About</Link>
+  <Link href="/contact" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600" }}>Contact</Link>
+  <Link href="/category/sports" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600" }}>Sports</Link>
+  <Link href="/category/finance" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600" }}>Finance</Link>
+  <Link href="/category/politics" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600" }}>Politics</Link>
+</div>
                 {["all", "sports", "finance", "politics"].map(cat => (
                   <button
                     key={cat}
