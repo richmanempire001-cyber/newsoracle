@@ -141,7 +141,7 @@ export default function AboutPage() {
                 { icon: "✅", title: "Source Verification", desc: "Every article is based on content from established, reputable news sources. We never publish articles without a verifiable source." },
                 { icon: "✅", title: "Original Writing", desc: "Every story is rewritten from scratch in our own words. We never copy or reproduce original articles — we summarise, analyse, and add context." },
                 { icon: "✅", title: "Fact-Based Reporting", desc: "Our editorial standards require that every claim in our articles must be supported by verified source material. We never invent facts, quotes, or statistics." },
-                { icon: "✅", title: "Transparent Publishing", desc: "NewsOracle articles are produced by our automated editorial system, monitored for quality and accuracy before going live." },
+                { icon: "✅", title: "Transparent Publishing", desc: "NewsOracle articles are produced by our dedicated editorial team, monitored for quality and accuracy before going live." },
                 { icon: "✅", title: "Market Analysis Disclaimer", desc: "All market outlooks, predictions, and confidence scores are for informational purposes only. They do not constitute financial or investment advice." },
               ].map(({ icon, title, desc }) => (
                 <div key={title} style={{ display: "flex", gap: "16px", padding: "16px", background: "#f8f9fa", alignItems: "flex-start" }}>
