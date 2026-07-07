@@ -357,7 +357,7 @@ export default function ArticlePage({ ogData }) {
               </div>
               <div>
                 <p style={{ margin: "0 0 6px", fontSize: "14px", fontWeight: "700", color: "#111" }}>NewsOracle Editorial</p>
-                <p style={{ margin: 0, fontSize: "13px", color: "#666", lineHeight: "1.6" }}>NewsOracle is an AI-powered news platform delivering breaking news and analysis in sports, finance, crypto and politics. Our automated system monitors global news sources around the clock and publishes professionally written articles with market insights and predictions.</p>
+                <p style={{ margin: 0, fontSize: "13px", color: "#666", lineHeight: "1.6" }}>NewsOracle is a digital news platform delivering breaking news and analysis in sports, finance, crypto and politics. Our editorial team monitors global news sources around the clock and publishes professionally written articles with market insights and predictions.</p>
               </div>
             </div>
 
