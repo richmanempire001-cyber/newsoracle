@@ -54,14 +54,50 @@ export default function ArticlePage({ article, related }) {
   }, []);
 
   if (!article) return (
-    <div style={{ fontFamily: "Arial, sans-serif", textAlign: "center", padding: "100px" }}>
-      <p>Article not found.</p>
-      <Link href="/" style={{ color: "#cc0000" }}>← Back to Home</Link>
-    </div>
+    <>
+      <Head>
+        <title>Article Not Found — NewsOracle</title>
+        <meta name="robots" content="noindex" />
+      </Head>
+      <div style={{ fontFamily: "Arial, sans-serif", background: "#f4f4f4", minHeight: "100vh" }}>
+        <div style={{ background: "#cc0000", color: "#fff", padding: "6px 0", fontSize: "12px" }}>
+          <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 20px" }}>
+            <span>{new Date().toLocaleDateString("en-GB", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</span>
+          </div>
+        </div>
+        <header style={{ background: "#fff", borderBottom: "3px solid #cc0000", padding: "16px 0" }}>
+          <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 20px" }}>
+            <Link href="/" style={{ textDecoration: "none" }}>
+              <h1 style={{ fontSize: "36px", fontWeight: "900", margin: 0, color: "#111", letterSpacing: "-1px" }}>
+                NEWS<span style={{ color: "#cc0000" }}>ORACLE</span>
+              </h1>
+            </Link>
+          </div>
+        </header>
+        <div style={{ maxWidth: "600px", margin: "0 auto", padding: "80px 20px", textAlign: "center" }}>
+          <div style={{ fontSize: "72px", fontWeight: "900", color: "#cc0000", marginBottom: "16px" }}>404</div>
+          <h2 style={{ fontSize: "24px", fontWeight: "700", color: "#111", margin: "0 0 12px" }}>Article Not Found</h2>
+          <p style={{ fontSize: "16px", color: "#666", lineHeight: "1.6", margin: "0 0 32px" }}>
+            The article you're looking for may have been moved or is no longer available.
+          </p>
+          <Link href="/" style={{ background: "#cc0000", color: "#fff", padding: "12px 32px", fontSize: "14px", fontWeight: "700", textDecoration: "none", display: "inline-block", textTransform: "uppercase", letterSpacing: "1px" }}>
+            Back to Homepage
+          </Link>
+        </div>
+        <footer style={{ background: "#111", color: "#999", padding: "40px 20px", marginTop: "40px" }}>
+          <div style={{ maxWidth: "1200px", margin: "0 auto", textAlign: "center" }}>
+            <h2 style={{ color: "#fff", margin: "0 0 10px", fontSize: "24px", fontWeight: "900" }}>
+              NEWS<span style={{ color: "#cc0000" }}>ORACLE</span>
+            </h2>
+            <p style={{ margin: 0, fontSize: "12px" }}>© 2026 NewsOracle. All content is for informational purposes only.</p>
+          </div>
+        </footer>
+      </div>
+    </>
   );
 
   const paragraphs = article.summary?.split('\n\n') || [];
-  const metaDesc = cleanMetaDescription(article.summary);
+  const metaDesc = article.meta_description || cleanMetaDescription(article.summary);
   const canonicalUrl = articleUrl(article);
   const imageUrl = getImage(article);
   const wordCount = article.summary?.trim().split(/\s+/).length || 0;
@@ -106,7 +142,7 @@ export default function ArticlePage({ article, related }) {
           "dateModified": article.created_at,
           "author": {
             "@type": "Organization",
-            "name": "NewsOracle Editorial",
+            "name": article.author || "NewsOracle Editorial",
             "url": "https://www.newsoracle.online/about"
           },
           "publisher": {
@@ -200,7 +236,7 @@ export default function ArticlePage({ article, related }) {
 
             {/* Meta */}
             <div style={{ display: "flex", flexWrap: "wrap", gap: "20px", padding: "14px 0", borderTop: "1px solid #eee", borderBottom: "1px solid #eee", marginBottom: "28px" }}>
-              <span style={{ fontSize: "13px", color: "#666" }}>By <strong>NewsOracle Editorial</strong></span>
+              <span style={{ fontSize: "13px", color: "#666" }}>By <strong>{article.author || 'NewsOracle Editorial'}</strong></span>
               <span style={{ fontSize: "13px", color: "#999" }}>
                 {new Date(article.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
               </span>
@@ -250,8 +286,15 @@ export default function ArticlePage({ article, related }) {
                 const bodyParagraphs = paragraphs.slice(3);
 
                 const elements = [];
+                const isSubheading = para.startsWith('## ');
 
-                if (isWhy) {
+                if (isSubheading) {
+                  elements.push(
+                    <h2 key={i} style={{ fontSize: "22px", fontWeight: "800", color: "#111", margin: "32px 0 16px", lineHeight: "1.3", fontFamily: "Arial, sans-serif" }}>
+                      {para.replace(/^## /, '')}
+                    </h2>
+                  );
+                } else if (isWhy) {
                   elements.push(
                     <div key={i} style={{ background: "#f0f7ff", borderLeft: "4px solid #1565c0", padding: "16px 20px", margin: "28px 0", borderRadius: "2px" }}>
                       <p style={{ margin: 0, fontSize: "16px", lineHeight: "1.8", color: "#1a1a1a", fontStyle: "italic", fontFamily: "Georgia, serif" }}>{para}</p>
@@ -269,7 +312,7 @@ export default function ArticlePage({ article, related }) {
                       {readNextArticles.map(rel => (
                         <Link key={rel.id} href={articlePath(rel)} style={{ textDecoration: "none" }}>
                           <div style={{ display: "flex", gap: "12px", marginBottom: "12px", cursor: "pointer" }}>
-                            <img src={getImage(rel)} alt={rel.title} style={{ width: "80px", height: "56px", objectFit: "cover", flexShrink: 0 }} />
+                            <img loading="lazy" src={getImage(rel)} alt={rel.title} style={{ width: "80px", height: "56px", objectFit: "cover", flexShrink: 0 }} />
                             <div>
                               <p style={{ margin: 0, fontSize: "14px", fontWeight: "600", color: "#111", lineHeight: "1.4" }}>{rel.title}</p>
                               <p style={{ margin: "4px 0 0", fontSize: "11px", color: "#999" }}>{timeAgo(rel.created_at)}</p>
@@ -351,9 +394,32 @@ export default function ArticlePage({ article, related }) {
                 <span style={{ color: "#fff", fontWeight: "900", fontSize: "18px" }}>N</span>
               </div>
               <div>
-                <p style={{ margin: "0 0 6px", fontSize: "14px", fontWeight: "700", color: "#111" }}>NewsOracle Editorial</p>
-                <p style={{ margin: 0, fontSize: "13px", color: "#666", lineHeight: "1.6" }}>NewsOracle is a digital news platform delivering breaking news and analysis in sports, finance, crypto and politics. Our editorial team monitors global news sources around the clock and publishes professionally written articles with market insights and predictions.</p>
+                <p style={{ margin: "0 0 6px", fontSize: "14px", fontWeight: "700", color: "#111" }}>{article.author || 'NewsOracle Editorial'}</p>
+                <p style={{ margin: 0, fontSize: "13px", color: "#666", lineHeight: "1.6" }}>
+                  {article.category === 'sports' && 'The NewsOracle Sports Desk covers breaking sports news from the NFL, NBA, Premier League, UFC, tennis, cricket and major global sporting events with live updates and post-match analysis.'}
+                  {article.category === 'finance' && 'The NewsOracle Markets Desk covers stock markets, cryptocurrency, economic policy and breaking financial news from Wall Street and global exchanges with data-driven analysis and market outlook.'}
+                  {article.category === 'politics' && 'The NewsOracle Politics Desk covers US politics, Congress, the White House, Supreme Court, global elections and international relations with neutral, fact-based reporting.'}
+                  {!['sports', 'finance', 'politics'].includes(article.category) && 'NewsOracle is a digital news platform delivering breaking news and analysis in sports, finance, crypto and politics. Our editorial team monitors global news sources around the clock.'}
+                </p>
               </div>
+            </div>
+
+            {/* Newsletter Signup */}
+            <div style={{ background: "#111", padding: "32px", marginTop: "32px", textAlign: "center" }}>
+              <h3 style={{ color: "#fff", fontSize: "18px", fontWeight: "800", margin: "0 0 8px" }}>Get Breaking News in Your Inbox</h3>
+              <p style={{ color: "#999", fontSize: "13px", margin: "0 0 20px" }}>Stay informed with the stories that matter. No spam, unsubscribe anytime.</p>
+              <div style={{ display: "flex", gap: "8px", maxWidth: "400px", margin: "0 auto" }}>
+                <input
+                  type="email"
+                  placeholder="Enter your email"
+                  style={{ flex: 1, padding: "12px 16px", fontSize: "14px", border: "none", outline: "none", boxSizing: "border-box" }}
+                  readOnly
+                />
+                <button style={{ background: "#cc0000", color: "#fff", border: "none", padding: "12px 24px", fontSize: "13px", fontWeight: "700", cursor: "pointer", textTransform: "uppercase", letterSpacing: "1px", whiteSpace: "nowrap" }}>
+                  Subscribe
+                </button>
+              </div>
+              <p style={{ color: "#666", fontSize: "11px", margin: "12px 0 0" }}>Coming soon</p>
             </div>
 
           </article>
@@ -367,7 +433,7 @@ export default function ArticlePage({ article, related }) {
               {sidebarArticles.map(rel => (
                 <Link key={rel.id} href={articlePath(rel)} style={{ textDecoration: "none" }}>
                   <div style={{ display: "flex", gap: "12px", marginBottom: "16px", paddingBottom: "16px", borderBottom: "1px solid #f0f0f0", cursor: "pointer" }}>
-                    <img src={getImage(rel)} alt={rel.title} style={{ width: "80px", height: "60px", objectFit: "cover", flexShrink: 0 }} />
+                    <img loading="lazy" src={getImage(rel)} alt={rel.title} style={{ width: "80px", height: "60px", objectFit: "cover", flexShrink: 0 }} />
                     <div>
                       <p style={{ margin: 0, fontSize: "13px", fontWeight: "600", color: "#111", lineHeight: "1.4" }}>{rel.title}</p>
                       <p style={{ margin: "4px 0 0", fontSize: "11px", color: "#999" }}>{new Date(rel.created_at).toLocaleDateString()}</p>
