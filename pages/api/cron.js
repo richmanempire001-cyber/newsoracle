@@ -234,12 +234,14 @@ async function generateArticle(headline, description, category) {
   const fieldsInstruction = {
     sports: `Return ONLY a JSON object with these fields:
 - title: (SEO headline, max 12 words, must include specific names/scores/teams people would search for)
+- metaDescription: (SEO meta description, exactly 1 sentence, 140-155 characters, summarising the key fact — do NOT truncate mid-word)
 - summary: (full news article, 350-600 words, must contain at least 3 specific named facts from source — names, scores, stats, quotes. Start with dateline. Use \\n\\n between paragraphs. End with a "why this matters" paragraph.)
 - category: ("${category}")
 - tag: (specific tag like "Premier League", "NBA", "UFC", "Tennis", "Cricket")
 - disclaimer: ("This article is for informational purposes only. Content is based on publicly available news sources.")`,
     finance: `Return ONLY a JSON object with these fields:
 - title: (SEO headline, max 12 words, must include specific names/numbers people would search for)
+- metaDescription: (SEO meta description, exactly 1 sentence, 140-155 characters, summarising the key fact — do NOT truncate mid-word)
 - summary: (full news article, 350-600 words, must contain at least 3 specific named facts from source — prices, percentages, names, quotes. Start with dateline. Use \\n\\n between paragraphs. End with a "why this matters" paragraph.)
 - prediction: (future outlook or analysis, written as expert market view, 60-80 words)
 - category: ("${category}")
@@ -249,6 +251,7 @@ async function generateArticle(headline, description, category) {
 - disclaimer: ("This article is for informational purposes only. Content is based on publicly available news sources.")`,
     politics: `Return ONLY a JSON object with these fields:
 - title: (SEO headline, max 12 words, must include specific names/policies people would search for)
+- metaDescription: (SEO meta description, exactly 1 sentence, 140-155 characters, summarising the key fact — do NOT truncate mid-word)
 - summary: (full news article, 350-600 words, must contain at least 3 specific named facts from source — names, decisions, votes, quotes. Start with dateline. Use \\n\\n between paragraphs. End with a "why this matters" paragraph.)
 - prediction: (what happens next politically, written as neutral analysis, 60-80 words)
 - category: ("${category}")
@@ -275,6 +278,7 @@ ABSOLUTE RULES — violating any of these makes the article unpublishable:
 - NEVER use the phrase "the question remains" or "all eyes are on" or "sent shockwaves"
 - Every paragraph must contain at least one specific fact — no paragraph should be pure commentary or filler
 - Match article length to available facts. If the source material is thin, write 250 words. Do NOT pad with filler to reach a word count.
+- If the article is 350+ words, insert exactly ONE subheading after the 3rd paragraph. Format it on its own line as ## followed by the subheading text (e.g. "## Impact on Global Markets"). The subheading must be specific to THIS story — never generic like "## Background" or "## Analysis"
 - End with a brief "why this matters" paragraph — one specific consequence, not a vague summary
 - Do NOT mention AI, Claude, or that this was rewritten
 ${categoryInstructions[category]}
@@ -342,14 +346,18 @@ export default async function handler(req, res) {
         continue;
       }
 
+      const authorNames = { sports: 'Sports Desk', finance: 'Markets Desk', politics: 'Politics Desk' };
+
       results.push({
         link: rss.itemLink,
         source: rss.sourceName || '',
         title: article.title,
         summary: article.summary,
+        meta_description: article.metaDescription || null,
         prediction: article.prediction || null,
         category: article.category,
         tag: article.tag,
+        author: authorNames[category] || 'NewsOracle Editorial',
         image: await getPexelsImage(article.tag || article.category) || rss.image || FALLBACK_IMAGES[category],
         sentiment: article.sentiment || null,
         confidence: article.confidence || null,
