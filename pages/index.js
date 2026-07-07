@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import Head from "next/head";
 import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
+import { articlePath } from "../lib/slugify";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -89,7 +90,7 @@ export default function Home({ initialArticles, featuredSports, featuredFinance,
               <span style={{ display: "inline-block", animation: "ticker 30s linear infinite", fontSize: "13px", fontWeight: "500" }}>
                 {articles.slice(0, 5).map((a) => (
                   <span key={a.id}>
-                    <Link href={`/article/${a.id}`} style={{ color: "#fff", textDecoration: "none" }}>
+                    <Link href={articlePath(a)} style={{ color: "#fff", textDecoration: "none" }}>
                       {a.title}
                     </Link>
                     <span style={{ margin: "0 32px", opacity: 0.5 }}>●</span>
@@ -211,7 +212,7 @@ export default function Home({ initialArticles, featuredSports, featuredFinance,
                   </div>
                   <div className="featured-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "20px", marginBottom: "40px" }}>
                     {[featuredSports, featuredFinance, featuredPolitics].filter(Boolean).map(article => (
-                      <Link key={article.id} href={`/article/${article.id}`} style={{ textDecoration: "none" }}>
+                      <Link key={article.id} href={articlePath(article)} style={{ textDecoration: "none" }}>
                         <div style={{ background: "#fff", boxShadow: "0 2px 8px rgba(0,0,0,0.08)", cursor: "pointer", height: "100%" }}>
                           <div style={{ position: "relative", overflow: "hidden" }}>
                             <img
@@ -245,7 +246,7 @@ export default function Home({ initialArticles, featuredSports, featuredFinance,
               {/* Article Grid */}
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "20px" }}>
                 {visibleArticles.map(article => (
-                  <Link key={article.id} href={`/article/${article.id}`} style={{ textDecoration: "none" }}>
+                  <Link key={article.id} href={articlePath(article)} style={{ textDecoration: "none" }}>
                     <div style={{ background: "#fff", cursor: "pointer", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", transition: "transform 0.2s" }}
                       onMouseEnter={e => e.currentTarget.style.transform = "translateY(-2px)"}
                       onMouseLeave={e => e.currentTarget.style.transform = "translateY(0)"}
@@ -323,9 +324,9 @@ export default function Home({ initialArticles, featuredSports, featuredFinance,
                 <a href="https://www.facebook.com/profile.php?id=61591337781640" target="_blank" rel="noopener noreferrer" style={{ color: "#fff", fontSize: "13px", textDecoration: "none", background: "#1877f2", padding: "8px 16px" }}>Facebook</a>
               </div>
               <div style={{ display: "flex", gap: "20px", flexWrap: "wrap" }}>
-                <span style={{ fontSize: "13px", cursor: "pointer" }}>Sports</span>
-                <span style={{ fontSize: "13px", cursor: "pointer" }}>Finance</span>
-                <span style={{ fontSize: "13px", cursor: "pointer" }}>Markets</span>
+                <Link href="/?cat=sports" style={{ color: "#999", fontSize: "13px", textDecoration: "none" }}>Sports</Link>
+                <Link href="/?cat=finance" style={{ color: "#999", fontSize: "13px", textDecoration: "none" }}>Finance</Link>
+                <Link href="/?cat=politics" style={{ color: "#999", fontSize: "13px", textDecoration: "none" }}>Politics</Link>
               </div>
             </div>
             <div style={{ display: "flex", justifyContent: "center", gap: "20px", marginBottom: "16px", flexWrap: "wrap" }}>
