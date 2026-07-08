@@ -2,7 +2,8 @@ import Anthropic from '@anthropic-ai/sdk';
 import { slugify } from '../../lib/slugify';
 async function postToFacebook(article) {
   try {
-    const message = `🔴 ${article.title}\n\n${article.summary?.substring(0, 500)}...\n\n🔗 Read more: https://www.newsoracle.online`;
+    const articleUrl = article.articleUrl || 'https://www.newsoracle.online';
+    const message = `🔴 ${article.title}\n\n${article.summary?.substring(0, 500)}...\n\n🔗 Read more: ${articleUrl}`;
    await fetch(`https://graph.facebook.com/${process.env.FACEBOOK_PAGE_ID}/photos`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -17,7 +18,8 @@ async function postToFacebook(article) {
   }
 }async function postToTelegram(article) {
   try {
-    const caption = `🔴 *${article.title}*\n\n${article.summary?.substring(0, 500)}...\n\n🔗 Read more: https://www.newsoracle.online`;
+    const articleUrl = article.articleUrl || 'https://www.newsoracle.online';
+    const caption = `🔴 *${article.title}*\n\n${article.summary?.substring(0, 500)}...\n\n🔗 Read more: ${articleUrl}`;
     await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendPhoto`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -33,7 +35,8 @@ async function postToFacebook(article) {
   }
 }async function postToThreads(article) {
   try {
-    const text = `🔴 ${article.title}\n\n${article.summary?.substring(0, 500)}...\n\n🔗 Read more: https://www.newsoracle.online`;
+    const articleUrl = article.articleUrl || 'https://www.newsoracle.online';
+    const text = `🔴 ${article.title}\n\n${article.summary?.substring(0, 500)}...\n\n🔗 Read more: ${articleUrl}`;
     const containerRes = await fetch(`https://graph.threads.net/v1.0/${process.env.THREADS_USER_ID}/threads`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -61,7 +64,8 @@ async function postToFacebook(article) {
 async function postToInstagram(article) {
   try {
     const imageUrl = article.image;
-    const caption = `🔴 ${article.title}\n\n${article.summary?.substring(0, 200)}...\n\n🔗 Read more: https://newsoracle.online`;
+    const articleUrl = article.articleUrl || 'https://www.newsoracle.online';
+    const caption = `🔴 ${article.title}\n\n${article.summary?.substring(0, 200)}...\n\n🔗 Read more: ${articleUrl}`;
     const containerRes = await fetch(`https://graph.instagram.com/v21.0/${process.env.INSTAGRAM_USER_ID}/media`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -95,20 +99,31 @@ const RSS_SOURCES = {
   finance: [
     'https://news.google.com/rss/search?q=bitcoin+OR+crypto+OR+stocks+OR+nasdaq+OR+S%26P500+OR+inflation+OR+Fed&ceid=US:en&hl=en-US&gl=US',
     'https://cointelegraph.com/rss',
+    'https://decrypt.co/feed',
+    'https://www.coindesk.com/arc/outboundfeeds/rss/',
   ],
   sports: [
     'https://news.google.com/rss/search?q=NFL+OR+NBA+OR+soccer+OR+cricket+OR+tennis+OR+Premier+League+OR+UFC&ceid=US:en&hl=en-US&gl=US',
     'https://www.espn.com/espn/rss/news',
+    'https://www.footballtransfers.com/en/rss',
   ],
   politics: [
     'https://news.google.com/rss/search?q=Trump+OR+Congress+OR+White+House+OR+elections+OR+Supreme+Court+OR+Senate&ceid=US:en&hl=en-US&gl=US',
     'https://www.aljazeera.com/xml/rss/all.xml',
+    'https://thehill.com/feed',
+    'https://www.politico.com/rss/politicopicks.xml',
+  ],
+  technology: [
+    'https://news.google.com/rss/search?q=AI+OR+Apple+OR+Tesla+OR+Google+OR+Meta+OR+OpenAI+OR+ChatGPT&ceid=US:en&hl=en-US&gl=US',
+    'https://www.theverge.com/rss/index.xml',
+    'https://techcrunch.com/feed/',
   ]
 };
 const FALLBACK_IMAGES = {
   finance: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&q=80',
   sports: 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=800&q=80',
-  politics: 'https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=800&q=80'
+  politics: 'https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=800&q=80',
+  technology: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&q=80'
 };async function getPexelsImage(query) {
   try {
     const res = await fetch(`https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=5&orientation=landscape`, {
@@ -117,7 +132,7 @@ const FALLBACK_IMAGES = {
     const data = await res.json();
     if (data.photos && data.photos.length > 0) {
       const random = data.photos[Math.floor(Math.random() * data.photos.length)];
-      return random.src.large2x;
+      return random.src.large;
     }
     return null;
   } catch {
@@ -168,7 +183,7 @@ async function fetchFullArticle(url) {
       .map(m => m[1].replace(/<[^>]*>/g, '').trim())
       .filter(p => p.length > 40);
 
-    const text = paragraphs.slice(0, 12).join(' ').substring(0, 3000);
+    const text = paragraphs.slice(0, 20).join(' ').substring(0, 5000);
     return text.length > 150 ? text : null;
   } catch {
     return null;
@@ -230,6 +245,11 @@ async function generateArticle(headline, description, category) {
 - Start with a dateline in caps (e.g. "WASHINGTON —", "BRUSSELS —", "LONDON —") based on where the political event occurred.
 - Focus on: who did what, the specific policy or decision, direct consequences, who opposes it, what happens next.
 - Write like a CNN Politics or AP reporter — neutral, factual, no editorializing.
+- Include a prediction field. Do NOT generate sentiment or confidence fields.`,
+    technology: `
+- Start with a dateline in caps (e.g. "SAN FRANCISCO —", "CUPERTINO —", "SEATTLE —") based on where the company or event is located.
+- Focus on: what was launched/announced, specific specs or numbers, who said what, how it compares to competitors, immediate user/market impact.
+- Write like a Verge or TechCrunch reporter — clear, informed, forward-looking.
 - Include a prediction field. Do NOT generate sentiment or confidence fields.`
   };
 
@@ -237,14 +257,14 @@ async function generateArticle(headline, description, category) {
     sports: `Return ONLY a JSON object with these fields:
 - title: (SEO headline, max 12 words, must include specific names/scores/teams people would search for)
 - metaDescription: (SEO meta description, exactly 1 sentence, 140-155 characters, summarising the key fact — do NOT truncate mid-word)
-- summary: (full news article, 350-600 words, must contain at least 3 specific named facts from source — names, scores, stats, quotes. Start with dateline. Use \\n\\n between paragraphs. End with a "why this matters" paragraph.)
+- summary: (full news article, 600-900 words, must contain at least 3 specific named facts from source — names, scores, stats, quotes. Start with dateline. Use \\n\\n between paragraphs. End with a "why this matters" paragraph.)
 - category: ("${category}")
 - tag: (specific tag like "Premier League", "NBA", "UFC", "Tennis", "Cricket")
 - disclaimer: ("This article is for informational purposes only. Content is based on publicly available news sources.")`,
     finance: `Return ONLY a JSON object with these fields:
 - title: (SEO headline, max 12 words, must include specific names/numbers people would search for)
 - metaDescription: (SEO meta description, exactly 1 sentence, 140-155 characters, summarising the key fact — do NOT truncate mid-word)
-- summary: (full news article, 350-600 words, must contain at least 3 specific named facts from source — prices, percentages, names, quotes. Start with dateline. Use \\n\\n between paragraphs. End with a "why this matters" paragraph.)
+- summary: (full news article, 600-900 words, must contain at least 3 specific named facts from source — prices, percentages, names, quotes. Start with dateline. Use \\n\\n between paragraphs. End with a "why this matters" paragraph.)
 - prediction: (future outlook or analysis, written as expert market view, 60-80 words)
 - category: ("${category}")
 - tag: (specific tag like "Bitcoin", "S&P 500", "Fed", "Inflation", "Crypto")
@@ -254,16 +274,24 @@ async function generateArticle(headline, description, category) {
     politics: `Return ONLY a JSON object with these fields:
 - title: (SEO headline, max 12 words, must include specific names/policies people would search for)
 - metaDescription: (SEO meta description, exactly 1 sentence, 140-155 characters, summarising the key fact — do NOT truncate mid-word)
-- summary: (full news article, 350-600 words, must contain at least 3 specific named facts from source — names, decisions, votes, quotes. Start with dateline. Use \\n\\n between paragraphs. End with a "why this matters" paragraph.)
+- summary: (full news article, 600-900 words, must contain at least 3 specific named facts from source — names, decisions, votes, quotes. Start with dateline. Use \\n\\n between paragraphs. End with a "why this matters" paragraph.)
 - prediction: (what happens next politically, written as neutral analysis, 60-80 words)
 - category: ("${category}")
 - tag: (specific tag like "Trump", "Congress", "Supreme Court", "NATO", "Senate")
+- disclaimer: ("This article is for informational purposes only. Content is based on publicly available news sources.")`,
+    technology: `Return ONLY a JSON object with these fields:
+- title: (SEO headline, max 12 words, must include specific product/company names people would search for)
+- metaDescription: (SEO meta description, exactly 1 sentence, 140-155 characters, summarising the key fact — do NOT truncate mid-word)
+- summary: (full news article, 600-900 words, must contain at least 3 specific named facts from source — product names, specs, prices, quotes, dates. Start with dateline. Use \\n\\n between paragraphs. End with a "why this matters" paragraph.)
+- prediction: (what this means for the tech industry or consumers, written as informed analysis, 60-80 words)
+- category: ("${category}")
+- tag: (specific tag like "Apple", "AI", "Tesla", "Google", "OpenAI", "Meta", "ChatGPT")
 - disclaimer: ("This article is for informational purposes only. Content is based on publicly available news sources.")`
   };
 
   const message = await anthropic.messages.create({
     model: 'claude-haiku-4-5',
-    max_tokens: 2048,
+    max_tokens: 4096,
     messages: [{
       role: 'user',
       content: `You are a senior journalist at a major international newsroom like CNN, BBC, or Reuters. Based on this real news headline and source material, write a professional news article.
@@ -279,7 +307,7 @@ ABSOLUTE RULES — violating any of these makes the article unpublishable:
 - NEVER start any sentence with these banned phrases: "In a move that", "This comes as", "It remains to be seen", "Only time will tell", "In today's", "In the world of", "The landscape of", "It's worth noting"
 - NEVER use the phrase "the question remains" or "all eyes are on" or "sent shockwaves"
 - Every paragraph must contain at least one specific fact — no paragraph should be pure commentary or filler
-- Match article length to available facts. If the source material is thin, write 250 words. Do NOT pad with filler to reach a word count.
+- Match article length to available facts. If the source material is thin, write 300 words. Do NOT pad with filler to reach a word count.
 - If the article is 350+ words, insert exactly ONE subheading after the 3rd paragraph. Format it on its own line as ## followed by the subheading text (e.g. "## Impact on Global Markets"). The subheading must be specific to THIS story — never generic like "## Background" or "## Analysis"
 - End with a brief "why this matters" paragraph — one specific consequence, not a vague summary
 - Do NOT mention AI, Claude, or that this was rewritten
@@ -305,11 +333,13 @@ export default async function handler(req, res) {
     const financeSource = RSS_SOURCES.finance[Math.floor(Math.random() * RSS_SOURCES.finance.length)];
     const sportsSource = RSS_SOURCES.sports[Math.floor(Math.random() * RSS_SOURCES.sports.length)];
     const politicsSource = RSS_SOURCES.politics[Math.floor(Math.random() * RSS_SOURCES.politics.length)];
+    const technologySource = RSS_SOURCES.technology[Math.floor(Math.random() * RSS_SOURCES.technology.length)];
 
-    const [financeRSS, sportsRSS, politicsRSS] = await Promise.all([
+    const [financeRSS, sportsRSS, politicsRSS, technologyRSS] = await Promise.all([
       fetchRSS(financeSource),
       fetchRSS(sportsSource),
-      fetchRSS(politicsSource)
+      fetchRSS(politicsSource),
+      fetchRSS(technologySource)
     ]);
 
     const results = [];
@@ -318,7 +348,8 @@ export default async function handler(req, res) {
     for (const [rss, category] of [
       [financeRSS, 'finance'],
       [sportsRSS, 'sports'],
-      [politicsRSS, 'politics']
+      [politicsRSS, 'politics'],
+      [technologyRSS, 'technology']
     ]) {
       if (!rss) continue;
 
@@ -348,13 +379,13 @@ export default async function handler(req, res) {
         continue;
       }
 
-      // QUALITY GATE 3: Skip if no full article but Claude padded over 400 words (filler detected)
-      if (!fullText && wordCount > 400) {
+      // QUALITY GATE 3: Skip if no full article but Claude padded over 700 words (filler detected)
+      if (!fullText && wordCount > 700) {
         console.log(`Skipped ${category}: filler detected (${wordCount} words from thin source)`);
         continue;
       }
 
-      const authorNames = { sports: 'Sports Desk', finance: 'Markets Desk', politics: 'Politics Desk' };
+      const authorNames = { sports: 'Sports Desk', finance: 'Markets Desk', politics: 'Politics Desk', technology: 'Tech Desk' };
 
       results.push({
         link: rss.itemLink,
@@ -385,11 +416,16 @@ export default async function handler(req, res) {
 const { data: insertedArticles, error } = await supabase.from('articles').insert(results).select();
 if (error) throw error;
 
-for (const article of results) {
+// Post to social media with actual article URLs
+for (const inserted of (insertedArticles || [])) {
+  const articleWithUrl = {
+    ...inserted,
+    articleUrl: `https://www.newsoracle.online/article/${inserted.id}-${slugify(inserted.title)}`
+  };
   await Promise.all([
-    postToTelegram(article),
-    postToFacebook(article),
-    postToThreads(article)
+    postToTelegram(articleWithUrl),
+    postToFacebook(articleWithUrl),
+    postToThreads(articleWithUrl)
   ]);
 }
 
