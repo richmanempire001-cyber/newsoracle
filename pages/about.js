@@ -84,7 +84,7 @@ export default function AboutPage() {
           </div>
         </header>
 
-        <style>{\`
+        <style>{`
           @media (max-width: 600px) {
             .utility-nav { display: none !important; }
             .category-nav-row { overflow-x: auto; }
@@ -93,7 +93,7 @@ export default function AboutPage() {
             .about-box { padding: 24px !important; }
             .top-bar-right { display: none !important; }
           }
-        \`}</style>
+        `}</style>
 
         {/* Hero Banner */}
         <div style={{ background: "linear-gradient(135deg, #111 0%, #333 100%)", color: "#fff", padding: "60px 20px", textAlign: "center" }}>
