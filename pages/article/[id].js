@@ -11,6 +11,7 @@ function getImage(article) {
     sports: "1461896836934-ffe607ba8211",
     crypto: "1579621970563-ebec7560ff3e",
     markets: "1444653614773-995cb1ef9efa",
+    technology: "1518770660439-4636190af475",
   };
   const key = keywords[article.category] || keywords.finance;
   return `https://images.unsplash.com/photo-${key}?w=1200&q=80`;
@@ -80,7 +81,7 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
           <div style={{ fontSize: "72px", fontWeight: "900", color: "#cc0000", marginBottom: "16px" }}>404</div>
           <h2 style={{ fontSize: "24px", fontWeight: "700", color: "#111", margin: "0 0 12px" }}>Article Not Found</h2>
           <p style={{ fontSize: "16px", color: "#666", lineHeight: "1.6", margin: "0 0 32px" }}>
-            The article you're looking for may have been moved or is no longer available.
+            The article you are looking for may have been moved or is no longer available.
           </p>
           <Link href="/" style={{ background: "#cc0000", color: "#fff", padding: "12px 32px", fontSize: "14px", fontWeight: "700", textDecoration: "none", display: "inline-block", textTransform: "uppercase", letterSpacing: "1px" }}>
             Back to Homepage
@@ -91,7 +92,7 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
             <h2 style={{ color: "#fff", margin: "0 0 10px", fontSize: "24px", fontWeight: "900" }}>
               NEWS<span style={{ color: "#cc0000" }}>ORACLE</span>
             </h2>
-            <p style={{ margin: 0, fontSize: "12px" }}>© 2026 NewsOracle. All content is for informational purposes only.</p>
+            <p style={{ margin: 0, fontSize: "12px" }}>2026 NewsOracle. All content is for informational purposes only.</p>
           </div>
         </footer>
       </div>
@@ -162,7 +163,7 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
           "@type": "BreadcrumbList",
           "itemListElement": [
             { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.newsoracle.online" },
-            { "@type": "ListItem", "position": 2, "name": article.category?.charAt(0).toUpperCase() + article.category?.slice(1), "item": `https://www.newsoracle.online/?cat=${article.category}` },
+            { "@type": "ListItem", "position": 2, "name": article.category?.charAt(0).toUpperCase() + article.category?.slice(1), "item": `https://www.newsoracle.online/category/${article.category}` },
             { "@type": "ListItem", "position": 3, "name": article.title }
           ]
         })}} />
@@ -190,8 +191,8 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
               </h1>
             </Link>
             <nav style={{ display: "flex", gap: "20px" }}>
-              <Link href="/?cat=sports" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600", textTransform: "uppercase" }}>Sports</Link>
-              <Link href="/?cat=finance" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600", textTransform: "uppercase" }}>Finance</Link>
+              <Link href="/category/sports" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600", textTransform: "uppercase" }}>Sports</Link>
+              <Link href="/category/finance" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600", textTransform: "uppercase" }}>Finance</Link>
               <Link href="/category/politics" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600", textTransform: "uppercase" }}>Politics</Link>
               <Link href="/category/technology" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600", textTransform: "uppercase" }}>Technology</Link>
             </nav>
@@ -217,7 +218,7 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
             <div style={{ marginBottom: "20px" }}>
               <Link href="/" style={{ color: "#cc0000", textDecoration: "none", fontSize: "13px", fontWeight: "600" }}>Home</Link>
               <span style={{ color: "#999", margin: "0 8px" }}>›</span>
-              <span style={{ color: "#999", fontSize: "13px", textTransform: "capitalize" }}>{article.category}</span>
+              <Link href={`/category/${article.category}`} style={{ color: "#999", textDecoration: "none", fontSize: "13px", textTransform: "capitalize" }}>{article.category}</Link>
             </div>
 
             {/* Tags */}
@@ -282,14 +283,12 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
               </ul>
             </div>
 
-            {/* Article Body with Read Next after 2nd paragraph */}
+            {/* Article Body */}
             <div style={{ fontSize: "17px", lineHeight: "1.85", color: "#333", fontFamily: "Georgia, serif" }}>
               {paragraphs.slice(3).map((para, i) => {
                 const isWhy = para.toLowerCase().startsWith('why this matters') || para.toLowerCase().startsWith('why it matters');
-                const bodyParagraphs = paragraphs.slice(3);
-
-                const elements = [];
                 const isSubheading = para.startsWith('## ');
+                const elements = [];
 
                 if (isSubheading) {
                   elements.push(
@@ -307,7 +306,6 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
                   elements.push(<p key={i} style={{ marginTop: 0, marginBottom: "20px" }}>{para}</p>);
                 }
 
-                // Insert "Read Next" block after the 2nd body paragraph
                 if (i === 1 && readNextArticles.length >= 2) {
                   elements.push(
                     <div key="read-next" style={{ background: "#f8f9fa", border: "1px solid #eee", padding: "20px", margin: "28px 0" }}>
@@ -331,7 +329,7 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
               })}
             </div>
 
-            {/* Market Outlook Box — finance only */}
+            {/* Market Outlook — finance only */}
             {article.category === 'finance' && article.prediction && (
               <div style={{ background: "#f8f9fa", borderLeft: "4px solid #cc0000", padding: "24px", margin: "32px 0" }}>
                 <h3 style={{ color: "#cc0000", fontSize: "12px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 12px" }}>
@@ -356,20 +354,22 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
             )}
 
             {/* What Happens Next — politics only */}
-            {article.category === 'politics' && article.prediction && ({/* Tech Outlook — technology only */}
-            {article.category === 'technology' && article.prediction && (
-              <div style={{ background: "#f8f9fa", borderLeft: "4px solid #7b1fa2", padding: "24px", margin: "32px 0" }}>
-                <h3 style={{ color: "#7b1fa2", fontSize: "12px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 12px" }}>
-                  What This Means
+            {article.category === 'politics' && article.prediction && (
+              <div style={{ background: "#f8f9fa", borderLeft: "4px solid #2e7d32", padding: "24px", margin: "32px 0" }}>
+                <h3 style={{ color: "#2e7d32", fontSize: "12px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 12px" }}>
+                  What Happens Next
                 </h3>
                 <p style={{ fontSize: "16px", lineHeight: "1.7", color: "#333", margin: 0, fontFamily: "Georgia, serif" }}>
                   {article.prediction}
                 </p>
               </div>
             )}
-              <div style={{ background: "#f8f9fa", borderLeft: "4px solid #2e7d32", padding: "24px", margin: "32px 0" }}>
-                <h3 style={{ color: "#2e7d32", fontSize: "12px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 12px" }}>
-                  What Happens Next
+
+            {/* What This Means — technology only */}
+            {article.category === 'technology' && article.prediction && (
+              <div style={{ background: "#f8f9fa", borderLeft: "4px solid #7b1fa2", padding: "24px", margin: "32px 0" }}>
+                <h3 style={{ color: "#7b1fa2", fontSize: "12px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 12px" }}>
+                  What This Means
                 </h3>
                 <p style={{ fontSize: "16px", lineHeight: "1.7", color: "#333", margin: 0, fontFamily: "Georgia, serif" }}>
                   {article.prediction}
@@ -388,10 +388,10 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
             <div style={{ margin: "32px 0", paddingTop: "24px", borderTop: "1px solid #eee" }}>
               <p style={{ fontSize: "13px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px", color: "#666", marginBottom: "12px" }}>Share this article</p>
               <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-                <a href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(article.title)}&url=${encodeURIComponent(canonicalUrl)}`} target="_blank" rel="noopener noreferrer" style={{ background: "#000", color: "#fff", padding: "10px 20px", fontSize: "13px", fontWeight: "600", textDecoration: "none", display: "inline-block" }}>𝕏 Twitter</a>
+                <a href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(article.title)}&url=${encodeURIComponent(canonicalUrl)}`} target="_blank" rel="noopener noreferrer" style={{ background: "#000", color: "#fff", padding: "10px 20px", fontSize: "13px", fontWeight: "600", textDecoration: "none", display: "inline-block" }}>X Twitter</a>
                 <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(canonicalUrl)}`} target="_blank" rel="noopener noreferrer" style={{ background: "#1877f2", color: "#fff", padding: "10px 20px", fontSize: "13px", fontWeight: "600", textDecoration: "none", display: "inline-block" }}>Facebook</a>
                 <a href={`https://wa.me/?text=${encodeURIComponent(article.title + ' ' + canonicalUrl)}`} target="_blank" rel="noopener noreferrer" style={{ background: "#25d366", color: "#fff", padding: "10px 20px", fontSize: "13px", fontWeight: "600", textDecoration: "none", display: "inline-block" }}>WhatsApp</a>
-                <button onClick={() => window.print()} style={{ background: "#666", color: "#fff", padding: "10px 20px", fontSize: "13px", fontWeight: "600", border: "none", cursor: "pointer", display: "inline-block" }}>🖨 Print</button>
+                <button onClick={() => window.print()} style={{ background: "#666", color: "#fff", padding: "10px 20px", fontSize: "13px", fontWeight: "600", border: "none", cursor: "pointer", display: "inline-block" }}>Print</button>
               </div>
             </div>
 
@@ -478,7 +478,7 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
               NEWS<span style={{ color: "#cc0000" }}>ORACLE</span>
             </h2>
             <p style={{ margin: 0, fontSize: "12px" }}>
-              © 2026 NewsOracle. All content is for informational purposes only and does not constitute financial or betting advice.
+              2026 NewsOracle. All content is for informational purposes only and does not constitute financial or betting advice.
             </p>
           </div>
         </footer>
@@ -488,13 +488,12 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
   );
 }
 
-export async function getServerSideProps({ params, res }) {
+export async function getServerSideProps({ params }) {
   const supabaseServer = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
     process.env.NEXT_PUBLIC_SUPABASE_KEY
   );
 
-  // Extract numeric ID from slug URL (e.g. "153-argentina-beats-cape-verde" → 153)
   const rawId = params.id;
   const numericId = parseInt(rawId.split('-')[0], 10);
 
@@ -512,7 +511,6 @@ export async function getServerSideProps({ params, res }) {
     return { notFound: true };
   }
 
-  // 301 redirect old numeric-only URLs to slug URLs
   const expectedSlug = `${article.id}-${slugify(article.title)}`;
   if (rawId !== expectedSlug) {
     return {
@@ -523,7 +521,6 @@ export async function getServerSideProps({ params, res }) {
     };
   }
 
-  // Fetch 3 related articles from the same category
   const { data: related } = await supabaseServer
     .from("articles")
     .select("*")
@@ -532,7 +529,6 @@ export async function getServerSideProps({ params, res }) {
     .order("created_at", { ascending: false })
     .limit(3);
 
-  // Fetch 3 articles from OTHER categories for cross-linking
   const { data: crossCategory } = await supabaseServer
     .from("articles")
     .select("*")
