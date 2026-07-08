@@ -1,5 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { slugify } from '../lib/slugify';
+import { slugify } from '../../lib/slugify';
 async function postToFacebook(article) {
   try {
     const message = `🔴 ${article.title}\n\n${article.summary?.substring(0, 500)}...\n\n🔗 Read more: https://www.newsoracle.online`;
