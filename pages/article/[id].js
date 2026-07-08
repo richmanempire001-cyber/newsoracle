@@ -192,7 +192,8 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
             <nav style={{ display: "flex", gap: "20px" }}>
               <Link href="/?cat=sports" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600", textTransform: "uppercase" }}>Sports</Link>
               <Link href="/?cat=finance" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600", textTransform: "uppercase" }}>Finance</Link>
-              <Link href="/?cat=politics" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600", textTransform: "uppercase" }}>Politics</Link>
+              <Link href="/category/politics" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600", textTransform: "uppercase" }}>Politics</Link>
+              <Link href="/category/technology" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600", textTransform: "uppercase" }}>Technology</Link>
             </nav>
           </div>
         </header>
@@ -354,8 +355,17 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
               </div>
             )}
 
-            {/* What Happens Next — politics only */}
-            {article.category === 'politics' && article.prediction && (
+            {/* Tech Outlook — technology only */}
+            {article.category === 'technology' && article.prediction && (
+              <div style={{ background: "#f8f9fa", borderLeft: "4px solid #7b1fa2", padding: "24px", margin: "32px 0" }}>
+                <h3 style={{ color: "#7b1fa2", fontSize: "12px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 12px" }}>
+                  What This Means
+                </h3>
+                <p style={{ fontSize: "16px", lineHeight: "1.7", color: "#333", margin: 0, fontFamily: "Georgia, serif" }}>
+                  {article.prediction}
+                </p>
+              </div>
+            )}
               <div style={{ background: "#f8f9fa", borderLeft: "4px solid #2e7d32", padding: "24px", margin: "32px 0" }}>
                 <h3 style={{ color: "#2e7d32", fontSize: "12px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 12px" }}>
                   What Happens Next
@@ -402,7 +412,8 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
                   {article.category === 'sports' && 'The NewsOracle Sports Desk covers breaking sports news from the NFL, NBA, Premier League, UFC, tennis, cricket and major global sporting events with live updates and post-match analysis.'}
                   {article.category === 'finance' && 'The NewsOracle Markets Desk covers stock markets, cryptocurrency, economic policy and breaking financial news from Wall Street and global exchanges with data-driven analysis and market outlook.'}
                   {article.category === 'politics' && 'The NewsOracle Politics Desk covers US politics, Congress, the White House, Supreme Court, global elections and international relations with neutral, fact-based reporting.'}
-                  {!['sports', 'finance', 'politics'].includes(article.category) && 'NewsOracle is a digital news platform delivering breaking news and analysis in sports, finance, crypto and politics. Our editorial team monitors global news sources around the clock.'}
+                  {article.category === 'technology' && 'The NewsOracle Tech Desk covers breaking technology news including AI, Apple, Google, Tesla, Meta, OpenAI, product launches and the innovations shaping the future.'}
+                  {!['sports', 'finance', 'politics', 'technology'].includes(article.category) && 'NewsOracle is a digital news platform delivering breaking news and analysis in sports, finance, crypto and politics. Our editorial team monitors global news sources around the clock.'}
                 </p>
               </div>
             </div>
