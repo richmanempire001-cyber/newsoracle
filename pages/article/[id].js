@@ -355,7 +355,8 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
               </div>
             )}
 
-            {/* Tech Outlook — technology only */}
+            {/* What Happens Next — politics only */}
+            {article.category === 'politics' && article.prediction && ({/* Tech Outlook — technology only */}
             {article.category === 'technology' && article.prediction && (
               <div style={{ background: "#f8f9fa", borderLeft: "4px solid #7b1fa2", padding: "24px", margin: "32px 0" }}>
                 <h3 style={{ color: "#7b1fa2", fontSize: "12px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 12px" }}>
