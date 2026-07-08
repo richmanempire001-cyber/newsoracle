@@ -1,4 +1,6 @@
-import Anthropic from '@anthropic-ai/sdk';async function postToFacebook(article) {
+import Anthropic from '@anthropic-ai/sdk';
+import { slugify } from '../lib/slugify';
+async function postToFacebook(article) {
   try {
     const message = `🔴 ${article.title}\n\n${article.summary?.substring(0, 500)}...\n\n🔗 Read more: https://www.newsoracle.online`;
    await fetch(`https://graph.facebook.com/${process.env.FACEBOOK_PAGE_ID}/photos`, {
@@ -346,6 +348,12 @@ export default async function handler(req, res) {
         continue;
       }
 
+      // QUALITY GATE 3: Skip if no full article but Claude padded over 400 words (filler detected)
+      if (!fullText && wordCount > 400) {
+        console.log(`Skipped ${category}: filler detected (${wordCount} words from thin source)`);
+        continue;
+      }
+
       const authorNames = { sports: 'Sports Desk', finance: 'Markets Desk', politics: 'Politics Desk' };
 
       results.push({
@@ -355,7 +363,7 @@ export default async function handler(req, res) {
         summary: article.summary,
         meta_description: article.metaDescription || null,
         prediction: article.prediction || null,
-        category: article.category,
+        category: category,
         tag: article.tag,
         author: authorNames[category] || 'NewsOracle Editorial',
         image: await getPexelsImage(article.tag || article.category) || rss.image || FALLBACK_IMAGES[category],
@@ -387,7 +395,7 @@ for (const article of results) {
 
 // IndexNow ping — notify Bing and Google instantly
 try {
-  const urls = (insertedArticles || []).map(a => `https://www.newsoracle.online/article/${a.id}`);
+  const urls = (insertedArticles || []).map(a => `https://www.newsoracle.online/article/${a.id}-${slugify(a.title)}`);
   await fetch('https://api.indexnow.org/indexnow', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
