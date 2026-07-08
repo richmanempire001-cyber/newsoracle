@@ -46,34 +46,54 @@ export default function AboutPage() {
           </div>
         </div>
 
-        {/* Header */}
-        <header style={{ background: "#fff", borderBottom: "3px solid #cc0000", padding: "16px 0" }}>
-          <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <Link href="/" style={{ textDecoration: "none" }}>
-              <h1 style={{ fontSize: "36px", fontWeight: "900", margin: 0, color: "#111", letterSpacing: "-1px" }}>
-                NEWS<span style={{ color: "#cc0000" }}>ORACLE</span>
-              </h1>
-            </Link>
-            <nav style={{ display: "flex", gap: "20px" }}>
-              <Link href="/?cat=sports" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600", textTransform: "uppercase" }}>Sports</Link>
-              <Link href="/?cat=finance" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600", textTransform: "uppercase" }}>Finance</Link>
-              <Link href="/?cat=politics" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600", textTransform: "uppercase" }}>Politics</Link>
-            </nav>
+        {/* Header — CNN Two-Row Style */}
+        <header style={{ background: "#fff", borderBottom: "3px solid #cc0000" }}>
+          <div style={{ borderBottom: "1px solid #eee", padding: "12px 0" }}>
+            <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div>
+                <Link href="/" style={{ textDecoration: "none" }}>
+                  <h1 style={{ fontSize: "42px", fontWeight: "900", margin: 0, color: "#111", letterSpacing: "-1px" }}>
+                    NEWS<span style={{ color: "#cc0000" }}>ORACLE</span>
+                  </h1>
+                </Link>
+                <p style={{ margin: "2px 0 0", fontSize: "11px", color: "#999", letterSpacing: "3px", textTransform: "uppercase" }}>
+                  Sports · Finance · Politics · Intelligence
+                </p>
+              </div>
+              <div className="utility-nav" style={{ display: "flex", gap: "20px" }}>
+                <Link href="/about" style={{ color: "#cc0000", textDecoration: "none", fontSize: "13px", fontWeight: "600" }}>About</Link>
+                <Link href="/contact" style={{ color: "#666", textDecoration: "none", fontSize: "13px" }}>Contact</Link>
+              </div>
+            </div>
+          </div>
+          <div className="category-nav-row" style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 20px", display: "flex", gap: "0" }}>
+            {[
+              { label: "Sports", href: "/category/sports" },
+              { label: "Finance", href: "/category/finance" },
+              { label: "Politics", href: "/category/politics" },
+            ].map(item => (
+              <Link key={item.label} href={item.href} style={{ textDecoration: "none" }}>
+                <div style={{ padding: "14px 24px", fontSize: "13px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px", color: "#333", borderBottom: "3px solid transparent", transition: "all 0.2s" }}
+                  onMouseEnter={e => { e.currentTarget.style.color = "#cc0000"; e.currentTarget.style.borderBottomColor = "#cc0000"; }}
+                  onMouseLeave={e => { e.currentTarget.style.color = "#333"; e.currentTarget.style.borderBottomColor = "transparent"; }}
+                >
+                  {item.label}
+                </div>
+              </Link>
+            ))}
           </div>
         </header>
 
-        <style>{`
+        <style>{\`
           @media (max-width: 600px) {
-            nav { display: none !important; }
+            .utility-nav { display: none !important; }
+            .category-nav-row { overflow-x: auto; }
             header h1 { font-size: 28px !important; }
             .about-grid { grid-template-columns: 1fr !important; }
             .about-box { padding: 24px !important; }
-          }
-          .top-bar-right { display: inline; }
-          @media (max-width: 600px) {
             .top-bar-right { display: none !important; }
           }
-        `}</style>
+        \`}</style>
 
         {/* Hero Banner */}
         <div style={{ background: "linear-gradient(135deg, #111 0%, #333 100%)", color: "#fff", padding: "60px 20px", textAlign: "center" }}>
@@ -160,15 +180,17 @@ export default function AboutPage() {
             <h2 style={{ fontSize: "22px", fontWeight: "900", color: "#111", margin: "0 0 24px" }}>What We Cover</h2>
             <div className="about-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "20px" }}>
               {[
-                { cat: "Sports", color: "#cc0000", icon: "🏆", desc: "NFL, NBA, Premier League, UFC, Tennis, Cricket, Formula 1 and all major global sporting events — live updates and post-match analysis." },
-                { cat: "Finance", color: "#0052cc", icon: "💰", desc: "Stock markets, cryptocurrency, Bitcoin, S&P 500, Fed decisions, inflation data, and breaking financial news from Wall Street and beyond." },
-                { cat: "Politics", color: "#2e7d32", icon: "🏛️", desc: "US politics, Congress, White House, Supreme Court, global elections, international relations and policy decisions that shape the world." },
-              ].map(({ cat, color, icon, desc }) => (
-                <div key={cat} style={{ padding: "28px", background: "#f8f9fa", borderBottom: `4px solid ${color}`, textAlign: "center" }}>
-                  <div style={{ fontSize: "36px", marginBottom: "12px" }}>{icon}</div>
-                  <h3 style={{ fontSize: "18px", fontWeight: "800", color: "#111", margin: "0 0 12px" }}>{cat}</h3>
-                  <p style={{ fontSize: "13px", color: "#666", lineHeight: "1.7", margin: 0 }}>{desc}</p>
-                </div>
+                { cat: "Sports", color: "#cc0000", icon: "🏆", desc: "NFL, NBA, Premier League, UFC, Tennis, Cricket, Formula 1 and all major global sporting events — live updates and post-match analysis.", href: "/category/sports" },
+                { cat: "Finance", color: "#0052cc", icon: "💰", desc: "Stock markets, cryptocurrency, Bitcoin, S&P 500, Fed decisions, inflation data, and breaking financial news from Wall Street and beyond.", href: "/category/finance" },
+                { cat: "Politics", color: "#2e7d32", icon: "🏛️", desc: "US politics, Congress, White House, Supreme Court, global elections, international relations and policy decisions that shape the world.", href: "/category/politics" },
+              ].map(({ cat, color, icon, desc, href }) => (
+                <Link key={cat} href={href} style={{ textDecoration: "none" }}>
+                  <div style={{ padding: "28px", background: "#f8f9fa", borderBottom: \`4px solid \${color}\`, textAlign: "center", cursor: "pointer" }}>
+                    <div style={{ fontSize: "36px", marginBottom: "12px" }}>{icon}</div>
+                    <h3 style={{ fontSize: "18px", fontWeight: "800", color: "#111", margin: "0 0 12px" }}>{cat}</h3>
+                    <p style={{ fontSize: "13px", color: "#666", lineHeight: "1.7", margin: 0 }}>{desc}</p>
+                  </div>
+                </Link>
               ))}
             </div>
           </div>
@@ -218,11 +240,28 @@ export default function AboutPage() {
 
         {/* Footer */}
         <footer style={{ background: "#111", color: "#999", padding: "40px 20px", marginTop: "40px" }}>
-          <div style={{ maxWidth: "1200px", margin: "0 auto", textAlign: "center" }}>
-            <h2 style={{ color: "#fff", margin: "0 0 10px", fontSize: "24px", fontWeight: "900" }}>
-              NEWS<span style={{ color: "#cc0000" }}>ORACLE</span>
-            </h2>
-            <p style={{ margin: 0, fontSize: "12px" }}>
+          <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #333", paddingBottom: "20px", marginBottom: "20px", flexWrap: "wrap", gap: "16px" }}>
+              <h2 style={{ color: "#fff", margin: 0, fontSize: "24px", fontWeight: "900" }}>
+                NEWS<span style={{ color: "#cc0000" }}>ORACLE</span>
+              </h2>
+              <div style={{ display: "flex", gap: "16px", justifyContent: "center" }}>
+                <a href="https://t.me/NewsOracleOfficial" target="_blank" rel="noopener noreferrer" style={{ color: "#fff", fontSize: "13px", textDecoration: "none", background: "#0088cc", padding: "8px 16px" }}>Telegram</a>
+                <a href="https://www.facebook.com/profile.php?id=61591337781640" target="_blank" rel="noopener noreferrer" style={{ color: "#fff", fontSize: "13px", textDecoration: "none", background: "#1877f2", padding: "8px 16px" }}>Facebook</a>
+              </div>
+              <div style={{ display: "flex", gap: "20px", flexWrap: "wrap" }}>
+                <Link href="/category/sports" style={{ color: "#999", fontSize: "13px", textDecoration: "none" }}>Sports</Link>
+                <Link href="/category/finance" style={{ color: "#999", fontSize: "13px", textDecoration: "none" }}>Finance</Link>
+                <Link href="/category/politics" style={{ color: "#999", fontSize: "13px", textDecoration: "none" }}>Politics</Link>
+              </div>
+            </div>
+            <div style={{ display: "flex", justifyContent: "center", gap: "20px", marginBottom: "16px", flexWrap: "wrap" }}>
+              <Link href="/about" style={{ color: "#999", textDecoration: "none", fontSize: "13px" }}>About Us</Link>
+              <Link href="/contact" style={{ color: "#999", textDecoration: "none", fontSize: "13px" }}>Contact</Link>
+              <Link href="/privacy-policy" style={{ color: "#999", textDecoration: "none", fontSize: "13px" }}>Privacy Policy</Link>
+              <Link href="/terms" style={{ color: "#999", textDecoration: "none", fontSize: "13px" }}>Terms of Service</Link>
+            </div>
+            <p style={{ margin: 0, fontSize: "12px", textAlign: "center" }}>
               © 2026 NewsOracle. All content is for informational purposes only and does not constitute financial or betting advice.
             </p>
           </div>
