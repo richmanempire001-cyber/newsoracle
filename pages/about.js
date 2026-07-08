@@ -182,7 +182,7 @@ export default function AboutPage() {
               {[
                 { cat: "Sports", color: "#cc0000", icon: "🏆", desc: "NFL, NBA, Premier League, UFC, Tennis, Cricket, Formula 1 and all major global sporting events — live updates and post-match analysis.", href: "/category/sports" },
                 { cat: "Finance", color: "#0052cc", icon: "💰", desc: "Stock markets, cryptocurrency, Bitcoin, S&P 500, Fed decisions, inflation data, and breaking financial news from Wall Street and beyond.", href: "/category/finance" },
-                { cat: "Politics", color: "#2e7d32", icon: "🏛️", desc: "US politics, Congress, White House, Supreme Court, global elections, international relations and policy decisions that shape the world.", href: "/category/politics" },
+                { cat: "Politics", color: "#2e7d32", icon: "\u{1F3DB}", desc: "US politics, Congress, White House, Supreme Court, global elections, international relations and policy decisions that shape the world.", href: "/category/politics" },
               ].map(({ cat, color, icon, desc, href }) => (
                 <Link key={cat} href={href} style={{ textDecoration: "none" }}>
                   <div style={{ padding: "28px", background: "#f8f9fa", borderBottom: \`4px solid \${color}\`, textAlign: "center", cursor: "pointer" }}>
