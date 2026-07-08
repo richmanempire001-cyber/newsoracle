@@ -33,7 +33,7 @@ export default function Custom404() {
             {[
               { label: "Sports", href: "/category/sports" },
               { label: "Finance", href: "/category/finance" },
-              { label: "Politics", href: "/category/politics" },
+              { label: "Politics", href: "/category/politics" },{ label: "Technology", href: "/category/technology" },
             ].map(item => (
               <Link key={item.label} href={item.href} style={{ textDecoration: "none" }}>
                 <div style={{ padding: "14px 24px", fontSize: "13px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px", color: "#333" }}>
