@@ -23,8 +23,15 @@ const CATEGORY_CONFIG = {
     title: "Politics",
     description: "US and global political news covering Congress, the White House, Supreme Court, elections, international relations and policy decisions that shape the world.",
     color: "#2e7d32",
-    icon: "🏛️",
+    icon: "🏛",
     keywords: "politics news, US politics, Congress, White House, Supreme Court, elections, Senate",
+  },
+  technology: {
+    title: "Technology",
+    description: "Breaking technology news covering AI, Apple, Google, Tesla, Meta, OpenAI, startups, product launches and the innovations shaping the future.",
+    color: "#7b1fa2",
+    icon: "💻",
+    keywords: "technology news, AI, Apple, Google, Tesla, OpenAI, ChatGPT, Meta, startups",
   },
 };
 
@@ -127,7 +134,7 @@ export default function CategoryPage({ category, config, articles, heroArticle, 
               </h1>
             </Link>
             <nav className="desktop-nav" style={{ display: "flex", gap: "4px" }}>
-              {["sports", "finance", "politics"].map(cat => (
+              {["sports", "finance", "politics", "technology"].map(cat => (
                 <Link
                   key={cat}
                   href={`/category/${cat}`}
