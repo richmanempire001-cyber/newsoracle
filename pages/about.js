@@ -201,10 +201,10 @@ export default function AboutPage() {
             <p style={{ fontSize: "14px", color: "#999", margin: "0 0 24px" }}>Get breaking news delivered instantly to your favourite platform</p>
             <div style={{ display: "flex", justifyContent: "center", gap: "16px", flexWrap: "wrap" }}>
               <a href="https://t.me/NewsOracleOfficial" target="_blank" rel="noopener noreferrer" style={{ background: "#0088cc", color: "#fff", padding: "12px 28px", fontSize: "14px", fontWeight: "700", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "8px" }}>
-                📱 Telegram
+                Telegram
               </a>
               <a href="https://www.facebook.com/profile.php?id=61591337781640" target="_blank" rel="noopener noreferrer" style={{ background: "#1877f2", color: "#fff", padding: "12px 28px", fontSize: "14px", fontWeight: "700", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "8px" }}>
-                👍 Facebook
+                Facebook
               </a>
             </div>
           </div>
@@ -230,7 +230,7 @@ export default function AboutPage() {
 
           {/* Disclaimer */}
           <div style={{ background: "#fffbf0", border: "1px solid #ffe082", padding: "24px", marginBottom: "24px" }}>
-            <h3 style={{ fontSize: "14px", fontWeight: "700", color: "#111", margin: "0 0 10px" }}>⚠️ Disclaimer</h3>
+            <h3 style={{ fontSize: "14px", fontWeight: "700", color: "#111", margin: "0 0 10px" }}>Disclaimer</h3>
             <p style={{ margin: 0, fontSize: "13px", color: "#888", lineHeight: "1.7" }}>
               All content published on NewsOracle is for informational purposes only. Articles are professionally written based on publicly available news sources. NewsOracle does not constitute financial, legal, or investment advice. Market outlooks and predictions are editorial opinions only. Always consult a qualified professional before making financial decisions.
             </p>
@@ -262,7 +262,7 @@ export default function AboutPage() {
               <Link href="/terms" style={{ color: "#999", textDecoration: "none", fontSize: "13px" }}>Terms of Service</Link>
             </div>
             <p style={{ margin: 0, fontSize: "12px", textAlign: "center" }}>
-              © 2026 NewsOracle. All content is for informational purposes only and does not constitute financial or betting advice.
+              2026 NewsOracle. All content is for informational purposes only and does not constitute financial or betting advice.
             </p>
           </div>
         </footer>
