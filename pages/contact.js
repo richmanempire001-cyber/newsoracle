@@ -45,6 +45,7 @@ export default function Contact() {
               { label: "Sports", href: "/category/sports" },
               { label: "Finance", href: "/category/finance" },
               { label: "Politics", href: "/category/politics" },
+              { label: "Technology", href: "/category/technology" },
             ].map(item => (
               <Link key={item.label} href={item.href} style={{ textDecoration: "none" }}>
                 <div style={{ padding: "14px 24px", fontSize: "13px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px", color: "#333", borderBottom: "3px solid transparent" }}>
