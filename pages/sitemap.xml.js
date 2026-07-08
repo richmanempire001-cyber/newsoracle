@@ -33,7 +33,8 @@ function generateSiteMap(articles) {
     <loc>https://www.newsoracle.online/category/politics</loc>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
-  </url><url>
+  </url>
+  <url>
     <loc>https://www.newsoracle.online/category/technology</loc>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
