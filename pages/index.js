@@ -162,6 +162,7 @@ export default function Home({ initialArticles, featuredSports, featuredFinance,
                 { label: "Sports", value: "sports", href: "/category/sports" },
                 { label: "Finance", value: "finance", href: "/category/finance" },
                 { label: "Politics", value: "politics", href: "/category/politics" },
+                { label: "Technology", value: "technology", href: "/category/technology" },
               ].map(item => (
                 item.href ? (
                   <Link key={item.value} href={item.href} style={{ textDecoration: "none" }}>
@@ -344,9 +345,10 @@ export default function Home({ initialArticles, featuredSports, featuredFinance,
                 <a href="https://www.facebook.com/profile.php?id=61591337781640" target="_blank" rel="noopener noreferrer" style={{ color: "#fff", fontSize: "13px", textDecoration: "none", background: "#1877f2", padding: "8px 16px" }}>Facebook</a>
               </div>
               <div style={{ display: "flex", gap: "20px", flexWrap: "wrap" }}>
-                <Link href="/?cat=sports" style={{ color: "#999", fontSize: "13px", textDecoration: "none" }}>Sports</Link>
-                <Link href="/?cat=finance" style={{ color: "#999", fontSize: "13px", textDecoration: "none" }}>Finance</Link>
-                <Link href="/?cat=politics" style={{ color: "#999", fontSize: "13px", textDecoration: "none" }}>Politics</Link>
+                <Link href="/category/sports" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600" }}>Sports</Link>
+                  <Link href="/category/finance" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600" }}>Finance</Link>
+                  <Link href="/category/politics" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600" }}>Politics</Link>
+                  <Link href="/category/technology" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600" }}>Technology</Link>
               </div>
             </div>
             <div style={{ display: "flex", justifyContent: "center", gap: "20px", marginBottom: "16px", flexWrap: "wrap" }}>
