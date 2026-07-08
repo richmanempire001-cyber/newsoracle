@@ -39,8 +39,9 @@ function cleanMetaDescription(summary) {
   return truncated.substring(0, lastSpace) + '...';
 }
 
-export default function ArticlePage({ article, related }) {
+export default function ArticlePage({ article, related, crossCategoryArticles }) {
   const [scrollProgress, setScrollProgress] = useState(0);
+  const [showBackToTop, setShowBackToTop] = useState(false);
 
   useEffect(() => {
     function handleScroll() {
@@ -48,6 +49,7 @@ export default function ArticlePage({ article, related }) {
       const docHeight = document.documentElement.scrollHeight - window.innerHeight;
       const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
       setScrollProgress(progress);
+      setShowBackToTop(scrollTop > 600);
     }
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
@@ -188,9 +190,9 @@ export default function ArticlePage({ article, related }) {
               </h1>
             </Link>
             <nav style={{ display: "flex", gap: "20px" }}>
-              <Link href="/category/sports" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600", textTransform: "uppercase" }}>Sports</Link>
-              <Link href="/category/finance" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600", textTransform: "uppercase" }}>Finance</Link>
-              <Link href="/category/politics" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600", textTransform: "uppercase" }}>Politics</Link>
+              <Link href="/?cat=sports" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600", textTransform: "uppercase" }}>Sports</Link>
+              <Link href="/?cat=finance" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600", textTransform: "uppercase" }}>Finance</Link>
+              <Link href="/?cat=politics" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600", textTransform: "uppercase" }}>Politics</Link>
             </nav>
           </div>
         </header>
@@ -337,14 +339,14 @@ export default function ArticlePage({ article, related }) {
                 <p style={{ fontSize: "16px", lineHeight: "1.7", color: "#333", margin: "0 0 16px", fontFamily: "Georgia, serif" }}>
                   {article.prediction}
                 </p>
-                <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", marginTop: "4px" }}>
                   {article.sentiment && (
-                    <span style={{ background: article.sentiment === "positive" ? "#e8f5e9" : article.sentiment === "negative" ? "#ffebee" : "#f5f5f5", color: article.sentiment === "positive" ? "#2e7d32" : article.sentiment === "negative" ? "#c62828" : "#666", padding: "5px 14px", fontSize: "12px", fontWeight: "600", textTransform: "uppercase" }}>
-                      {article.sentiment}
+                    <span style={{ display: "inline-block", background: article.sentiment === "positive" ? "#e8f5e9" : article.sentiment === "negative" ? "#ffebee" : "#f5f5f5", color: article.sentiment === "positive" ? "#2e7d32" : article.sentiment === "negative" ? "#c62828" : "#666", padding: "6px 16px", fontSize: "12px", fontWeight: "600", textTransform: "uppercase", borderRadius: "2px" }}>
+                      Sentiment: {article.sentiment}
                     </span>
                   )}
                   {article.confidence && (
-                    <span style={{ background: "#e3f2fd", color: "#1565c0", padding: "5px 14px", fontSize: "12px", fontWeight: "600" }}>
+                    <span style={{ display: "inline-block", background: "#e3f2fd", color: "#1565c0", padding: "6px 16px", fontSize: "12px", fontWeight: "600", borderRadius: "2px" }}>
                       Analyst Confidence: {article.confidence}%
                     </span>
                   )}
@@ -378,6 +380,7 @@ export default function ArticlePage({ article, related }) {
                 <a href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(article.title)}&url=${encodeURIComponent(canonicalUrl)}`} target="_blank" rel="noopener noreferrer" style={{ background: "#000", color: "#fff", padding: "10px 20px", fontSize: "13px", fontWeight: "600", textDecoration: "none", display: "inline-block" }}>𝕏 Twitter</a>
                 <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(canonicalUrl)}`} target="_blank" rel="noopener noreferrer" style={{ background: "#1877f2", color: "#fff", padding: "10px 20px", fontSize: "13px", fontWeight: "600", textDecoration: "none", display: "inline-block" }}>Facebook</a>
                 <a href={`https://wa.me/?text=${encodeURIComponent(article.title + ' ' + canonicalUrl)}`} target="_blank" rel="noopener noreferrer" style={{ background: "#25d366", color: "#fff", padding: "10px 20px", fontSize: "13px", fontWeight: "600", textDecoration: "none", display: "inline-block" }}>WhatsApp</a>
+                <button onClick={() => window.print()} style={{ background: "#666", color: "#fff", padding: "10px 20px", fontSize: "13px", fontWeight: "600", border: "none", cursor: "pointer", display: "inline-block" }}>🖨 Print</button>
               </div>
             </div>
 
@@ -404,7 +407,23 @@ export default function ArticlePage({ article, related }) {
               </div>
             </div>
 
-            
+            {/* More from NewsOracle — cross-category articles */}
+            {crossCategoryArticles.length > 0 && (
+              <div style={{ marginTop: "32px", paddingTop: "24px", borderTop: "1px solid #eee" }}>
+                <h3 style={{ fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "2px", color: "#cc0000", margin: "0 0 16px" }}>More from NewsOracle</h3>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px" }}>
+                  {crossCategoryArticles.map(rel => (
+                    <Link key={rel.id} href={articlePath(rel)} style={{ textDecoration: "none" }}>
+                      <div style={{ cursor: "pointer" }}>
+                        <img loading="lazy" src={getImage(rel)} alt={rel.title} style={{ width: "100%", height: "120px", objectFit: "cover", display: "block", marginBottom: "8px" }} />
+                        <span style={{ fontSize: "10px", color: "#cc0000", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px" }}>{rel.category}</span>
+                        <p style={{ margin: "4px 0 0", fontSize: "13px", fontWeight: "600", color: "#111", lineHeight: "1.4" }}>{rel.title}</p>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
 
           </article>
 
@@ -429,6 +448,16 @@ export default function ArticlePage({ article, related }) {
           </aside>
 
         </div>
+
+        {/* Back to Top Button */}
+        {showBackToTop && (
+          <button
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            style={{ position: "fixed", bottom: "30px", right: "30px", width: "48px", height: "48px", background: "#cc0000", color: "#fff", border: "none", borderRadius: "50%", fontSize: "20px", fontWeight: "900", cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.2)", zIndex: 999, display: "flex", alignItems: "center", justifyContent: "center" }}
+          >
+            ↑
+          </button>
+        )}
 
         {/* Footer */}
         <footer style={{ background: "#111", color: "#999", padding: "40px 20px", marginTop: "40px" }}>
@@ -491,10 +520,20 @@ export async function getServerSideProps({ params, res }) {
     .order("created_at", { ascending: false })
     .limit(3);
 
+  // Fetch 3 articles from OTHER categories for cross-linking
+  const { data: crossCategory } = await supabaseServer
+    .from("articles")
+    .select("*")
+    .neq("category", article.category)
+    .neq("id", article.id)
+    .order("created_at", { ascending: false })
+    .limit(3);
+
   return {
     props: {
       article,
       related: related || [],
+      crossCategoryArticles: crossCategory || [],
     },
   };
 }
