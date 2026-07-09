@@ -155,7 +155,7 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
   return (
     <>
       <Head>
-        <title>{article.title} — NewsOracle</title>
+        <title>{`${article.title} — NewsOracle`}</title>
         <meta name="description" content={metaDesc} />
         <link rel="canonical" href={canonicalUrl} />
         <meta property="og:title" content={article.title} />
