@@ -30,6 +30,14 @@ function timeAgo(date) {
   return `${Math.floor(seconds / 86400)} days ago`;
 }
 
+function formatViews(views) {
+  if (!views || views < 1) return "0 views";
+  if (views < 1000) return `${views} views`;
+  if (views < 10000) return `${(views / 1000).toFixed(1)}K views`;
+  if (views < 1000000) return `${Math.floor(views / 1000)}K views`;
+  return `${(views / 1000000).toFixed(1)}M views`;
+}
+
 function cleanMetaDescription(summary) {
   if (!summary) return "";
   const firstPara = summary.split('\n\n')[0] || summary;
@@ -38,6 +46,40 @@ function cleanMetaDescription(summary) {
   const truncated = clean.substring(0, 157);
   const lastSpace = truncated.lastIndexOf(' ');
   return truncated.substring(0, lastSpace) + '...';
+}
+
+function buildFaqSchema(article, paragraphs) {
+  const faqItems = [];
+  const firstPara = paragraphs[0] || '';
+  const cleanFirst = firstPara.replace(/^[A-Z\s]+ — /, '');
+  if (cleanFirst.length > 30) {
+    faqItems.push({
+      "@type": "Question",
+      "name": `What happened with ${article.tag || article.category}?`,
+      "acceptedAnswer": { "@type": "Answer", "text": cleanFirst }
+    });
+  }
+  const whyPara = paragraphs.find(p => p.toLowerCase().startsWith('why this matters') || p.toLowerCase().startsWith('why it matters'));
+  if (whyPara) {
+    faqItems.push({
+      "@type": "Question",
+      "name": "Why does this matter?",
+      "acceptedAnswer": { "@type": "Answer", "text": whyPara }
+    });
+  }
+  if (article.prediction) {
+    faqItems.push({
+      "@type": "Question",
+      "name": "What happens next?",
+      "acceptedAnswer": { "@type": "Answer", "text": article.prediction }
+    });
+  }
+  if (faqItems.length === 0) return null;
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": faqItems
+  };
 }
 
 export default function ArticlePage({ article, related, crossCategoryArticles }) {
@@ -104,6 +146,8 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
   const canonicalUrl = articleUrl(article);
   const imageUrl = getImage(article);
   const wordCount = article.summary?.trim().split(/\s+/).length || 0;
+  const faqSchema = buildFaqSchema(article, paragraphs);
+  const isBreaking = (new Date() - new Date(article.created_at)) < 7200000;
 
   const readNextArticles = related.slice(0, 2);
   const sidebarArticles = related.slice(0, 3);
@@ -167,6 +211,9 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
             { "@type": "ListItem", "position": 3, "name": article.title }
           ]
         })}} />
+        {faqSchema && (
+          <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
+        )}
       </Head>
 
       {/* Reading Progress Bar */}
@@ -205,6 +252,11 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
             .article-box { padding: 16px !important; }
             .article-layout { grid-template-columns: 1fr !important; }
             .top-bar-right { display: none !important; }
+            .cross-category-grid { grid-template-columns: 1fr !important; }
+          }
+          @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
           }
         `}</style>
 
@@ -223,14 +275,14 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
 
             {/* Tags */}
             <div style={{ marginBottom: "16px", display: "flex", gap: "8px" }}>
-  {(new Date() - new Date(article.created_at)) < 7200000 && (
-    <span style={{ background: "#ff0000", color: "#fff", padding: "4px 12px", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px", animation: "pulse 2s infinite" }}>
-      BREAKING
-    </span>
-  )}
-  <span style={{ background: "#cc0000", color: "#fff", padding: "4px 12px", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px" }}>
-    {article.category}
-  </span>
+              {isBreaking && (
+                <span style={{ background: "#ff0000", color: "#fff", padding: "4px 12px", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px", animation: "pulse 2s infinite" }}>
+                  BREAKING
+                </span>
+              )}
+              <span style={{ background: "#cc0000", color: "#fff", padding: "4px 12px", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px" }}>
+                {article.category}
+              </span>
               {article.tag && (
                 <span style={{ background: "#f0f0f0", color: "#555", padding: "4px 12px", fontSize: "11px", fontWeight: "600", textTransform: "uppercase" }}>
                   {article.tag}
@@ -253,7 +305,10 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
                 {new Date(article.created_at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })} GMT
               </span>
               <span style={{ fontSize: "13px", color: "#999" }}>
-                📖 {getReadTime(article.summary)} min read
+                {getReadTime(article.summary)} min read
+              </span>
+              <span style={{ fontSize: "13px", color: "#666" }}>
+                {formatViews(article.views)}
               </span>
               <span style={{ fontSize: "13px", color: "#cc0000", fontWeight: "600" }}>
                 Updated {timeAgo(article.created_at)}
@@ -278,7 +333,7 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
 
             {/* Key Points Box */}
             <div style={{ background: "#fff8f8", border: "1px solid #ffcccc", borderLeft: "4px solid #cc0000", padding: "20px 24px", marginBottom: "28px" }}>
-              <h3 style={{ color: "#cc0000", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 16px" }}>🔴 Key Points</h3>
+              <h3 style={{ color: "#cc0000", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 16px" }}>Key Points</h3>
               <ul style={{ margin: 0, padding: "0 0 0 18px" }}>
                 {paragraphs.slice(0, 3).map((para, i) => (
                   <li key={i} style={{ fontSize: "14px", color: "#333", lineHeight: "1.7", marginBottom: "12px" }}>
@@ -385,7 +440,7 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
             {/* Sources */}
             <div style={{ padding: "12px 0", borderTop: "1px solid #eee", marginTop: "24px" }}>
               <p style={{ margin: 0, fontSize: "12px", color: "#999", lineHeight: "1.6" }}>
-                📰 <strong>Sources:</strong> {article.source ? `Based on reporting from ${article.source} and other international news sources.` : 'Based on reporting from international news sources via Google News and leading global publications.'}
+                <strong>Sources:</strong> {article.source ? `Based on reporting from ${article.source} and other international news sources.` : 'Based on reporting from international news sources via Google News and leading global publications.'}
               </p>
             </div>
 
@@ -424,11 +479,11 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
               </div>
             </div>
 
-            {/* More from NewsOracle — cross-category articles */}
+            {/* More from NewsOracle */}
             {crossCategoryArticles.length > 0 && (
               <div style={{ marginTop: "32px", paddingTop: "24px", borderTop: "1px solid #eee" }}>
                 <h3 style={{ fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "2px", color: "#cc0000", margin: "0 0 16px" }}>More from NewsOracle</h3>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px" }}>
+                <div className="cross-category-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px" }}>
                   {crossCategoryArticles.map(rel => (
                     <Link key={rel.id} href={articlePath(rel)} style={{ textDecoration: "none" }}>
                       <div style={{ cursor: "pointer" }}>
@@ -526,6 +581,12 @@ export async function getServerSideProps({ params }) {
     };
   }
 
+  // Increment view count
+  await supabaseServer
+    .from("articles")
+    .update({ views: (article.views || 0) + 1 })
+    .eq("id", numericId);
+
   const { data: related } = await supabaseServer
     .from("articles")
     .select("*")
@@ -544,7 +605,7 @@ export async function getServerSideProps({ params }) {
 
   return {
     props: {
-      article,
+      article: { ...article, views: (article.views || 0) + 1 },
       related: related || [],
       crossCategoryArticles: crossCategory || [],
     },
