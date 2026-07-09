@@ -298,6 +298,7 @@ async function generateArticle(headline, description, category) {
 
 Headline: "${headline}"
 Source material: "${description}"
+Source quality: ${description.length > 1000 ? 'Full article available — write a comprehensive 600-900 word article' : 'Limited source — write a focused 300-400 word article using only available facts, do not pad'}
 
 ABSOLUTE RULES — violating any of these makes the article unpublishable:
 - Write ONLY based on facts in the headline and source material. Do NOT invent quotes, statistics, names, or details.
@@ -365,7 +366,7 @@ export default async function handler(req, res) {
       const sourceMaterial = fullText || rss.description;
 
       // QUALITY GATE 1: Skip if no full article AND RSS description is too thin
-      if (!fullText && rss.description.length < 300) {
+      if (!fullText && rss.description.length < 200) {
         console.log(`Skipped ${category}: thin source (${rss.description.length} chars, no full article)`);
         continue;
       }
