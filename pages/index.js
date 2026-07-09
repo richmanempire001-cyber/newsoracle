@@ -33,18 +33,7 @@ export default function Home({ initialArticles, featuredSports, featuredFinance,
   const [articles, setArticles] = useState(initialArticles || []);
   const [filter, setFilter] = useState("all");
   const [visible, setVisible] = useState(20);
-  const [cookieAccepted, setCookieAccepted] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-
-  useEffect(() => {
-    const accepted = localStorage.getItem('cookieAccepted');
-    if (accepted) setCookieAccepted(true);
-  }, []);
-
-  function acceptCookies() {
-    localStorage.setItem('cookieAccepted', 'true');
-    setCookieAccepted(true);
-  }
 
   const categoryFiltered = filter === "all" ? articles : articles.filter(a => a.category === filter);
   const filtered = searchQuery.trim()
@@ -314,24 +303,7 @@ export default function Home({ initialArticles, featuredSports, featuredFinance,
           )}
         </main>
 
-        {/* Cookie Banner */}
-        {!cookieAccepted && (
-          <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: "#111", color: "#fff", padding: "16px 20px", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
-            <p style={{ margin: 0, fontSize: "13px", color: "#ccc", maxWidth: "700px" }}>
-              We use cookies to improve your experience and show relevant ads. By continuing to use NewsOracle, you agree to our{" "}
-              <Link href="/privacy-policy" style={{ color: "#cc0000" }}>Privacy Policy</Link>{" "}and{" "}
-              <Link href="/terms" style={{ color: "#cc0000" }}>Terms of Service</Link>.
-            </p>
-            <div style={{ display: "flex", gap: "10px" }}>
-              <button onClick={acceptCookies} style={{ background: "#cc0000", color: "#fff", border: "none", padding: "10px 24px", fontSize: "13px", fontWeight: "700", cursor: "pointer" }}>
-                Accept All
-              </button>
-              <button onClick={acceptCookies} style={{ background: "transparent", color: "#999", border: "1px solid #555", padding: "10px 24px", fontSize: "13px", cursor: "pointer" }}>
-                Accept Necessary
-              </button>
-            </div>
-          </div>
-        )}
+        
 
         {/* Footer */}
         <footer style={{ background: "#111", color: "#999", padding: "40px 20px", marginTop: "40px" }}>
@@ -358,7 +330,7 @@ export default function Home({ initialArticles, featuredSports, featuredFinance,
               <Link href="/terms" style={{ color: "#999", textDecoration: "none", fontSize: "13px" }}>Terms of Service</Link>
             </div>
             <p style={{ margin: 0, fontSize: "12px", textAlign: "center" }}>
-              © 2026 NewsOracle. All content is for informational purposes only and does not constitute financial or betting advice.
+              © 2026 NewsOracle. All content is for informational purposes only and does not constitute financial or betting advice. We use cookies to improve your experience.
             </p>
           </div>
         </footer>
