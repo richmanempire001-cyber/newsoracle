@@ -223,9 +223,14 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
 
             {/* Tags */}
             <div style={{ marginBottom: "16px", display: "flex", gap: "8px" }}>
-              <span style={{ background: "#cc0000", color: "#fff", padding: "4px 12px", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px" }}>
-                {article.category}
-              </span>
+  {(new Date() - new Date(article.created_at)) < 7200000 && (
+    <span style={{ background: "#ff0000", color: "#fff", padding: "4px 12px", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px", animation: "pulse 2s infinite" }}>
+      BREAKING
+    </span>
+  )}
+  <span style={{ background: "#cc0000", color: "#fff", padding: "4px 12px", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px" }}>
+    {article.category}
+  </span>
               {article.tag && (
                 <span style={{ background: "#f0f0f0", color: "#555", padding: "4px 12px", fontSize: "11px", fontWeight: "600", textTransform: "uppercase" }}>
                   {article.tag}
