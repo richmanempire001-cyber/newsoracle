@@ -378,7 +378,7 @@ export async function getServerSideProps() {
     .from("articles")
     .select("*")
     .order("created_at", { ascending: false })
-    .limit(100);
+    .limit(40);
 
   const articles = data || [];
 
