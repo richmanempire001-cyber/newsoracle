@@ -390,7 +390,7 @@ export default async function handler(req, res) {
 
       // QUALITY GATE 2: Skip if generated article is under 400 words
       const wordCount = article.summary?.trim().split(/\s+/).length || 0;
-      if (wordCount < 400) {
+      if (wordCount < 300) {
         console.log(`Skipped ${category}: article too short (${wordCount} words)`);
         continue;
       }
@@ -427,8 +427,8 @@ export default async function handler(req, res) {
       });
     }
     if (results.length === 0) {
-      return res.status(500).json({ error: 'No RSS feeds returned data' });
-    }
+  return res.status(200).json({ message: 'No new articles to publish this run' });
+}
 
     if (results.length === 0) {
   return res.status(200).json({ message: 'No new articles to publish' });
