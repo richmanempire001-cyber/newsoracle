@@ -184,7 +184,13 @@ async function fetchFullArticle(url) {
       .filter(p => p.length > 40);
 
     const text = paragraphs.slice(0, 20).join(' ').substring(0, 5000);
-    return text.length > 150 ? text : null;
+
+    // Extract OG image from source article
+    const ogMatch = result.html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i) ||
+                    result.html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
+    const ogImage = ogMatch ? (ogMatch[1] || ogMatch[2] || null) : null;
+
+    return text.length > 150 ? { text, ogImage } : null;
   } catch {
     return null;
   }
@@ -235,7 +241,7 @@ async function generateArticle(headline, description, category) {
 - Start with a dateline in caps (e.g. "LONDON —", "NEW YORK —", "MIAMI —") based on where the event took place.
 - Focus on: final score, key player performances, decisive moments, what this means for standings/tournament.
 - Write like a CNN Sports or ESPN reporter — vivid, immediate, factual.
-- Do NOT generate prediction, sentiment, or confidence fields. Only return: title, summary, category, tag, disclaimer.`,
+- Do NOT generate prediction, sentiment, or confidence fields. Only return: title, summary, keyPoints, category, tag, disclaimer.`,
     finance: `
 - Start with a dateline in caps (e.g. "NEW YORK —", "WASHINGTON —", "LONDON —") based on the market or institution involved.
 - Focus on: exact numbers (price, percentage move, market cap), who said what, what triggered the move, immediate market reaction.
@@ -255,15 +261,17 @@ async function generateArticle(headline, description, category) {
 
   const fieldsInstruction = {
     sports: `Return ONLY a JSON object with these fields:
-- title: (SEO headline, max 12 words, must include specific names/scores/teams people would search for)
+- title: (SEO-optimized headline, max 12 words. Write it the way someone would SEARCH for this story on Google. Include names, scores, teams. Example: "Lakers Beat Celtics 112-108: LeBron Scores 34 in Playoff Win")
 - metaDescription: (SEO meta description, exactly 1 sentence, 140-155 characters, summarising the key fact — do NOT truncate mid-word)
+- keyPoints: (exactly 3 bullet points separated by \\n, each ONE short sentence summarizing a key fact. Must be DIFFERENT from the article opening. Example: "- Messi scored the equalizer in the 83rd minute.\\n- Argentina advances to the quarterfinals.\\n- Egypt's VAR appeal was denied by the referee.")
 - summary: (full news article, 600-900 words, must contain at least 3 specific named facts from source — names, scores, stats, quotes. Start with dateline. Use \\n\\n between paragraphs. End with a "why this matters" paragraph.)
 - category: ("${category}")
 - tag: (specific tag like "Premier League", "NBA", "UFC", "Tennis", "Cricket")
 - disclaimer: ("This article is for informational purposes only. Content is based on publicly available news sources.")`,
     finance: `Return ONLY a JSON object with these fields:
-- title: (SEO headline, max 12 words, must include specific names/numbers people would search for)
+- title: (SEO-optimized headline, max 12 words. Write it the way someone would SEARCH for this story on Google. Include names, numbers. Example: "Bitcoin Drops 5% to $62K After Fed Holds Interest Rates")
 - metaDescription: (SEO meta description, exactly 1 sentence, 140-155 characters, summarising the key fact — do NOT truncate mid-word)
+- keyPoints: (exactly 3 bullet points separated by \\n, each ONE short sentence summarizing a key fact. Must be DIFFERENT from the article opening. Example: "- Bitcoin fell 5% to $62,000 after the Fed held rates steady.\\n- Ethereum outperformed with a 2% gain during the same period.\\n- Analysts expect continued volatility through Q3.")
 - summary: (full news article, 600-900 words, must contain at least 3 specific named facts from source — prices, percentages, names, quotes. Start with dateline. Use \\n\\n between paragraphs. End with a "why this matters" paragraph.)
 - prediction: (future outlook or analysis, written as expert market view, 60-80 words)
 - category: ("${category}")
@@ -272,16 +280,18 @@ async function generateArticle(headline, description, category) {
 - confidence: (number between 60-95)
 - disclaimer: ("This article is for informational purposes only. Content is based on publicly available news sources.")`,
     politics: `Return ONLY a JSON object with these fields:
-- title: (SEO headline, max 12 words, must include specific names/policies people would search for)
+- title: (SEO-optimized headline, max 12 words. Write it the way someone would SEARCH for this story on Google. Include names, policies. Example: "Trump Signs Executive Order Banning TikTok: What It Means")
 - metaDescription: (SEO meta description, exactly 1 sentence, 140-155 characters, summarising the key fact — do NOT truncate mid-word)
+- keyPoints: (exactly 3 bullet points separated by \\n, each ONE short sentence summarizing a key fact. Must be DIFFERENT from the article opening. Example: "- Trump signed the order banning TikTok from US app stores.\\n- Congress has 90 days to pass legislation before the ban takes effect.\\n- ByteDance says it will challenge the order in court.")
 - summary: (full news article, 600-900 words, must contain at least 3 specific named facts from source — names, decisions, votes, quotes. Start with dateline. Use \\n\\n between paragraphs. End with a "why this matters" paragraph.)
 - prediction: (what happens next politically, written as neutral analysis, 60-80 words)
 - category: ("${category}")
 - tag: (specific tag like "Trump", "Congress", "Supreme Court", "NATO", "Senate")
 - disclaimer: ("This article is for informational purposes only. Content is based on publicly available news sources.")`,
     technology: `Return ONLY a JSON object with these fields:
-- title: (SEO headline, max 12 words, must include specific product/company names people would search for)
+- title: (SEO-optimized headline, max 12 words. Write it the way someone would SEARCH for this story on Google. Include product/company names. Example: "OpenAI Launches GPT-5: Price, Features and Release Date")
 - metaDescription: (SEO meta description, exactly 1 sentence, 140-155 characters, summarising the key fact — do NOT truncate mid-word)
+- keyPoints: (exactly 3 bullet points separated by \\n, each ONE short sentence summarizing a key fact. Must be DIFFERENT from the article opening. Example: "- OpenAI released GPT-5 with 10x faster processing speed.\\n- The new model costs $30/month for Plus subscribers.\\n- Google and Anthropic are expected to respond within weeks.")
 - summary: (full news article, 600-900 words, must contain at least 3 specific named facts from source — product names, specs, prices, quotes, dates. Start with dateline. Use \\n\\n between paragraphs. End with a "why this matters" paragraph.)
 - prediction: (what this means for the tech industry or consumers, written as informed analysis, 60-80 words)
 - category: ("${category}")
@@ -298,19 +308,21 @@ async function generateArticle(headline, description, category) {
 
 Headline: "${headline}"
 Source material: "${description}"
-Source quality: ${description.length > 1000 ? 'Full article available — write a comprehensive 600-900 word article' : 'Limited source — write a focused 300-400 word article using only available facts, do not pad'}
+Source quality: ${description.length > 1000 ? 'Full article available — write a comprehensive 600-900 word article' : 'Limited source — write a focused 400-500 word article using only available facts, do not pad'}
 
 ABSOLUTE RULES — violating any of these makes the article unpublishable:
 - Write ONLY based on facts in the headline and source material. Do NOT invent quotes, statistics, names, or details.
 - The first sentence MUST be a dateline followed by the single most important concrete fact. Example: "WASHINGTON — The Senate voted 52-48 on Thursday to confirm..."
 - The article MUST contain at least 3 specific named facts from the source material (names, numbers, scores, quotes, dates, locations). If the source doesn't have 3 facts, use every fact it does have and keep the article short.
+- Title MUST be optimized for Google Search — write headlines the way someone would search for this story. Include specific names, numbers, or outcomes people would type into Google. Example: instead of "Team wins game" write "Lakers Beat Celtics 112-108: LeBron Scores 34 in Playoff Victory"
 - NEVER write generic background explaining what something generally is (e.g. "Executive orders are a tool presidents use...", "Small-cap stocks are companies with...", "The Supreme Court is the highest court..."). Only explain THIS specific event.
 - NEVER start any sentence with these banned phrases: "In a move that", "This comes as", "It remains to be seen", "Only time will tell", "In today's", "In the world of", "The landscape of", "It's worth noting"
 - NEVER use the phrase "the question remains" or "all eyes are on" or "sent shockwaves"
 - Every paragraph must contain at least one specific fact — no paragraph should be pure commentary or filler
-- Match article length to available facts. If the source material is thin, write 300 words. Do NOT pad with filler to reach a word count.
+- Include ONE brief historical comparison or precedent (e.g. "The last time a company of this size filed similar claims was in 2020 when..." or "This marks only the second time since 2018 that..."). Keep it to one sentence and base it on real knowledge if possible.
+- Match article length to available facts. If the source material is thin, write 400 words. Do NOT pad with filler to reach a word count.
 - If the article is 350+ words, insert exactly ONE subheading after the 3rd paragraph. Format it on its own line as ## followed by the subheading text (e.g. "## Impact on Global Markets"). The subheading must be specific to THIS story — never generic like "## Background" or "## Analysis"
-- End with a brief "why this matters" paragraph — one specific consequence, not a vague summary
+- End with a brief "why this matters" paragraph — connect it directly to the READER. Not "This sets a precedent for the industry" but "If you hold Bitcoin, this ruling could directly affect your portfolio" or "If you follow the Premier League, this transfer changes the title race." Make it personal and specific.
 - Do NOT mention AI, Claude, or that this was rewritten
 ${categoryInstructions[category]}
 
@@ -354,7 +366,8 @@ export default async function handler(req, res) {
     ]) {
       if (!rss) continue;
 
-      const titleWords = rss.title.toLowerCase().split(' ').filter(w => w.length > 4).slice(0, 3).join('%');
+      // Improved duplicate detection — 5 words, length > 3
+      const titleWords = rss.title.toLowerCase().split(' ').filter(w => w.length > 3).slice(0, 5).join('%');
       const { data: existing } = await supabase
         .from('articles')
         .select('id')
@@ -362,7 +375,9 @@ export default async function handler(req, res) {
         .limit(1);
       if (existing && existing.length > 0) continue;
 
-      const fullText = await fetchFullArticle(rss.itemLink);
+      const fullArticle = await fetchFullArticle(rss.itemLink);
+      const fullText = fullArticle?.text || null;
+      const ogImage = fullArticle?.ogImage || null;
       const sourceMaterial = fullText || rss.description;
 
       // QUALITY GATE 1: Skip if no full article AND RSS description is too thin
@@ -373,9 +388,9 @@ export default async function handler(req, res) {
 
       const article = await generateArticle(rss.title, sourceMaterial, category);
 
-      // QUALITY GATE 2: Skip if generated article is under 250 words
+      // QUALITY GATE 2: Skip if generated article is under 400 words
       const wordCount = article.summary?.trim().split(/\s+/).length || 0;
-      if (wordCount < 250) {
+      if (wordCount < 400) {
         console.log(`Skipped ${category}: article too short (${wordCount} words)`);
         continue;
       }
@@ -388,17 +403,22 @@ export default async function handler(req, res) {
 
       const authorNames = { sports: 'Sports Desk', finance: 'Markets Desk', politics: 'Politics Desk', technology: 'Tech Desk' };
 
+      // Image priority: OG image from source > RSS feed image > Pexels specific search > category fallback
+      const pexelsQuery = `${article.tag} ${article.title.split(' ').slice(0, 3).join(' ')}`;
+      const articleImage = ogImage || rss.image || await getPexelsImage(pexelsQuery) || FALLBACK_IMAGES[category];
+
       results.push({
         link: rss.itemLink,
         source: rss.sourceName || '',
         title: article.title,
         summary: article.summary,
+        key_points: article.keyPoints || null,
         meta_description: article.metaDescription || null,
         prediction: article.prediction || null,
         category: category,
         tag: article.tag,
         author: authorNames[category] || 'NewsOracle Editorial',
-        image: await getPexelsImage(article.tag || article.category) || rss.image || FALLBACK_IMAGES[category],
+        image: articleImage,
         sentiment: article.sentiment || null,
         confidence: article.confidence || null,
         disclaimer: article.disclaimer,
