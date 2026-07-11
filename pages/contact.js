@@ -78,6 +78,10 @@ export default function Contact() {
                   <p style={{ margin: "0 0 4px", fontWeight: "700", color: "#111" }}>Response Time</p>
                   <p style={{ margin: 0, color: "#444" }}>Within 24-48 hours</p>
                 </div>
+                <div style={{ marginBottom: "16px" }}>
+                  <p style={{ margin: "0 0 4px", fontWeight: "700", color: "#111" }}>Location</p>
+                  <p style={{ margin: 0, color: "#444" }}>Toronto, Canada</p>
+                </div>
               </div>
               <div>
                 <h2 style={{ fontSize: "20px", fontWeight: "700", margin: "0 0 16px" }}>Categories</h2>
