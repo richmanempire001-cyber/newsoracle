@@ -465,6 +465,23 @@ try {
   });
 } catch (err) {
   console.error('IndexNow error:', err);
+}// Google Sitemap Ping — tell Google sitemap has been updated
+try {
+  await fetch('https://www.google.com/ping?sitemap=https://www.newsoracle.online/news-sitemap.xml');
+  await fetch('https://www.google.com/ping?sitemap=https://www.newsoracle.online/sitemap.xml');
+} catch (err) {
+  console.error('Google ping error:', err);
+}
+
+// PubSubHubbub — real-time notification to Google
+try {
+  await fetch('https://pubsubhubbub.appspot.com/publish', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: 'hub.mode=publish&hub.url=' + encodeURIComponent('https://www.newsoracle.online/news-sitemap.xml')
+  });
+} catch (err) {
+  console.error('PubSubHubbub error:', err);
 }
 
     return res.status(200).json({
