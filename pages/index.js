@@ -29,7 +29,7 @@ function timeAgo(date) {
   return `${Math.floor(seconds / 86400)}d ago`;
 }
 
-export default function Home({ initialArticles, featuredSports, featuredFinance, featuredPolitics }) {
+export default function Home({ initialArticles, featuredSports, featuredFinance, featuredPolitics, featuredTechnology }) {
   const [articles, setArticles] = useState(initialArticles || []);
   const [filter, setFilter] = useState("all");
   const [visible, setVisible] = useState(20);
@@ -49,18 +49,18 @@ export default function Home({ initialArticles, featuredSports, featuredFinance,
   return (
     <>
       <Head>
-        <title>NewsOracle — Sports, Finance & Politics News</title>
+        <title>NewsOracle — Sports, Finance, Technology & Politics News</title>
         <meta name="description" content="NewsOracle delivers the latest sports, finance, technology and politics news with in-depth analysis and market predictions. Updated around the clock." />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="robots" content="index, follow" />
-        <meta property="og:title" content="NewsOracle — Sports, Finance & Politics News" />
+        <meta property="og:title" content="NewsOracle — Sports, Finance, Technology & Politics News" />
         <meta property="og:description" content="Latest sports, finance, technology and politics news with expert analysis and market predictions. Updated around the clock." />
         <meta property="og:image" content="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=1200&q=80" />
         <meta property="og:url" content="https://www.newsoracle.online" />
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="NewsOracle" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="NewsOracle — Sports, Finance & Politics News" />
+        <meta name="twitter:title" content="NewsOracle — Sports, Finance, Technology & Politics News" />
         <meta name="twitter:description" content="Latest sports, finance, technology and politics news with expert analysis and market predictions." />
         <meta name="twitter:image" content="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=1200&q=80" />
         <link rel="canonical" href="https://www.newsoracle.online" />
@@ -221,7 +221,7 @@ export default function Home({ initialArticles, featuredSports, featuredFinance,
                     <span style={{ fontSize: "11px", color: "#cc0000", fontWeight: "700", textTransform: "uppercase", letterSpacing: "2px" }}>Top Stories</span>
                   </div>
                   <div className="featured-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "20px", marginBottom: "40px" }}>
-                    {[featuredSports, featuredFinance, featuredPolitics].filter(Boolean).map(article => (
+                    {[featuredSports, featuredFinance, featuredPolitics, featuredTechnology].filter(Boolean).map(article => (
                       <Link key={article.id} href={articlePath(article)} style={{ textDecoration: "none" }}>
                         <div style={{ background: "#fff", boxShadow: "0 2px 8px rgba(0,0,0,0.08)", cursor: "pointer", height: "100%" }}>
                           <div style={{ position: "relative", overflow: "hidden" }}>
@@ -340,7 +340,8 @@ export default function Home({ initialArticles, featuredSports, featuredFinance,
   );
 }
 
-export async function getServerSideProps() {
+export async function getServerSideProps({ res }) {
+  res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=120');
   const supabaseServer = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
     process.env.NEXT_PUBLIC_SUPABASE_KEY
@@ -357,6 +358,7 @@ export async function getServerSideProps() {
   const featuredSports = articles.find(a => a.category === "sports") || null;
   const featuredFinance = articles.find(a => a.category === "finance") || null;
   const featuredPolitics = articles.find(a => a.category === "politics") || null;
+  const featuredTechnology = articles.find(a => a.category === "technology") || null;
 
   return {
     props: {
@@ -364,6 +366,7 @@ export async function getServerSideProps() {
       featuredSports,
       featuredFinance,
       featuredPolitics,
+      featuredTechnology,
     },
   };
 }
