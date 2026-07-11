@@ -80,9 +80,14 @@ export default function Custom404() {
             <h2 style={{ color: "#fff", margin: "0 0 10px", fontSize: "24px", fontWeight: "900" }}>
               NEWS<span style={{ color: "#cc0000" }}>ORACLE</span>
             </h2>
-            <p style={{ margin: 0, fontSize: "12px" }}>
-              © 2026 NewsOracle. All content is for informational purposes only and does not constitute financial or betting advice.
-            </p>
+            <div style={{ display: "flex", justifyContent: "center", gap: "20px", marginBottom: "12px", flexWrap: "wrap" }}>
+  <Link href="/about" style={{ color: "#999", textDecoration: "none", fontSize: "13px" }}>About Us</Link>
+  <Link href="/contact" style={{ color: "#999", textDecoration: "none", fontSize: "13px" }}>Contact</Link>
+  <Link href="/corrections" style={{ color: "#999", textDecoration: "none", fontSize: "13px" }}>Corrections</Link>
+  <Link href="/privacy-policy" style={{ color: "#999", textDecoration: "none", fontSize: "13px" }}>Privacy Policy</Link>
+  <Link href="/terms" style={{ color: "#999", textDecoration: "none", fontSize: "13px" }}>Terms of Service</Link>
+</div>
+<p style={{ margin: 0, fontSize: "12px" }}>2026 NewsOracle. All content is for informational purposes only.</p>
           </div>
         </footer>
 
