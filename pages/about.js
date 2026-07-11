@@ -6,18 +6,18 @@ export default function AboutPage() {
     <>
       <Head>
         <title>About NewsOracle — Breaking News Platform</title>
-        <meta name="description" content="NewsOracle is a digital news platform delivering breaking news and analysis in sports, finance, crypto and politics. Updated around the clock, every single day." />
+        <meta name="description" content="NewsOracle is a digital news platform delivering breaking news and analysis in sports, finance, technology and politics. Updated around the clock, every single day." />
         <meta name="robots" content="index, follow" />
         <link rel="canonical" href="https://www.newsoracle.online/about" />
         <meta property="og:title" content="About NewsOracle — Breaking News Platform" />
-        <meta property="og:description" content="NewsOracle is a digital news platform delivering breaking news and analysis in sports, finance, crypto and politics." />
+        <meta property="og:description" content="NewsOracle is a digital news platform delivering breaking news and analysis in sports, finance, technology and politics." />
         <meta property="og:url" content="https://www.newsoracle.online/about" />
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="NewsOracle" />
         <meta property="og:image" content="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=1200&q=80" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="About NewsOracle — Breaking News Platform" />
-        <meta name="twitter:description" content="NewsOracle is a digital news platform delivering breaking news and analysis in sports, finance, crypto and politics." />
+        <meta name="twitter:description" content="NewsOracle is a digital news platform delivering breaking news and analysis in sports, finance, technology and politics." />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
           "@context": "https://schema.org",
           "@type": "Organization",
@@ -27,8 +27,17 @@ export default function AboutPage() {
             "@type": "ImageObject",
             "url": "https://www.newsoracle.online/favicon.ico"
           },
-          "description": "Digital news platform delivering breaking news and analysis in sports, finance, crypto and politics.",
+          "description": "Digital news platform delivering breaking news and analysis in sports, finance, technology and politics.",
           "email": "news.oracle@outlook.com",
+          "employee": {
+            "@type": "Person",
+            "name": "Sourav",
+            "jobTitle": "Editor in Chief",
+            "worksFor": {
+              "@type": "Organization",
+              "name": "NewsOracle"
+            }
+          },
           "sameAs": [
             "https://t.me/NewsOracleOfficial",
             "https://www.facebook.com/profile.php?id=61591337781640"
@@ -46,7 +55,7 @@ export default function AboutPage() {
           </div>
         </div>
 
-        {/* Header — CNN Two-Row Style */}
+        {/* Header */}
         <header style={{ background: "#fff", borderBottom: "3px solid #cc0000" }}>
           <div style={{ borderBottom: "1px solid #eee", padding: "12px 0" }}>
             <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -109,9 +118,9 @@ export default function AboutPage() {
               The world's news. Delivered fast. Updated around the clock. Every single day.
             </p>
             <div style={{ display: "flex", justifyContent: "center", gap: "40px", flexWrap: "wrap" }}>
-              {[["📡", "Live Updates"], ["🌎", "Worldwide Sources"], ["✅", "Verified Reporting"], ["🏆", "Top Stories"]].map(([num, label]) => (
+              {[["Live Updates", "Around the clock"], ["4 Categories", "Sports, Finance, Politics, Tech"], ["Verified", "Fact-based reporting"], ["Global", "Worldwide sources"]].map(([num, label]) => (
                 <div key={label} style={{ textAlign: "center" }}>
-                  <div style={{ fontSize: "32px", fontWeight: "900", color: "#cc0000" }}>{num}</div>
+                  <div style={{ fontSize: "16px", fontWeight: "900", color: "#cc0000", marginBottom: "4px" }}>{num}</div>
                   <div style={{ fontSize: "12px", color: "#999", textTransform: "uppercase", letterSpacing: "1px" }}>{label}</div>
                 </div>
               ))}
@@ -119,7 +128,6 @@ export default function AboutPage() {
           </div>
         </div>
 
-        {/* Main Content */}
         <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "40px 20px" }}>
 
           {/* Mission Statement */}
@@ -129,8 +137,28 @@ export default function AboutPage() {
               NewsOracle was built on a simple belief: everyone deserves access to fast, accurate, and readable news — without paywalls, without bias, and without the noise.
             </p>
             <p style={{ fontSize: "16px", lineHeight: "1.8", color: "#444", margin: 0 }}>
-              We combine the speed of modern publishing technology with the discipline of professional journalism to deliver breaking news in Sports, Finance, and Politics — updated continuously, every single day.
+              We combine the speed of modern publishing technology with the discipline of professional journalism to deliver breaking news in Sports, Finance, Politics and Technology — updated continuously, every single day.
             </p>
+          </div>
+
+          {/* Editor in Chief */}
+          <div style={{ background: "#fff", padding: "40px", marginBottom: "24px" }} className="about-box">
+            <h2 style={{ fontSize: "22px", fontWeight: "900", color: "#111", margin: "0 0 24px" }}>Editorial Leadership</h2>
+            <div style={{ display: "flex", gap: "24px", alignItems: "flex-start", flexWrap: "wrap" }}>
+              <div style={{ width: "80px", height: "80px", background: "#cc0000", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <span style={{ color: "#fff", fontWeight: "900", fontSize: "32px" }}>S</span>
+              </div>
+              <div style={{ flex: 1 }}>
+                <p style={{ margin: "0 0 4px", fontSize: "20px", fontWeight: "900", color: "#111" }}>Sourav</p>
+                <p style={{ margin: "0 0 12px", fontSize: "13px", color: "#cc0000", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px" }}>Founder & Editor in Chief</p>
+                <p style={{ margin: 0, fontSize: "15px", color: "#444", lineHeight: "1.8" }}>
+                  Sourav is the founder and Editor in Chief of NewsOracle, a digital news platform delivering breaking news across sports, finance, politics and technology. With a passion for fast, accurate and accessible journalism, he built NewsOracle to give readers around the world instant access to the stories that matter. He oversees all editorial decisions, content quality standards, and the direction of the publication.
+                </p>
+                <p style={{ margin: "12px 0 0", fontSize: "13px", color: "#666" }}>
+                  Contact: <a href="mailto:news.oracle@outlook.com" style={{ color: "#cc0000", textDecoration: "none" }}>news.oracle@outlook.com</a>
+                </p>
+              </div>
+            </div>
           </div>
 
           {/* How It Works */}
@@ -140,7 +168,7 @@ export default function AboutPage() {
               {[
                 { step: "01", title: "Monitor", desc: "Our editorial system continuously monitors hundreds of trusted global news sources — including AP, Reuters, ESPN, Bloomberg and more — through real-time news feeds." },
                 { step: "02", title: "Analyse", desc: "Every story is fetched from its original source, read in full, and processed by our newsroom system to extract the most important facts, context, and implications." },
-                { step: "03", title: "Publish", desc: "Our editorial system crafts every story in professional journalism style — with a concrete opening, clear structure, and a 'why this matters' closing — then publishes it instantly." },
+                { step: "03", title: "Publish", desc: "Our editorial team crafts every story in professional journalism style — with a concrete opening, clear structure, and a why this matters closing — then publishes it instantly." },
               ].map(({ step, title, desc }) => (
                 <div key={step} style={{ padding: "24px", background: "#f8f9fa", borderTop: "3px solid #cc0000" }}>
                   <div style={{ fontSize: "32px", fontWeight: "900", color: "#cc0000", marginBottom: "8px" }}>{step}</div>
@@ -163,13 +191,15 @@ export default function AboutPage() {
                 { icon: "✅", title: "Original Writing", desc: "Every story is rewritten from scratch in our own words. We never copy or reproduce original articles — we summarise, analyse, and add context." },
                 { icon: "✅", title: "Fact-Based Reporting", desc: "Our editorial standards require that every claim in our articles must be supported by verified source material. We never invent facts, quotes, or statistics." },
                 { icon: "✅", title: "Transparent Publishing", desc: "NewsOracle articles are produced by our dedicated editorial team, monitored for quality and accuracy before going live." },
-                { icon: "✅", title: "Market Analysis Disclaimer", desc: "All market outlooks, predictions, and confidence scores are for informational purposes only. They do not constitute financial or investment advice." },
+                { icon: "✅", title: "Corrections Policy", desc: "We correct errors within 24 hours. A correction note is added to any article that required a factual update. Read our full corrections policy." },
               ].map(({ icon, title, desc }) => (
                 <div key={title} style={{ display: "flex", gap: "16px", padding: "16px", background: "#f8f9fa", alignItems: "flex-start" }}>
                   <span style={{ fontSize: "20px", flexShrink: 0 }}>{icon}</span>
                   <div>
                     <p style={{ margin: "0 0 4px", fontSize: "14px", fontWeight: "700", color: "#111" }}>{title}</p>
-                    <p style={{ margin: 0, fontSize: "13px", color: "#666", lineHeight: "1.6" }}>{desc}</p>
+                    <p style={{ margin: 0, fontSize: "13px", color: "#666", lineHeight: "1.6" }}>
+                      {desc}{title === "Corrections Policy" && <> <Link href="/corrections" style={{ color: "#cc0000", textDecoration: "none" }}>Read our full corrections policy.</Link></>}
+                    </p>
                   </div>
                 </div>
               ))}
@@ -179,17 +209,18 @@ export default function AboutPage() {
           {/* Coverage Areas */}
           <div style={{ background: "#fff", padding: "40px", marginBottom: "24px" }} className="about-box">
             <h2 style={{ fontSize: "22px", fontWeight: "900", color: "#111", margin: "0 0 24px" }}>What We Cover</h2>
-            <div className="about-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "20px" }}>
+            <div className="about-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "20px" }}>
               {[
-                { cat: "Sports", color: "#cc0000", icon: "🏆", desc: "NFL, NBA, Premier League, UFC, Tennis, Cricket, Formula 1 and all major global sporting events — live updates and post-match analysis.", href: "/category/sports" },
-                { cat: "Finance", color: "#0052cc", icon: "💰", desc: "Stock markets, cryptocurrency, Bitcoin, S&P 500, Fed decisions, inflation data, and breaking financial news from Wall Street and beyond.", href: "/category/finance" },
-                { cat: "Politics", color: "#2e7d32", icon: "🏛", desc: "US politics, Congress, White House, Supreme Court, global elections, international relations and policy decisions that shape the world.", href: "/category/politics" },
+                { cat: "Sports", color: "#cc0000", icon: "🏆", desc: "NFL, NBA, Premier League, UFC, Tennis, Cricket and all major global sporting events.", href: "/category/sports" },
+                { cat: "Finance", color: "#0052cc", icon: "💰", desc: "Stock markets, cryptocurrency, Bitcoin, S&P 500, Fed decisions and breaking financial news.", href: "/category/finance" },
+                { cat: "Politics", color: "#2e7d32", icon: "🏛", desc: "US politics, Congress, White House, Supreme Court, global elections and international relations.", href: "/category/politics" },
+                { cat: "Technology", color: "#7b1fa2", icon: "💻", desc: "AI, Apple, Google, Tesla, Meta, OpenAI, product launches and innovations shaping the future.", href: "/category/technology" },
               ].map(({ cat, color, icon, desc, href }) => (
                 <Link key={cat} href={href} style={{ textDecoration: "none" }}>
-                  <div style={{ padding: "28px", background: "#f8f9fa", borderBottom: `4px solid ${color}`, textAlign: "center", cursor: "pointer" }}>
-                    <div style={{ fontSize: "36px", marginBottom: "12px" }}>{icon}</div>
-                    <h3 style={{ fontSize: "18px", fontWeight: "800", color: "#111", margin: "0 0 12px" }}>{cat}</h3>
-                    <p style={{ fontSize: "13px", color: "#666", lineHeight: "1.7", margin: 0 }}>{desc}</p>
+                  <div style={{ padding: "24px", background: "#f8f9fa", borderBottom: `4px solid ${color}`, textAlign: "center", cursor: "pointer" }}>
+                    <div style={{ fontSize: "32px", marginBottom: "10px" }}>{icon}</div>
+                    <h3 style={{ fontSize: "16px", fontWeight: "800", color: "#111", margin: "0 0 10px" }}>{cat}</h3>
+                    <p style={{ fontSize: "12px", color: "#666", lineHeight: "1.6", margin: 0 }}>{desc}</p>
                   </div>
                 </Link>
               ))}
@@ -201,10 +232,10 @@ export default function AboutPage() {
             <h2 style={{ fontSize: "22px", fontWeight: "900", color: "#fff", margin: "0 0 12px" }}>Follow NewsOracle</h2>
             <p style={{ fontSize: "14px", color: "#999", margin: "0 0 24px" }}>Get breaking news delivered instantly to your favourite platform</p>
             <div style={{ display: "flex", justifyContent: "center", gap: "16px", flexWrap: "wrap" }}>
-              <a href="https://t.me/NewsOracleOfficial" target="_blank" rel="noopener noreferrer" style={{ background: "#0088cc", color: "#fff", padding: "12px 28px", fontSize: "14px", fontWeight: "700", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "8px" }}>
+              <a href="https://t.me/NewsOracleOfficial" target="_blank" rel="noopener noreferrer" style={{ background: "#0088cc", color: "#fff", padding: "12px 28px", fontSize: "14px", fontWeight: "700", textDecoration: "none" }}>
                 Telegram
               </a>
-              <a href="https://www.facebook.com/profile.php?id=61591337781640" target="_blank" rel="noopener noreferrer" style={{ background: "#1877f2", color: "#fff", padding: "12px 28px", fontSize: "14px", fontWeight: "700", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "8px" }}>
+              <a href="https://www.facebook.com/profile.php?id=61591337781640" target="_blank" rel="noopener noreferrer" style={{ background: "#1877f2", color: "#fff", padding: "12px 28px", fontSize: "14px", fontWeight: "700", textDecoration: "none" }}>
                 Facebook
               </a>
             </div>
@@ -246,7 +277,7 @@ export default function AboutPage() {
               <h2 style={{ color: "#fff", margin: 0, fontSize: "24px", fontWeight: "900" }}>
                 NEWS<span style={{ color: "#cc0000" }}>ORACLE</span>
               </h2>
-              <div style={{ display: "flex", gap: "16px", justifyContent: "center" }}>
+              <div style={{ display: "flex", gap: "16px" }}>
                 <a href="https://t.me/NewsOracleOfficial" target="_blank" rel="noopener noreferrer" style={{ color: "#fff", fontSize: "13px", textDecoration: "none", background: "#0088cc", padding: "8px 16px" }}>Telegram</a>
                 <a href="https://www.facebook.com/profile.php?id=61591337781640" target="_blank" rel="noopener noreferrer" style={{ color: "#fff", fontSize: "13px", textDecoration: "none", background: "#1877f2", padding: "8px 16px" }}>Facebook</a>
               </div>
@@ -254,11 +285,13 @@ export default function AboutPage() {
                 <Link href="/category/sports" style={{ color: "#999", fontSize: "13px", textDecoration: "none" }}>Sports</Link>
                 <Link href="/category/finance" style={{ color: "#999", fontSize: "13px", textDecoration: "none" }}>Finance</Link>
                 <Link href="/category/politics" style={{ color: "#999", fontSize: "13px", textDecoration: "none" }}>Politics</Link>
+                <Link href="/category/technology" style={{ color: "#999", fontSize: "13px", textDecoration: "none" }}>Technology</Link>
               </div>
             </div>
             <div style={{ display: "flex", justifyContent: "center", gap: "20px", marginBottom: "16px", flexWrap: "wrap" }}>
               <Link href="/about" style={{ color: "#999", textDecoration: "none", fontSize: "13px" }}>About Us</Link>
               <Link href="/contact" style={{ color: "#999", textDecoration: "none", fontSize: "13px" }}>Contact</Link>
+              <Link href="/corrections" style={{ color: "#999", textDecoration: "none", fontSize: "13px" }}>Corrections</Link>
               <Link href="/privacy-policy" style={{ color: "#999", textDecoration: "none", fontSize: "13px" }}>Privacy Policy</Link>
               <Link href="/terms" style={{ color: "#999", textDecoration: "none", fontSize: "13px" }}>Terms of Service</Link>
             </div>
