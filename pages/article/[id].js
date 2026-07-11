@@ -335,9 +335,9 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
             <div style={{ background: "#fff8f8", border: "1px solid #ffcccc", borderLeft: "4px solid #cc0000", padding: "20px 24px", marginBottom: "28px" }}>
               <h3 style={{ color: "#cc0000", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 16px" }}>Key Points</h3>
               <ul style={{ margin: 0, padding: "0 0 0 18px" }}>
-                {paragraphs.slice(0, 3).map((para, i) => (
+                {(article.key_points ? article.key_points.split('\n').filter(p => p.trim()) : paragraphs.slice(0, 3)).map((point, i) => (
                   <li key={i} style={{ fontSize: "14px", color: "#333", lineHeight: "1.7", marginBottom: "12px" }}>
-                    {para}
+                    {point.replace(/^[-•]\s*/, '').trim()}
                   </li>
                 ))}
               </ul>
@@ -398,9 +398,9 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
                 <p style={{ fontSize: "16px", lineHeight: "1.7", color: "#333", margin: "0 0 16px", fontFamily: "Georgia, serif" }}>
                   {article.prediction}
                 </p>
-                <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", marginTop: "4px" }}>
+                <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", marginTop: "12px" }}>
                   {article.sentiment && (
-                    <span style={{ display: "inline-block", background: article.sentiment === "positive" ? "#e8f5e9" : article.sentiment === "negative" ? "#ffebee" : "#f5f5f5", color: article.sentiment === "positive" ? "#2e7d32" : article.sentiment === "negative" ? "#c62828" : "#666", padding: "6px 16px", fontSize: "12px", fontWeight: "600", textTransform: "uppercase", borderRadius: "2px" }}>
+                    <span style={{ display: "inline-block", background: article.sentiment === "positive" ? "#e8f5e9" : article.sentiment === "negative" ? "#ffebee" : "#f5f5f5", color: article.sentiment === "positive" ? "#2e7d32" : article.sentiment === "negative" ? "#c62828" : "#666", padding: "6px 16px", fontSize: "12px", fontWeight: "600", textTransform: "uppercase", borderRadius: "2px", marginRight: "8px" }}>
                       Sentiment: {article.sentiment}
                     </span>
                   )}
