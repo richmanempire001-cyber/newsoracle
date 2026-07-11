@@ -471,6 +471,46 @@ try {
   await fetch('https://www.google.com/ping?sitemap=https://www.newsoracle.online/sitemap.xml');
 } catch (err) {
   console.error('Google ping error:', err);
+}// Google Indexing API — instantly notify Google to index new articles
+try {
+  const keyJson = JSON.parse(process.env.GOOGLE_INDEXING_KEY);
+  const now = Math.floor(Date.now() / 1000);
+  const header = Buffer.from(JSON.stringify({ alg: 'RS256', typ: 'JWT' })).toString('base64url');
+  const claim = Buffer.from(JSON.stringify({
+    iss: keyJson.client_email,
+    scope: 'https://www.googleapis.com/auth/indexing',
+    aud: 'https://oauth2.googleapis.com/token',
+    exp: now + 3600,
+    iat: now
+  })).toString('base64url');
+  const { createSign } = await import('crypto');
+  const sign = createSign('RSA-SHA256');
+  sign.update(`${header}.${claim}`);
+  const signature = sign.sign(keyJson.private_key, 'base64url');
+  const jwt = `${header}.${claim}.${signature}`;
+  const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${jwt}`
+  });
+  const tokenData = await tokenRes.json();
+  const accessToken = tokenData.access_token;
+  if (accessToken) {
+    const articleUrls = (insertedArticles || []).map(a => `https://www.newsoracle.online/article/${a.id}-${slugify(a.title)}`);
+    for (const url of articleUrls) {
+      await fetch('https://indexing.googleapis.com/v3/urlNotifications:publish', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
+        },
+        body: JSON.stringify({ url, type: 'URL_UPDATED' })
+      });
+    }
+    console.log(`Google Indexing API: submitted ${articleUrls.length} URLs`);
+  }
+} catch (err) {
+  console.error('Google Indexing API error:', err);
 }
 
 // PubSubHubbub — real-time notification to Google
