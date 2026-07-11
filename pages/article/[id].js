@@ -468,7 +468,9 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
                 <span style={{ color: "#fff", fontWeight: "900", fontSize: "18px" }}>N</span>
               </div>
               <div>
-                <p style={{ margin: "0 0 6px", fontSize: "14px", fontWeight: "700", color: "#111" }}>{article.author || 'NewsOracle Editorial'}</p>
+                <Link href={`/author/${(article.author || 'NewsOracle Editorial').toLowerCase().replace(/\s+/g, '-')}`} style={{ textDecoration: "none" }}>
+  <p style={{ margin: "0 0 6px", fontSize: "14px", fontWeight: "700", color: "#cc0000" }}>{article.author || 'NewsOracle Editorial'}</p>
+</Link>
                 <p style={{ margin: 0, fontSize: "13px", color: "#666", lineHeight: "1.6" }}>
                   {article.category === 'sports' && 'The NewsOracle Sports Desk covers breaking sports news from the NFL, NBA, Premier League, UFC, tennis, cricket and major global sporting events with live updates and post-match analysis.'}
                   {article.category === 'finance' && 'The NewsOracle Markets Desk covers stock markets, cryptocurrency, economic policy and breaking financial news from Wall Street and global exchanges with data-driven analysis and market outlook.'}
