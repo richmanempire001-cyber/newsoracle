@@ -64,7 +64,8 @@ export default function Home({ initialArticles, featuredSports, featuredFinance,
         <meta name="twitter:description" content="Latest sports, finance, technology and politics news with expert analysis and market predictions." />
         <meta name="twitter:image" content="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=1200&q=80" />
         <link rel="canonical" href="https://www.newsoracle.online" />
-        <meta name="msvalidate.01" content="4FDF3AAFAD2785FF5FD15E9D2AF5EC67" /><meta name="p:domain_verify" content="9f32938df0bf0a235828edcb7c2c0048" />
+        <meta name="msvalidate.01" content="4FDF3AAFAD2785FF5FD15E9D2AF5EC67" />
+<meta name="p:domain_verify" content="9f32938df0bf0a235828edcb7c2c0048" />
       </Head>
 
       <div style={{ fontFamily: "'Arial', sans-serif", background: "#f4f4f4", minHeight: "100vh" }}>
