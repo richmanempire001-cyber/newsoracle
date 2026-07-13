@@ -195,7 +195,7 @@ export default function Home({ initialArticles, featuredSports, featuredFinance,
           </div>
           {/* Mobile filters */}
           <div className="mobile-filters" style={{ padding: "8px 20px", borderTop: "1px solid #eee" }}>
-            {["all", "sports", "finance", "politics"].map(cat => (
+            {["all", "sports", "finance", "politics", "technology"].map(cat => (
               <button key={cat} onClick={() => { setFilter(cat); setVisible(20); }} style={{ padding: "6px 14px", background: filter === cat ? "#cc0000" : "transparent", color: filter === cat ? "#fff" : "#333", border: "1px solid #ddd", cursor: "pointer", fontSize: "12px", fontWeight: "600", textTransform: "uppercase" }}>
                 {cat}
               </button>
@@ -280,7 +280,13 @@ export default function Home({ initialArticles, featuredSports, featuredFinance,
                           {article.summary?.substring(0, 100)}...
                         </p>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid #f0f0f0", paddingTop: "10px" }}>
-                          <span style={{ fontSize: "11px", color: "#999" }}>{timeAgo(article.created_at)}</span>
+                          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                            {(new Date() - new Date(article.created_at)) < 7200000 && (
+                              <span style={{ background: "#ff0000", color: "#fff", padding: "2px 6px", fontSize: "9px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px" }}>BREAKING</span>
+                            )}
+                            <span style={{ fontSize: "11px", color: "#999" }}>{timeAgo(article.created_at)}</span>
+                            {article.views > 0 && <span style={{ fontSize: "11px", color: "#999" }}>{article.views >= 1000 ? `${Math.floor(article.views/1000)}K` : article.views} views</span>}
+                          </div>
                           <span style={{ fontSize: "11px", color: "#cc0000", fontWeight: "600" }}>Read more →</span>
                         </div>
                       </div>
