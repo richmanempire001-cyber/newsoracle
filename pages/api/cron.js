@@ -280,6 +280,7 @@ async function fetchRSS(url) {
     return null;
   }
 }
+
 async function generateArticle(headline, description, category) {
   const categoryInstructions = {
     sports: `
@@ -310,7 +311,7 @@ async function generateArticle(headline, description, category) {
 - metaDescription: (SEO meta description, exactly 1 sentence, 140-155 characters, summarising the key fact — do NOT truncate mid-word)
 - keyPoints: (exactly 3 bullet points separated by \\n, each ONE short sentence summarizing a key fact. Must be DIFFERENT from the article opening. Example: "- Messi scored the equalizer in the 83rd minute.\\n- Argentina advances to the quarterfinals.\\n- Egypt's VAR appeal was denied by the referee.")
 - summary: (full news article, 600-900 words, must contain at least 3 specific named facts from source — names, scores, stats, quotes. Start with dateline. Use \\n\\n between paragraphs. End with a "why this matters" paragraph.)
-- category: ("${category}")
+- category: MUST be exactly "${category}" — do not change this under any circumstances regardless of article content
 - tag: (specific tag like "Premier League", "NBA", "UFC", "Tennis", "Cricket")
 - disclaimer: ("This article is for informational purposes only. Content is based on publicly available news sources.")`,
     finance: `Return ONLY a JSON object with these fields:
@@ -319,7 +320,7 @@ async function generateArticle(headline, description, category) {
 - keyPoints: (exactly 3 bullet points separated by \\n, each ONE short sentence summarizing a key fact. Must be DIFFERENT from the article opening. Example: "- Bitcoin fell 5% to $62,000 after the Fed held rates steady.\\n- Ethereum outperformed with a 2% gain during the same period.\\n- Analysts expect continued volatility through Q3.")
 - summary: (full news article, 600-900 words, must contain at least 3 specific named facts from source — prices, percentages, names, quotes. Start with dateline. Use \\n\\n between paragraphs. End with a "why this matters" paragraph.)
 - prediction: (future outlook or analysis, written as expert market view, 60-80 words)
-- category: ("${category}")
+- category: MUST be exactly "${category}" — do not change this under any circumstances regardless of article content
 - tag: (specific tag like "Bitcoin", "S&P 500", "Fed", "Inflation", "Crypto")
 - sentiment: (either "positive", "negative", or "neutral")
 - confidence: (number between 60-95)
@@ -330,7 +331,7 @@ async function generateArticle(headline, description, category) {
 - keyPoints: (exactly 3 bullet points separated by \\n, each ONE short sentence summarizing a key fact. Must be DIFFERENT from the article opening. Example: "- Trump signed the order banning TikTok from US app stores.\\n- Congress has 90 days to pass legislation before the ban takes effect.\\n- ByteDance says it will challenge the order in court.")
 - summary: (full news article, 600-900 words, must contain at least 3 specific named facts from source — names, decisions, votes, quotes. Start with dateline. Use \\n\\n between paragraphs. End with a "why this matters" paragraph.)
 - prediction: (what happens next politically, written as neutral analysis, 60-80 words)
-- category: ("${category}")
+- category: MUST be exactly "${category}" — do not change this under any circumstances regardless of article content
 - tag: (specific tag like "Trump", "Congress", "Supreme Court", "NATO", "Senate")
 - disclaimer: ("This article is for informational purposes only. Content is based on publicly available news sources.")`,
     technology: `Return ONLY a JSON object with these fields:
@@ -339,7 +340,7 @@ async function generateArticle(headline, description, category) {
 - keyPoints: (exactly 3 bullet points separated by \\n, each ONE short sentence summarizing a key fact. Must be DIFFERENT from the article opening. Example: "- OpenAI released GPT-5 with 10x faster processing speed.\\n- The new model costs $30/month for Plus subscribers.\\n- Google and Anthropic are expected to respond within weeks.")
 - summary: (full news article, 600-900 words, must contain at least 3 specific named facts from source — product names, specs, prices, quotes, dates. Start with dateline. Use \\n\\n between paragraphs. End with a "why this matters" paragraph.)
 - prediction: (what this means for the tech industry or consumers, written as informed analysis, 60-80 words)
-- category: ("${category}")
+- category: MUST be exactly "${category}" — do not change this under any circumstances regardless of article content
 - tag: (specific tag like "Apple", "AI", "Tesla", "Google", "OpenAI", "Meta", "ChatGPT")
 - disclaimer: ("This article is for informational purposes only. Content is based on publicly available news sources.")`
   };
@@ -465,6 +466,9 @@ export default async function handler(req, res) {
 
           const article = await generateArticle(rss.title, sourceMaterial, category);
 
+          // Force correct category regardless of what Claude returned
+          article.category = category;
+
           // QUALITY GATE 2: article too short
           const wordCount = article.summary?.trim().split(/\s+/).length || 0;
           if (wordCount < 300) {
@@ -549,13 +553,17 @@ try {
   });
 } catch (err) {
   console.error('IndexNow error:', err);
-}// Google Sitemap Ping — tell Google sitemap has been updated
+}
+
+// Google Sitemap Ping — tell Google sitemap has been updated
 try {
   await fetch('https://www.google.com/ping?sitemap=https://www.newsoracle.online/news-sitemap.xml');
   await fetch('https://www.google.com/ping?sitemap=https://www.newsoracle.online/sitemap.xml');
 } catch (err) {
   console.error('Google ping error:', err);
-}// Google Indexing API — instantly notify Google to index new articles
+}
+
+// Google Indexing API — instantly notify Google to index new articles
 try {
   const keyJson = JSON.parse(process.env.GOOGLE_INDEXING_KEY);
   const now = Math.floor(Date.now() / 1000);
