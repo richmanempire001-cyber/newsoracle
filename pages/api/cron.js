@@ -196,6 +196,34 @@ async function fetchFullArticle(url) {
   }
 }
 
+function scoreRSSItem(title, description, pubDate) {
+  let score = 0;
+
+  // Recency scoring
+  if (pubDate) {
+    const ageMs = Date.now() - new Date(pubDate).getTime();
+    const ageHours = ageMs / (1000 * 60 * 60);
+    if (ageHours > 6) return -999; // hard cutoff — disqualify immediately
+    if (ageHours <= 2) score += 2; // recency bonus
+  }
+
+  // Has a number in title (+3)
+  if (/\d/.test(title)) score += 3;
+
+  // Named entity in first 5 words (+2)
+  const firstFive = title.split(' ').slice(0, 5).join(' ');
+  if (/[A-Z][a-z]+/.test(firstFive)) score += 2;
+
+  // Change-of-state verb (+2)
+  const stateVerbs = /\b(falls|surges|rises|drops|wins|loses|dies|launches|bans|hits|ousts|faces|cuts|raises|crashes|soars|resigns|fires|arrests|indicts|acquits|sanctions)\b/i;
+  if (stateVerbs.test(title)) score += 2;
+
+  // Description richness (+1)
+  if (description.length > 300) score += 1;
+
+  return score;
+}
+
 async function fetchRSS(url) {
   try {
     const res = await fetch(url);
@@ -203,13 +231,16 @@ async function fetchRSS(url) {
     const items = [...text.matchAll(/<item[\s\S]*?<\/item>/g)].slice(0, 10);
     if (items.length === 0) return null;
 
-    for (let i = 0; i < Math.min(3, items.length); i++) {
+    const candidates = [];
+
+    for (let i = 0; i < Math.min(5, items.length); i++) {
       const itemText = items[i][0];
 
       const linkMatch = itemText.match(/<link>(.*?)<\/link>|<link[^>]*href="([^"]+)"/);
       const itemLink = linkMatch ? (linkMatch[1] || linkMatch[2] || '').trim() : '';
       const titleMatch = itemText.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>|<title>(.*?)<\/title>/);
       const descMatch = itemText.match(/<description><!\[CDATA\[(.*?)\]\]><\/description>|<description>(.*?)<\/description>/);
+      const pubDateMatch = itemText.match(/<pubDate>(.*?)<\/pubDate>/);
 
       const imageMatch =
         itemText.match(/url="([^"]+\.(jpg|jpeg|png|webp)[^"]*)"/) ||
@@ -223,18 +254,32 @@ async function fetchRSS(url) {
       const image = imageMatch ? (imageMatch[1] || imageMatch[0]) : null;
       const sourceMatch = itemText.match(/<source[^>]*>(.*?)<\/source>/);
       const sourceName = sourceMatch ? sourceMatch[1].trim() : '';
+      const pubDate = pubDateMatch ? pubDateMatch[1].trim() : null;
 
       if (!title || title.length < 10) continue;
       if (!description || description.length < 100) continue;
 
-      return { title, description, image, sourceUrl: url, originalTitle: title, itemLink: itemLink || title, sourceName };
+      const score = scoreRSSItem(title, description, pubDate);
+      if (score === -999) {
+        console.log(`Skipped (stale >6hr): ${title}`);
+        continue;
+      }
+
+      candidates.push({ title, description, image, sourceUrl: url, originalTitle: title, itemLink: itemLink || title, sourceName, pubDate, score });
     }
-    return null;
+
+    if (candidates.length === 0) return null;
+
+    // Return highest scoring candidate
+    candidates.sort((a, b) => b.score - a.score);
+    const best = candidates[0];
+    console.log(`Best item (score ${best.score}): ${best.title}`);
+    return best;
+
   } catch {
     return null;
   }
 }
-
 async function generateArticle(headline, description, category) {
   const categoryInstructions = {
     sports: `
@@ -261,7 +306,7 @@ async function generateArticle(headline, description, category) {
 
   const fieldsInstruction = {
     sports: `Return ONLY a JSON object with these fields:
-- title: (SEO-optimized headline, max 12 words. Write it the way someone would SEARCH for this story on Google. Include names, scores, teams. Example: "Lakers Beat Celtics 112-108: LeBron Scores 34 in Playoff Win")
+- title: (SEO-optimized headline, max 12 words, HARD LIMIT 100 characters. Write it the way someone would SEARCH for this story on Google. Include names, scores, teams. HEADLINE RULES — all must apply: (1) Put the most recognizable entity in the first 5 words. (2) Include a specific number if the story has one — "Falls 8%" beats "Falls Sharply". (3) Use a change-of-state verb where possible: Falls, Surges, Wins, Loses, Dies, Launches, Bans, Hits, Ousts, Faces, Cuts, Raises, Resigns, Fires. (4) For public figures with health or age context, include age: "84-Year-Old Senator Says..." style. (5) Never start with vague openers like "New Report Shows", "Sources Say", "Report:", "Watch:", "Here's Why". Example: "Lakers Beat Celtics 112-108: LeBron Scores 34 in Playoff Win")
 - metaDescription: (SEO meta description, exactly 1 sentence, 140-155 characters, summarising the key fact — do NOT truncate mid-word)
 - keyPoints: (exactly 3 bullet points separated by \\n, each ONE short sentence summarizing a key fact. Must be DIFFERENT from the article opening. Example: "- Messi scored the equalizer in the 83rd minute.\\n- Argentina advances to the quarterfinals.\\n- Egypt's VAR appeal was denied by the referee.")
 - summary: (full news article, 600-900 words, must contain at least 3 specific named facts from source — names, scores, stats, quotes. Start with dateline. Use \\n\\n between paragraphs. End with a "why this matters" paragraph.)
@@ -269,7 +314,7 @@ async function generateArticle(headline, description, category) {
 - tag: (specific tag like "Premier League", "NBA", "UFC", "Tennis", "Cricket")
 - disclaimer: ("This article is for informational purposes only. Content is based on publicly available news sources.")`,
     finance: `Return ONLY a JSON object with these fields:
-- title: (SEO-optimized headline, max 12 words. Write it the way someone would SEARCH for this story on Google. Include names, numbers. Example: "Bitcoin Drops 5% to $62K After Fed Holds Interest Rates")
+- title: (SEO-optimized headline, max 12 words, HARD LIMIT 100 characters. Write it the way someone would SEARCH for this story on Google. Include names, numbers. HEADLINE RULES — all must apply: (1) Put the most recognizable entity in the first 5 words. (2) Include a specific number if the story has one — "Falls 8%" beats "Falls Sharply". (3) Use a change-of-state verb where possible: Falls, Surges, Wins, Loses, Dies, Launches, Bans, Hits, Ousts, Faces, Cuts, Raises, Resigns, Fires. (4) For public figures with health or age context, include age: "84-Year-Old Senator Says..." style. (5) Never start with vague openers like "New Report Shows", "Sources Say", "Report:", "Watch:", "Here's Why". Example: "Bitcoin Drops 5% to $62K After Fed Holds Interest Rates")
 - metaDescription: (SEO meta description, exactly 1 sentence, 140-155 characters, summarising the key fact — do NOT truncate mid-word)
 - keyPoints: (exactly 3 bullet points separated by \\n, each ONE short sentence summarizing a key fact. Must be DIFFERENT from the article opening. Example: "- Bitcoin fell 5% to $62,000 after the Fed held rates steady.\\n- Ethereum outperformed with a 2% gain during the same period.\\n- Analysts expect continued volatility through Q3.")
 - summary: (full news article, 600-900 words, must contain at least 3 specific named facts from source — prices, percentages, names, quotes. Start with dateline. Use \\n\\n between paragraphs. End with a "why this matters" paragraph.)
@@ -280,7 +325,7 @@ async function generateArticle(headline, description, category) {
 - confidence: (number between 60-95)
 - disclaimer: ("This article is for informational purposes only. Content is based on publicly available news sources.")`,
     politics: `Return ONLY a JSON object with these fields:
-- title: (SEO-optimized headline, max 12 words. Write it the way someone would SEARCH for this story on Google. Include names, policies. Example: "Trump Signs Executive Order Banning TikTok: What It Means")
+- title: (SEO-optimized headline, max 12 words, HARD LIMIT 100 characters. Write it the way someone would SEARCH for this story on Google. Include names, policies. HEADLINE RULES — all must apply: (1) Put the most recognizable entity in the first 5 words. (2) Include a specific number if the story has one — "Falls 8%" beats "Falls Sharply". (3) Use a change-of-state verb where possible: Falls, Surges, Wins, Loses, Dies, Launches, Bans, Hits, Ousts, Faces, Cuts, Raises, Resigns, Fires. (4) For public figures with health or age context, include age: "84-Year-Old Senator Says..." style. (5) Never start with vague openers like "New Report Shows", "Sources Say", "Report:", "Watch:", "Here's Why". Example: "Trump Signs Executive Order Banning TikTok: What It Means")
 - metaDescription: (SEO meta description, exactly 1 sentence, 140-155 characters, summarising the key fact — do NOT truncate mid-word)
 - keyPoints: (exactly 3 bullet points separated by \\n, each ONE short sentence summarizing a key fact. Must be DIFFERENT from the article opening. Example: "- Trump signed the order banning TikTok from US app stores.\\n- Congress has 90 days to pass legislation before the ban takes effect.\\n- ByteDance says it will challenge the order in court.")
 - summary: (full news article, 600-900 words, must contain at least 3 specific named facts from source — names, decisions, votes, quotes. Start with dateline. Use \\n\\n between paragraphs. End with a "why this matters" paragraph.)
@@ -289,7 +334,7 @@ async function generateArticle(headline, description, category) {
 - tag: (specific tag like "Trump", "Congress", "Supreme Court", "NATO", "Senate")
 - disclaimer: ("This article is for informational purposes only. Content is based on publicly available news sources.")`,
     technology: `Return ONLY a JSON object with these fields:
-- title: (SEO-optimized headline, max 12 words. Write it the way someone would SEARCH for this story on Google. Include product/company names. Example: "OpenAI Launches GPT-5: Price, Features and Release Date")
+- title: (SEO-optimized headline, max 12 words, HARD LIMIT 100 characters. Write it the way someone would SEARCH for this story on Google. Include product/company names. HEADLINE RULES — all must apply: (1) Put the most recognizable entity in the first 5 words. (2) Include a specific number if the story has one — "Falls 8%" beats "Falls Sharply". (3) Use a change-of-state verb where possible: Falls, Surges, Wins, Loses, Dies, Launches, Bans, Hits, Ousts, Faces, Cuts, Raises, Resigns, Fires. (4) For public figures with health or age context, include age: "84-Year-Old Senator Says..." style. (5) Never start with vague openers like "New Report Shows", "Sources Say", "Report:", "Watch:", "Here's Why". Example: "OpenAI Launches GPT-5: Price, Features and Release Date")
 - metaDescription: (SEO meta description, exactly 1 sentence, 140-155 characters, summarising the key fact — do NOT truncate mid-word)
 - keyPoints: (exactly 3 bullet points separated by \\n, each ONE short sentence summarizing a key fact. Must be DIFFERENT from the article opening. Example: "- OpenAI released GPT-5 with 10x faster processing speed.\\n- The new model costs $30/month for Plus subscribers.\\n- Google and Anthropic are expected to respond within weeks.")
 - summary: (full news article, 600-900 words, must contain at least 3 specific named facts from source — product names, specs, prices, quotes, dates. Start with dateline. Use \\n\\n between paragraphs. End with a "why this matters" paragraph.)
@@ -347,6 +392,36 @@ export default async function handler(req, res) {
     const now = new Date().toISOString();
     const authorNames = { sports: 'Sports Desk', finance: 'Markets Desk', politics: 'Politics Desk', technology: 'Tech Desk' };
 
+    // Cross-source trending detection — fetch all sources first, find entities appearing in 2+ feeds
+    const allFetchedItems = [];
+    for (const category of ['finance', 'sports', 'politics', 'technology']) {
+      for (const source of RSS_SOURCES[category]) {
+        try {
+          const rss = await fetchRSS(source);
+          if (rss) allFetchedItems.push({ ...rss, category, source });
+        } catch {}
+      }
+    }
+
+    // Extract named entities (capitalized words 4+ chars) from each title
+    function extractEntities(title) {
+      return title.match(/\b[A-Z][a-z]{3,}\b/g) || [];
+    }
+
+    // Count how many feeds mention each entity
+    const entityCounts = {};
+    for (const item of allFetchedItems) {
+      for (const entity of extractEntities(item.title)) {
+        entityCounts[entity] = (entityCounts[entity] || 0) + 1;
+      }
+    }
+
+    // Build trending bonus map — entity appears in 2+ feeds = trending
+    function getTrendingBonus(title) {
+      const entities = extractEntities(title);
+      return entities.some(e => entityCounts[e] >= 2) ? 3 : 0;
+    }
+
     for (const category of ['finance', 'sports', 'politics', 'technology']) {
       try {
         // Shuffle sources so we don't always try the same one first
@@ -358,6 +433,12 @@ export default async function handler(req, res) {
 
           const rss = await fetchRSS(source);
           if (!rss) continue;
+
+          // Apply trending bonus from cross-source detection
+          rss.score = (rss.score || 0) + getTrendingBonus(rss.title);
+          if (getTrendingBonus(rss.title) > 0) {
+            console.log(`Trending bonus applied to: ${rss.title}`);
+          }
 
           // Duplicate detection
           const titleWords = rss.title.toLowerCase().split(' ').filter(w => w.length > 3).slice(0, 5).join('%');
