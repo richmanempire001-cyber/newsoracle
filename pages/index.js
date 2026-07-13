@@ -52,7 +52,7 @@ export default function Home({ initialArticles, featuredSports, featuredFinance,
         <title>NewsOracle — Sports, Finance, Technology & Politics News</title>
         <meta name="description" content="NewsOracle delivers the latest sports, finance, technology and politics news with in-depth analysis and market predictions. Updated around the clock." />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="robots" content="index, follow" />
+        <meta name="robots" content="index, follow, max-image-preview:large" />
         <meta property="og:title" content="NewsOracle — Sports, Finance, Technology & Politics News" />
         <meta property="og:description" content="Latest sports, finance, technology and politics news with expert analysis and market predictions. Updated around the clock." />
         <meta property="og:image" content="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=1200&q=80" />
