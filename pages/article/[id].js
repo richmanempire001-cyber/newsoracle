@@ -366,7 +366,17 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
                   elements.push(<p key={i} style={{ marginTop: 0, marginBottom: "20px" }}>{para}</p>);
                 }
 
-                if (i === 1 && readNextArticles.length >= 2) {
+                if (i === 3 && related.length > 0) {
+                  const contextArticle = related[0];
+                  elements.push(
+                    <p key="context-link" style={{ marginTop: 0, marginBottom: "20px" }}>
+                      <strong>Related coverage:</strong>{' '}
+                      <Link href={articlePath(contextArticle)} style={{ color: "#cc0000", textDecoration: "none", fontWeight: "600" }}>
+                        {contextArticle.title}
+                      </Link>
+                    </p>
+                  );
+                }if (i === 1 && readNextArticles.length >= 2) {
                   elements.push(
                     <div key="read-next" style={{ background: "#f8f9fa", border: "1px solid #eee", padding: "20px", margin: "28px 0" }}>
                       <h4 style={{ fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "2px", color: "#cc0000", margin: "0 0 16px" }}>Read Next</h4>
@@ -535,11 +545,23 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
 
         {/* Footer */}
         <footer style={{ background: "#111", color: "#999", padding: "40px 20px", marginTop: "40px" }}>
-          <div style={{ maxWidth: "1200px", margin: "0 auto", textAlign: "center" }}>
-            <h2 style={{ color: "#fff", margin: "0 0 10px", fontSize: "24px", fontWeight: "900" }}>
+          <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+            <div style={{ display: "flex", justifyContent: "center", gap: "16px", marginBottom: "16px", flexWrap: "wrap" }}>
+              <a href="https://t.me/NewsOracleOfficial" target="_blank" rel="noopener noreferrer" style={{ color: "#fff", fontSize: "13px", textDecoration: "none", background: "#0088cc", padding: "8px 16px" }}>Telegram</a>
+              <a href="https://www.facebook.com/profile.php?id=61591337781640" target="_blank" rel="noopener noreferrer" style={{ color: "#fff", fontSize: "13px", textDecoration: "none", background: "#1877f2", padding: "8px 16px" }}>Facebook</a>
+            </div>
+            <div style={{ display: "flex", justifyContent: "center", gap: "20px", marginBottom: "16px", flexWrap: "wrap" }}>
+              <Link href="/about" style={{ color: "#999", textDecoration: "none", fontSize: "13px" }}>About Us</Link>
+              <Link href="/contact" style={{ color: "#999", textDecoration: "none", fontSize: "13px" }}>Contact</Link>
+              <Link href="/corrections" style={{ color: "#999", textDecoration: "none", fontSize: "13px" }}>Corrections</Link>
+              <Link href="/editorial-guidelines" style={{ color: "#999", textDecoration: "none", fontSize: "13px" }}>Editorial Guidelines</Link>
+              <Link href="/privacy-policy" style={{ color: "#999", textDecoration: "none", fontSize: "13px" }}>Privacy Policy</Link>
+              <Link href="/terms" style={{ color: "#999", textDecoration: "none", fontSize: "13px" }}>Terms of Service</Link>
+            </div>
+            <h2 style={{ color: "#fff", margin: "0 0 10px", fontSize: "24px", fontWeight: "900", textAlign: "center" }}>
               NEWS<span style={{ color: "#cc0000" }}>ORACLE</span>
             </h2>
-            <p style={{ margin: 0, fontSize: "12px" }}>
+            <p style={{ margin: 0, fontSize: "12px", textAlign: "center" }}>
               2026 NewsOracle. All content is for informational purposes only and does not constitute financial or betting advice.
             </p>
           </div>
