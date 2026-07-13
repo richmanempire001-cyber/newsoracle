@@ -132,7 +132,7 @@ const FALLBACK_IMAGES = {
     const data = await res.json();
     if (data.photos && data.photos.length > 0) {
       const random = data.photos[Math.floor(Math.random() * data.photos.length)];
-      return random.src.large;
+      return random.src.original.split('?')[0] + '?auto=compress&cs=tinysrgb&w=1260';
     }
     return null;
   } catch {
@@ -343,96 +343,99 @@ export default async function handler(req, res) {
   }
 
   try {
-    const financeSource = RSS_SOURCES.finance[Math.floor(Math.random() * RSS_SOURCES.finance.length)];
-    const sportsSource = RSS_SOURCES.sports[Math.floor(Math.random() * RSS_SOURCES.sports.length)];
-    const politicsSource = RSS_SOURCES.politics[Math.floor(Math.random() * RSS_SOURCES.politics.length)];
-    const technologySource = RSS_SOURCES.technology[Math.floor(Math.random() * RSS_SOURCES.technology.length)];
-
-    const [financeRSS, sportsRSS, politicsRSS, technologyRSS] = await Promise.all([
-      fetchRSS(financeSource),
-      fetchRSS(sportsSource),
-      fetchRSS(politicsSource),
-      fetchRSS(technologySource)
-    ]);
-
     const results = [];
     const now = new Date().toISOString();
+    const authorNames = { sports: 'Sports Desk', finance: 'Markets Desk', politics: 'Politics Desk', technology: 'Tech Desk' };
 
-    for (const [rss, category] of [
-      [financeRSS, 'finance'],
-      [sportsRSS, 'sports'],
-      [politicsRSS, 'politics'],
-      [technologyRSS, 'technology']
-    ]) {
-      if (!rss) continue;
+    for (const category of ['finance', 'sports', 'politics', 'technology']) {
+      try {
+        // Shuffle sources so we don't always try the same one first
+        const sources = [...RSS_SOURCES[category]].sort(() => Math.random() - 0.5);
+        let published = false;
 
-      // Improved duplicate detection — 5 words, length > 3
-      const titleWords = rss.title.toLowerCase().split(' ').filter(w => w.length > 3).slice(0, 5).join('%');
-      const { data: existing } = await supabase
-        .from('articles')
-        .select('id')
-        .or(`link.eq.${rss.itemLink},title.ilike.%${titleWords}%`)
-        .limit(1);
-      if (existing && existing.length > 0) continue;
+        for (const source of sources) {
+          if (published) break;
 
-      const fullArticle = await fetchFullArticle(rss.itemLink);
-      const fullText = fullArticle?.text || null;
-      const ogImage = fullArticle?.ogImage || null;
-      const sourceMaterial = fullText || rss.description;
+          const rss = await fetchRSS(source);
+          if (!rss) continue;
 
-      // QUALITY GATE 1: Skip if no full article AND RSS description is too thin
-      if (!fullText && rss.description.length < 200) {
-        console.log(`Skipped ${category}: thin source (${rss.description.length} chars, no full article)`);
-        continue;
+          // Duplicate detection
+          const titleWords = rss.title.toLowerCase().split(' ').filter(w => w.length > 3).slice(0, 5).join('%');
+          const { data: existing } = await supabase
+            .from('articles')
+            .select('id')
+            .or(`link.eq.${rss.itemLink},title.ilike.%${titleWords}%`)
+            .limit(1);
+          if (existing && existing.length > 0) {
+            console.log(`Skipped ${category} (${source}): duplicate`);
+            continue;
+          }
+
+          const fullArticle = await fetchFullArticle(rss.itemLink);
+          const fullText = fullArticle?.text || null;
+          const ogImage = fullArticle?.ogImage || null;
+          const sourceMaterial = fullText || rss.description;
+
+          // QUALITY GATE 1: thin source
+          if (!fullText && rss.description.length < 200) {
+            console.log(`Skipped ${category} (${source}): thin source (${rss.description.length} chars)`);
+            continue;
+          }
+
+          const article = await generateArticle(rss.title, sourceMaterial, category);
+
+          // QUALITY GATE 2: article too short
+          const wordCount = article.summary?.trim().split(/\s+/).length || 0;
+          if (wordCount < 300) {
+            console.log(`Skipped ${category} (${source}): too short (${wordCount} words)`);
+            continue;
+          }
+
+          // QUALITY GATE 3: filler detected
+          if (!fullText && wordCount > 700) {
+            console.log(`Skipped ${category} (${source}): filler detected (${wordCount} words)`);
+            continue;
+          }
+
+          const pexelsQuery = `${article.tag} ${article.title.split(' ').slice(0, 3).join(' ')}`;
+          const articleImage = ogImage || rss.image || await getPexelsImage(pexelsQuery) || FALLBACK_IMAGES[category];
+
+          results.push({
+            link: rss.itemLink,
+            source: rss.sourceName || '',
+            title: article.title,
+            summary: article.summary,
+            key_points: article.keyPoints || null,
+            meta_description: article.metaDescription || null,
+            prediction: article.prediction || null,
+            category: category,
+            tag: article.tag,
+            author: authorNames[category] || 'NewsOracle Editorial',
+            image: articleImage,
+            sentiment: article.sentiment || null,
+            confidence: article.confidence || null,
+            disclaimer: article.disclaimer,
+            pub_date: now,
+            posted_at: now
+          });
+
+          published = true;
+          console.log(`Published ${category}: "${article.title}" from ${source}`);
+        }
+
+        if (!published) {
+          console.log(`No article published for ${category} this run — all sources failed gates`);
+        }
+
+      } catch (categoryErr) {
+        console.error(`Error processing ${category}:`, categoryErr.message);
+        // Continue to next category — don't let one failure kill the run
       }
-
-      const article = await generateArticle(rss.title, sourceMaterial, category);
-
-      // QUALITY GATE 2: Skip if generated article is under 400 words
-      const wordCount = article.summary?.trim().split(/\s+/).length || 0;
-      if (wordCount < 300) {
-        console.log(`Skipped ${category}: article too short (${wordCount} words)`);
-        continue;
-      }
-
-      // QUALITY GATE 3: Skip if no full article but Claude padded over 700 words (filler detected)
-      if (!fullText && wordCount > 700) {
-        console.log(`Skipped ${category}: filler detected (${wordCount} words from thin source)`);
-        continue;
-      }
-
-      const authorNames = { sports: 'Sports Desk', finance: 'Markets Desk', politics: 'Politics Desk', technology: 'Tech Desk' };
-
-      // Image priority: OG image from source > RSS feed image > Pexels specific search > category fallback
-      const pexelsQuery = `${article.tag} ${article.title.split(' ').slice(0, 3).join(' ')}`;
-      const articleImage = ogImage || rss.image || await getPexelsImage(pexelsQuery) || FALLBACK_IMAGES[category];
-
-      results.push({
-        link: rss.itemLink,
-        source: rss.sourceName || '',
-        title: article.title,
-        summary: article.summary,
-        key_points: article.keyPoints || null,
-        meta_description: article.metaDescription || null,
-        prediction: article.prediction || null,
-        category: category,
-        tag: article.tag,
-        author: authorNames[category] || 'NewsOracle Editorial',
-        image: articleImage,
-        sentiment: article.sentiment || null,
-        confidence: article.confidence || null,
-        disclaimer: article.disclaimer,
-        pub_date: now,
-        posted_at: now
-      });
     }
-    if (results.length === 0) {
-  return res.status(200).json({ message: 'No new articles to publish this run' });
-}
 
     if (results.length === 0) {
-  return res.status(200).json({ message: 'No new articles to publish' });
-}
+      return res.status(200).json({ message: 'No new articles to publish this run' });
+    }
 
 const { data: insertedArticles, error } = await supabase.from('articles').insert(results).select();
 if (error) throw error;
