@@ -73,7 +73,7 @@ export default function CategoryPage({ category, config, articles, heroArticle, 
         <title>{config.title} — NewsOracle</title>
         <meta name="description" content={config.description} />
         <meta name="keywords" content={config.keywords} />
-        <meta name="robots" content="index, follow" />
+        <meta name="robots" content="index, follow, max-image-preview:large" />
         <link rel="canonical" href={`https://www.newsoracle.online/category/${category}`} />
         <meta property="og:title" content={`${config.title} — NewsOracle`} />
         <meta property="og:description" content={config.description} />
