@@ -171,6 +171,7 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
         <meta name="twitter:title" content={article.title} />
         <meta name="twitter:description" content={metaDesc} />
         <meta name="twitter:image" content={imageUrl} />
+        <meta name="robots" content="max-image-preview:large" />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
           "@context": "https://schema.org",
           "@type": "NewsArticle",
