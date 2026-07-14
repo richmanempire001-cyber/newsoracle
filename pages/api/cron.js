@@ -1,10 +1,14 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { slugify } from '../../lib/slugify';
+
+// Vercel max duration — explicit 60 second timeout
+export const config = { maxDuration: 60 };
+
 async function postToFacebook(article) {
   try {
     const articleUrl = article.articleUrl || 'https://www.newsoracle.online';
     const message = `🔴 ${article.title}\n\n${article.summary?.substring(0, 500)}...\n\n🔗 Read more: ${articleUrl}`;
-   await fetch(`https://graph.facebook.com/${process.env.FACEBOOK_PAGE_ID}/photos`, {
+    await fetch(`https://graph.facebook.com/${process.env.FACEBOOK_PAGE_ID}/photos`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -16,7 +20,9 @@ async function postToFacebook(article) {
   } catch (err) {
     console.error('Facebook error:', err);
   }
-}async function postToTelegram(article) {
+}
+
+async function postToTelegram(article) {
   try {
     const articleUrl = article.articleUrl || 'https://www.newsoracle.online';
     const caption = `🔴 *${article.title}*\n\n${article.summary?.substring(0, 500)}...\n\n🔗 Read more: ${articleUrl}`;
@@ -33,7 +39,9 @@ async function postToFacebook(article) {
   } catch (err) {
     console.error('Telegram error:', err);
   }
-}async function postToThreads(article) {
+}
+
+async function postToThreads(article) {
   try {
     const articleUrl = article.articleUrl || 'https://www.newsoracle.online';
     const text = `🔴 ${article.title}\n\n${article.summary?.substring(0, 500)}...\n\n🔗 Read more: ${articleUrl}`;
@@ -61,6 +69,7 @@ async function postToFacebook(article) {
     console.error('Threads error:', err);
   }
 }
+
 async function postToInstagram(article) {
   try {
     const imageUrl = article.image;
@@ -90,6 +99,7 @@ async function postToInstagram(article) {
     console.error('Instagram error:', err);
   }
 }
+
 import { createClient } from '@supabase/supabase-js';
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -119,12 +129,15 @@ const RSS_SOURCES = {
     'https://techcrunch.com/feed/',
   ]
 };
+
 const FALLBACK_IMAGES = {
   finance: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&q=80',
   sports: 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=800&q=80',
   politics: 'https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=800&q=80',
   technology: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&q=80'
-};async function getPexelsImage(query) {
+};
+
+async function getPexelsImage(query) {
   try {
     const res = await fetch(`https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=5&orientation=landscape`, {
       headers: { Authorization: process.env.PEXELS_API_KEY }
@@ -143,16 +156,12 @@ const FALLBACK_IMAGES = {
 async function extractRealUrlFromGoogleWrapper(html) {
   const metaRefresh = html.match(/<meta[^>]+http-equiv=["']refresh["'][^>]+content=["'][^"']*url=([^"'>]+)["']/i);
   if (metaRefresh) return metaRefresh[1];
-
   const canonical = html.match(/<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i);
   if (canonical && !canonical[1].includes('news.google.com')) return canonical[1];
-
   const jsRedirect = html.match(/(?:window\.location|location\.href)\s*=\s*["']([^"']+)["']/i);
   if (jsRedirect) return jsRedirect[1];
-
   const dataNUrl = html.match(/data-n-au="([^"]+)"/i);
   if (dataNUrl) return dataNUrl[1];
-
   return null;
 }
 
@@ -170,7 +179,6 @@ async function fetchFullArticle(url) {
   try {
     let result = await fetchHtml(url);
     if (!result) return null;
-
     if (result.finalUrl.includes('news.google.com')) {
       const realUrl = await extractRealUrlFromGoogleWrapper(result.html);
       if (realUrl) {
@@ -178,18 +186,13 @@ async function fetchFullArticle(url) {
         if (secondResult) result = secondResult;
       }
     }
-
     const paragraphs = [...result.html.matchAll(/<p[^>]*>(.*?)<\/p>/gis)]
       .map(m => m[1].replace(/<[^>]*>/g, '').trim())
       .filter(p => p.length > 40);
-
     const text = paragraphs.slice(0, 20).join(' ').substring(0, 5000);
-
-    // Extract OG image from source article
     const ogMatch = result.html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i) ||
                     result.html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
     const ogImage = ogMatch ? (ogMatch[1] || ogMatch[2] || null) : null;
-
     return text.length > 150 ? { text, ogImage } : null;
   } catch {
     return null;
@@ -198,29 +201,18 @@ async function fetchFullArticle(url) {
 
 function scoreRSSItem(title, description, pubDate) {
   let score = 0;
-
-  // Recency scoring
   if (pubDate) {
     const ageMs = Date.now() - new Date(pubDate).getTime();
     const ageHours = ageMs / (1000 * 60 * 60);
-    if (ageHours > 6) return -999; // hard cutoff — disqualify immediately
-    if (ageHours <= 2) score += 2; // recency bonus
+    if (ageHours > 6) return -999;
+    if (ageHours <= 2) score += 2;
   }
-
-  // Has a number in title (+3)
   if (/\d/.test(title)) score += 3;
-
-  // Named entity in first 5 words (+2)
   const firstFive = title.split(' ').slice(0, 5).join(' ');
   if (/[A-Z][a-z]+/.test(firstFive)) score += 2;
-
-  // Change-of-state verb (+2)
   const stateVerbs = /\b(falls|surges|rises|drops|wins|loses|dies|launches|bans|hits|ousts|faces|cuts|raises|crashes|soars|resigns|fires|arrests|indicts|acquits|sanctions)\b/i;
   if (stateVerbs.test(title)) score += 2;
-
-  // Description richness (+1)
   if (description.length > 300) score += 1;
-
   return score;
 }
 
@@ -230,55 +222,52 @@ async function fetchRSS(url) {
     const text = await res.text();
     const items = [...text.matchAll(/<item[\s\S]*?<\/item>/g)].slice(0, 10);
     if (items.length === 0) return null;
-
     const candidates = [];
-
     for (let i = 0; i < Math.min(5, items.length); i++) {
       const itemText = items[i][0];
-
       const linkMatch = itemText.match(/<link>(.*?)<\/link>|<link[^>]*href="([^"]+)"/);
       const itemLink = linkMatch ? (linkMatch[1] || linkMatch[2] || '').trim() : '';
       const titleMatch = itemText.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>|<title>(.*?)<\/title>/);
       const descMatch = itemText.match(/<description><!\[CDATA\[(.*?)\]\]><\/description>|<description>(.*?)<\/description>/);
       const pubDateMatch = itemText.match(/<pubDate>(.*?)<\/pubDate>/);
-
       const imageMatch =
         itemText.match(/url="([^"]+\.(jpg|jpeg|png|webp)[^"]*)"/) ||
         itemText.match(/<media:content[^>]+url="([^"]+)"/) ||
         itemText.match(/<media:thumbnail[^>]+url="([^"]+)"/) ||
         itemText.match(/<enclosure[^>]+url="([^"]+\.(jpg|jpeg|png|webp)[^"]*)"/) ||
         itemText.match(/https?:\/\/[^\s"'<>]+\.(jpg|jpeg|png|webp)/i);
-
       const title = titleMatch ? (titleMatch[1] || titleMatch[2]).trim() : '';
       const description = descMatch ? (descMatch[1] || descMatch[2]).replace(/<[^>]*>/g, '').trim() : '';
       const image = imageMatch ? (imageMatch[1] || imageMatch[0]) : null;
       const sourceMatch = itemText.match(/<source[^>]*>(.*?)<\/source>/);
       const sourceName = sourceMatch ? sourceMatch[1].trim() : '';
       const pubDate = pubDateMatch ? pubDateMatch[1].trim() : null;
-
       if (!title || title.length < 10) continue;
       if (!description || description.length < 100) continue;
-
       const score = scoreRSSItem(title, description, pubDate);
       if (score === -999) {
         console.log(`Skipped (stale >6hr): ${title}`);
         continue;
       }
-
       candidates.push({ title, description, image, sourceUrl: url, originalTitle: title, itemLink: itemLink || title, sourceName, pubDate, score });
     }
-
     if (candidates.length === 0) return null;
-
-    // Return highest scoring candidate
     candidates.sort((a, b) => b.score - a.score);
     const best = candidates[0];
     console.log(`Best item (score ${best.score}): ${best.title}`);
     return best;
-
   } catch {
     return null;
   }
+}
+
+function extractPrimaryEntity(title) {
+  const matches = title.match(/\b[A-Z][a-z]{3,}\b/g);
+  return matches ? matches[0] : null;
+}
+
+function extractEntities(title) {
+  return title.match(/\b[A-Z][a-z]{3,}\b/g) || [];
 }
 
 async function generateArticle(headline, description, category) {
@@ -393,23 +382,29 @@ export default async function handler(req, res) {
     const now = new Date().toISOString();
     const authorNames = { sports: 'Sports Desk', finance: 'Markets Desk', politics: 'Politics Desk', technology: 'Tech Desk' };
 
-    // Cross-source trending detection — fetch all sources first, find entities appearing in 2+ feeds
-    const allFetchedItems = [];
-    for (const category of ['finance', 'sports', 'politics', 'technology']) {
-      for (const source of RSS_SOURCES[category]) {
-        try {
-          const rss = await fetchRSS(source);
-          if (rss) allFetchedItems.push({ ...rss, category, source });
-        } catch {}
+    // STEP 1 — Fetch ALL 14 RSS sources in parallel (one fetch, not two)
+    const allSourceEntries = [];
+    for (const [category, sources] of Object.entries(RSS_SOURCES)) {
+      for (const source of sources) {
+        allSourceEntries.push({ category, source });
       }
     }
 
-    // Extract named entities (capitalized words 4+ chars) from each title
-    function extractEntities(title) {
-      return title.match(/\b[A-Z][a-z]{3,}\b/g) || [];
-    }
+    const rssResults = await Promise.all(
+      allSourceEntries.map(async ({ category, source }) => {
+        try {
+          const rss = await fetchRSS(source);
+          return rss ? { ...rss, category, source } : null;
+        } catch {
+          return null;
+        }
+      })
+    );
 
-    // Count how many feeds mention each entity
+    const allFetchedItems = rssResults.filter(Boolean);
+    console.log(`Fetched ${allFetchedItems.length} RSS items from ${allSourceEntries.length} sources`);
+
+    // STEP 2 — Cross-source trending detection (no extra fetches needed)
     const entityCounts = {};
     for (const item of allFetchedItems) {
       for (const entity of extractEntities(item.title)) {
@@ -417,204 +412,247 @@ export default async function handler(req, res) {
       }
     }
 
-    // Build trending bonus map — entity appears in 2+ feeds = trending
     function getTrendingBonus(title) {
       const entities = extractEntities(title);
       return entities.some(e => entityCounts[e] >= 2) ? 3 : 0;
     }
 
+    // STEP 3 — Group fetched items by category, apply trending bonus, sort by score
+    const itemsByCategory = {};
     for (const category of ['finance', 'sports', 'politics', 'technology']) {
-      try {
-        // Shuffle sources so we don't always try the same one first
-        const sources = [...RSS_SOURCES[category]].sort(() => Math.random() - 0.5);
-        let published = false;
+      itemsByCategory[category] = allFetchedItems
+        .filter(item => item.category === category)
+        .map(item => ({
+          ...item,
+          score: (item.score || 0) + getTrendingBonus(item.title)
+        }))
+        .sort((a, b) => b.score - a.score);
+    }
 
-        for (const source of sources) {
-          if (published) break;
+    // STEP 4 — Fetch recent articles once for duplicate checking across all categories
+    const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString();
+    const { data: recentArticles } = await supabase
+      .from('articles')
+      .select('id, title, link')
+      .gte('created_at', twelveHoursAgo);
 
-          const rss = await fetchRSS(source);
-          if (!rss) continue;
+    const recentTitles = (recentArticles || []).map(a => a.title.toLowerCase());
+    const recentLinks = new Set((recentArticles || []).map(a => a.link));
 
-          // Apply trending bonus from cross-source detection
-          rss.score = (rss.score || 0) + getTrendingBonus(rss.title);
-          if (getTrendingBonus(rss.title) > 0) {
-            console.log(`Trending bonus applied to: ${rss.title}`);
-          }
+    function isDuplicate(rss) {
+      if (recentLinks.has(rss.itemLink)) return true;
 
-          // Duplicate detection
-          const titleWords = rss.title.toLowerCase().split(' ').filter(w => w.length > 3).slice(0, 5).join('%');
-          const { data: existing } = await supabase
-            .from('articles')
-            .select('id')
-            .or(`link.eq.${rss.itemLink},title.ilike.%${titleWords}%`)
-            .limit(1);
-          if (existing && existing.length > 0) {
-            console.log(`Skipped ${category} (${source}): duplicate`);
-            continue;
-          }
+      // 8-word keyword match (up from 5)
+      const titleWords = rss.title.toLowerCase().split(' ').filter(w => w.length > 3).slice(0, 8).join(' ');
+      if (recentTitles.some(t => t.includes(titleWords))) return true;
 
-          const fullArticle = await fetchFullArticle(rss.itemLink);
-          const fullText = fullArticle?.text || null;
-          const ogImage = fullArticle?.ogImage || null;
-          const sourceMaterial = fullText || rss.description;
-
-          // QUALITY GATE 1: thin source
-          if (!fullText && rss.description.length < 200) {
-            console.log(`Skipped ${category} (${source}): thin source (${rss.description.length} chars)`);
-            continue;
-          }
-
-          const article = await generateArticle(rss.title, sourceMaterial, category);
-
-          // Force correct category regardless of what Claude returned
-          article.category = category;
-
-          // QUALITY GATE 2: article too short
-          const wordCount = article.summary?.trim().split(/\s+/).length || 0;
-          if (wordCount < 300) {
-            console.log(`Skipped ${category} (${source}): too short (${wordCount} words)`);
-            continue;
-          }
-
-          // QUALITY GATE 3: filler detected
-          if (!fullText && wordCount > 700) {
-            console.log(`Skipped ${category} (${source}): filler detected (${wordCount} words)`);
-            continue;
-          }
-
-          const pexelsQuery = `${article.tag} ${article.title.split(' ').slice(0, 3).join(' ')}`;
-          const articleImage = ogImage || rss.image || await getPexelsImage(pexelsQuery) || FALLBACK_IMAGES[category];
-
-          results.push({
-            link: rss.itemLink,
-            source: rss.sourceName || '',
-            title: article.title,
-            summary: article.summary,
-            key_points: article.keyPoints || null,
-            meta_description: article.metaDescription || null,
-            prediction: article.prediction || null,
-            category: category,
-            tag: article.tag,
-            author: authorNames[category] || 'NewsOracle Editorial',
-            image: articleImage,
-            sentiment: article.sentiment || null,
-            confidence: article.confidence || null,
-            disclaimer: article.disclaimer,
-            pub_date: now,
-            posted_at: now
-          });
-
-          published = true;
-          console.log(`Published ${category}: "${article.title}" from ${source}`);
+      // Primary entity + topic match
+      const primaryEntity = extractPrimaryEntity(rss.title);
+      if (primaryEntity && primaryEntity.length > 4) {
+        const entityLower = primaryEntity.toLowerCase();
+        const topicWord = rss.title.toLowerCase().split(' ').filter(w => w.length > 4)[0];
+        if (topicWord && recentTitles.some(t => t.includes(entityLower) && t.includes(topicWord))) {
+          return true;
         }
-
-        if (!published) {
-          console.log(`No article published for ${category} this run — all sources failed gates`);
-        }
-
-      } catch (categoryErr) {
-        console.error(`Error processing ${category}:`, categoryErr.message);
-        // Continue to next category — don't let one failure kill the run
       }
+
+      return false;
+    }
+
+    // STEP 5 — Pick best non-duplicate item per category
+    const selectedItems = {};
+    for (const category of ['finance', 'sports', 'politics', 'technology']) {
+      const candidates = itemsByCategory[category] || [];
+      for (const item of candidates) {
+        if (!isDuplicate(item)) {
+          selectedItems[category] = item;
+          console.log(`Selected ${category} (score ${item.score}): ${item.title}`);
+          break;
+        } else {
+          console.log(`Skipped ${category} duplicate: ${item.title}`);
+        }
+      }
+    }
+
+    // STEP 6 — Fetch full articles in parallel
+    const categoriesToProcess = Object.keys(selectedItems);
+    const fullArticleResults = await Promise.all(
+      categoriesToProcess.map(async category => {
+        const rss = selectedItems[category];
+        try {
+          const fullArticle = await fetchFullArticle(rss.itemLink);
+          return { category, rss, fullText: fullArticle?.text || null, ogImage: fullArticle?.ogImage || null };
+        } catch {
+          return { category, rss, fullText: null, ogImage: null };
+        }
+      })
+    );
+
+    // STEP 7 — Quality gate 1, then generate all articles in parallel
+    const validItems = fullArticleResults.filter(({ rss, fullText }) => {
+      if (!fullText && rss.description.length < 200) {
+        console.log(`Skipped: thin source (${rss.description.length} chars) for ${rss.title}`);
+        return false;
+      }
+      return true;
+    });
+
+    const generatedArticles = await Promise.all(
+      validItems.map(async ({ category, rss, fullText, ogImage }) => {
+        try {
+          const sourceMaterial = fullText || rss.description;
+          const article = await generateArticle(rss.title, sourceMaterial, category);
+          article.category = category;
+          return { category, rss, article, fullText, ogImage };
+        } catch (err) {
+          console.error(`Article generation failed for ${category}:`, err.message);
+          return null;
+        }
+      })
+    );
+
+    // STEP 8 — Quality gates 2 & 3, fetch images in parallel
+    const passedGates = generatedArticles.filter(item => {
+      if (!item) return false;
+      const { category, rss, article, fullText } = item;
+      const wordCount = article.summary?.trim().split(/\s+/).length || 0;
+      if (wordCount < 300) {
+        console.log(`Skipped ${category}: too short (${wordCount} words)`);
+        return false;
+      }
+      if (!fullText && wordCount > 700) {
+        console.log(`Skipped ${category}: filler detected (${wordCount} words)`);
+        return false;
+      }
+      return true;
+    });
+
+    const itemsWithImages = await Promise.all(
+      passedGates.map(async ({ category, rss, article, ogImage }) => {
+        const pexelsQuery = `${article.tag} ${article.title.split(' ').slice(0, 3).join(' ')}`;
+        const articleImage = ogImage || rss.image || await getPexelsImage(pexelsQuery) || FALLBACK_IMAGES[category];
+        return { category, rss, article, articleImage };
+      })
+    );
+
+    // STEP 9 — Build results array
+    for (const { category, rss, article, articleImage } of itemsWithImages) {
+      results.push({
+        link: rss.itemLink,
+        source: rss.sourceName || '',
+        title: article.title,
+        summary: article.summary,
+        key_points: article.keyPoints || null,
+        meta_description: article.metaDescription || null,
+        prediction: article.prediction || null,
+        category: category,
+        tag: article.tag,
+        author: authorNames[category] || 'NewsOracle Editorial',
+        image: articleImage,
+        sentiment: article.sentiment || null,
+        confidence: article.confidence || null,
+        disclaimer: article.disclaimer,
+        pub_date: now,
+        posted_at: now
+      });
+      console.log(`Ready to publish ${category}: "${article.title}"`);
     }
 
     if (results.length === 0) {
       return res.status(200).json({ message: 'No new articles to publish this run' });
     }
 
-const { data: insertedArticles, error } = await supabase.from('articles').insert(results).select();
-if (error) throw error;
+    // STEP 10 — Insert to Supabase
+    const { data: insertedArticles, error } = await supabase.from('articles').insert(results).select();
+    if (error) throw error;
 
-// Post to social media with actual article URLs
-for (const inserted of (insertedArticles || [])) {
-  const articleWithUrl = {
-    ...inserted,
-    articleUrl: `https://www.newsoracle.online/article/${inserted.id}-${slugify(inserted.title)}`
-  };
-  await Promise.all([
-    postToTelegram(articleWithUrl),
-    postToFacebook(articleWithUrl),
-    postToThreads(articleWithUrl)
-  ]);
-}
+    // STEP 11 — Social media posts in parallel
+    await Promise.all(
+      (insertedArticles || []).map(async inserted => {
+        const articleWithUrl = {
+          ...inserted,
+          articleUrl: `https://www.newsoracle.online/article/${inserted.id}-${slugify(inserted.title)}`
+        };
+        await Promise.all([
+          postToTelegram(articleWithUrl),
+          postToFacebook(articleWithUrl),
+          postToThreads(articleWithUrl)
+        ]);
+      })
+    );
 
-// IndexNow ping — notify Bing and Google instantly
-try {
-  const urls = (insertedArticles || []).map(a => `https://www.newsoracle.online/article/${a.id}-${slugify(a.title)}`);
-  await fetch('https://api.indexnow.org/indexnow', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      host: 'www.newsoracle.online',
-      key: 'newsoracle2026bing',
-      keyLocation: 'https://www.newsoracle.online/newsoracle2026bing.txt',
-      urlList: urls
-    })
-  });
-} catch (err) {
-  console.error('IndexNow error:', err);
-}
-
-// Google Sitemap Ping — tell Google sitemap has been updated
-try {
-  await fetch('https://www.google.com/ping?sitemap=https://www.newsoracle.online/news-sitemap.xml');
-  await fetch('https://www.google.com/ping?sitemap=https://www.newsoracle.online/sitemap.xml');
-} catch (err) {
-  console.error('Google ping error:', err);
-}
-
-// Google Indexing API — instantly notify Google to index new articles
-try {
-  const keyJson = JSON.parse(process.env.GOOGLE_INDEXING_KEY);
-  const now = Math.floor(Date.now() / 1000);
-  const header = Buffer.from(JSON.stringify({ alg: 'RS256', typ: 'JWT' })).toString('base64url');
-  const claim = Buffer.from(JSON.stringify({
-    iss: keyJson.client_email,
-    scope: 'https://www.googleapis.com/auth/indexing',
-    aud: 'https://oauth2.googleapis.com/token',
-    exp: now + 3600,
-    iat: now
-  })).toString('base64url');
-  const { createSign } = await import('crypto');
-  const sign = createSign('RSA-SHA256');
-  sign.update(`${header}.${claim}`);
-  const signature = sign.sign(keyJson.private_key, 'base64url');
-  const jwt = `${header}.${claim}.${signature}`;
-  const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${jwt}`
-  });
-  const tokenData = await tokenRes.json();
-  const accessToken = tokenData.access_token;
-  if (accessToken) {
-    const articleUrls = (insertedArticles || []).map(a => `https://www.newsoracle.online/article/${a.id}-${slugify(a.title)}`);
-    for (const url of articleUrls) {
-      await fetch('https://indexing.googleapis.com/v3/urlNotifications:publish', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`
-        },
-        body: JSON.stringify({ url, type: 'URL_UPDATED' })
-      });
-    }
-    console.log(`Google Indexing API: submitted ${articleUrls.length} URLs`);
-  }
-} catch (err) {
-  console.error('Google Indexing API error:', err);
-}
-
-// PubSubHubbub — real-time notification to Google
-try {
-  await fetch('https://pubsubhubbub.appspot.com/publish', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: 'hub.mode=publish&hub.url=' + encodeURIComponent('https://www.newsoracle.online/news-sitemap.xml')
-  });
-} catch (err) {
-  console.error('PubSubHubbub error:', err);
-}
+    // STEP 12 — All indexing pings in parallel
+    await Promise.all([
+      (async () => {
+        try {
+          const urls = (insertedArticles || []).map(a => `https://www.newsoracle.online/article/${a.id}-${slugify(a.title)}`);
+          await fetch('https://api.indexnow.org/indexnow', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              host: 'www.newsoracle.online',
+              key: 'newsoracle2026bing',
+              keyLocation: 'https://www.newsoracle.online/newsoracle2026bing.txt',
+              urlList: urls
+            })
+          });
+        } catch (err) { console.error('IndexNow error:', err); }
+      })(),
+      (async () => {
+        try {
+          await Promise.all([
+            fetch('https://www.google.com/ping?sitemap=https://www.newsoracle.online/news-sitemap.xml'),
+            fetch('https://www.google.com/ping?sitemap=https://www.newsoracle.online/sitemap.xml')
+          ]);
+        } catch (err) { console.error('Google ping error:', err); }
+      })(),
+      (async () => {
+        try {
+          const keyJson = JSON.parse(process.env.GOOGLE_INDEXING_KEY);
+          const nowTs = Math.floor(Date.now() / 1000);
+          const header = Buffer.from(JSON.stringify({ alg: 'RS256', typ: 'JWT' })).toString('base64url');
+          const claim = Buffer.from(JSON.stringify({
+            iss: keyJson.client_email,
+            scope: 'https://www.googleapis.com/auth/indexing',
+            aud: 'https://oauth2.googleapis.com/token',
+            exp: nowTs + 3600,
+            iat: nowTs
+          })).toString('base64url');
+          const { createSign } = await import('crypto');
+          const sign = createSign('RSA-SHA256');
+          sign.update(`${header}.${claim}`);
+          const signature = sign.sign(keyJson.private_key, 'base64url');
+          const jwt = `${header}.${claim}.${signature}`;
+          const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${jwt}`
+          });
+          const tokenData = await tokenRes.json();
+          const accessToken = tokenData.access_token;
+          if (accessToken) {
+            const articleUrls = (insertedArticles || []).map(a => `https://www.newsoracle.online/article/${a.id}-${slugify(a.title)}`);
+            await Promise.all(articleUrls.map(url =>
+              fetch('https://indexing.googleapis.com/v3/urlNotifications:publish', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
+                body: JSON.stringify({ url, type: 'URL_UPDATED' })
+              })
+            ));
+            console.log(`Google Indexing API: submitted ${articleUrls.length} URLs`);
+          }
+        } catch (err) { console.error('Google Indexing API error:', err); }
+      })(),
+      (async () => {
+        try {
+          await fetch('https://pubsubhubbub.appspot.com/publish', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'hub.mode=publish&hub.url=' + encodeURIComponent('https://www.newsoracle.online/news-sitemap.xml')
+          });
+        } catch (err) { console.error('PubSubHubbub error:', err); }
+      })()
+    ]);
 
     return res.status(200).json({
       success: true,
