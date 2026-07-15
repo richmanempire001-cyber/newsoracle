@@ -105,30 +105,55 @@ import { createClient } from '@supabase/supabase-js';
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
+// CHANGE 1 — 5 new direct sources added, Google News kept as last-resort fallback
 const RSS_SOURCES = {
   finance: [
-    'https://news.google.com/rss/search?q=bitcoin+OR+crypto+OR+stocks+OR+nasdaq+OR+S%26P500+OR+inflation+OR+Fed&ceid=US:en&hl=en-US&gl=US',
+    // Direct sources — always tried first (high quality, full text)
     'https://cointelegraph.com/rss',
     'https://decrypt.co/feed',
     'https://www.coindesk.com/arc/outboundfeeds/rss/',
+    'https://feeds.reuters.com/reuters/businessNews',
+    'https://www.cnbc.com/id/100003114/device/rss/rss.html',
+    // Google News — last resort fallback only
+    'https://news.google.com/rss/search?q=bitcoin+OR+crypto+OR+stocks+OR+nasdaq+OR+S%26P500+OR+inflation+OR+Fed&ceid=US:en&hl=en-US&gl=US',
   ],
   sports: [
-    'https://news.google.com/rss/search?q=NFL+OR+NBA+OR+soccer+OR+cricket+OR+tennis+OR+Premier+League+OR+UFC&ceid=US:en&hl=en-US&gl=US',
+    // Direct sources — always tried first
     'https://www.espn.com/espn/rss/news',
     'https://www.footballtransfers.com/en/rss',
+    'https://www.bbc.com/sport/rss.xml',
+    'https://www.skysports.com/rss/12040',
+    // Google News — last resort fallback only
+    'https://news.google.com/rss/search?q=NFL+OR+NBA+OR+soccer+OR+cricket+OR+tennis+OR+Premier+League+OR+UFC&ceid=US:en&hl=en-US&gl=US',
   ],
   politics: [
-    'https://news.google.com/rss/search?q=Trump+OR+Congress+OR+White+House+OR+elections+OR+Supreme+Court+OR+Senate&ceid=US:en&hl=en-US&gl=US',
+    // Direct sources — always tried first
     'https://www.aljazeera.com/xml/rss/all.xml',
     'https://thehill.com/feed',
     'https://www.politico.com/rss/politicopicks.xml',
+    'https://feeds.bbci.co.uk/news/politics/rss.xml',
+    'https://rss.dw.com/rdf/rss-en-world',
+    // Google News — last resort fallback only
+    'https://news.google.com/rss/search?q=Trump+OR+Congress+OR+White+House+OR+elections+OR+Supreme+Court+OR+Senate&ceid=US:en&hl=en-US&gl=US',
   ],
   technology: [
-    'https://news.google.com/rss/search?q=AI+OR+Apple+OR+Tesla+OR+Google+OR+Meta+OR+OpenAI+OR+ChatGPT&ceid=US:en&hl=en-US&gl=US',
+    // Direct sources — always tried first
     'https://www.theverge.com/rss/index.xml',
     'https://techcrunch.com/feed/',
+    'https://www.wired.com/feed/rss',
+    'https://feeds.arstechnica.com/arstechnica/index',
+    // Google News — last resort fallback only
+    'https://news.google.com/rss/search?q=AI+OR+Apple+OR+Tesla+OR+Google+OR+Meta+OR+OpenAI+OR+ChatGPT&ceid=US:en&hl=en-US&gl=US',
   ]
 };
+
+// Track which sources are Google News wrappers
+const GOOGLE_NEWS_SOURCES = new Set([
+  'https://news.google.com/rss/search?q=bitcoin+OR+crypto+OR+stocks+OR+nasdaq+OR+S%26P500+OR+inflation+OR+Fed&ceid=US:en&hl=en-US&gl=US',
+  'https://news.google.com/rss/search?q=NFL+OR+NBA+OR+soccer+OR+cricket+OR+tennis+OR+Premier+League+OR+UFC&ceid=US:en&hl=en-US&gl=US',
+  'https://news.google.com/rss/search?q=Trump+OR+Congress+OR+White+House+OR+elections+OR+Supreme+Court+OR+Senate&ceid=US:en&hl=en-US&gl=US',
+  'https://news.google.com/rss/search?q=AI+OR+Apple+OR+Tesla+OR+Google+OR+Meta+OR+OpenAI+OR+ChatGPT&ceid=US:en&hl=en-US&gl=US',
+]);
 
 const FALLBACK_IMAGES = {
   finance: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&q=80',
@@ -153,39 +178,86 @@ async function getPexelsImage(query) {
   }
 }
 
-async function extractRealUrlFromGoogleWrapper(html) {
+// CHANGE 2 — Improved Google News extraction with 7 methods instead of 4
+async function extractRealUrlFromGoogleWrapper(html, originalUrl) {
+  // Method 1: meta refresh
   const metaRefresh = html.match(/<meta[^>]+http-equiv=["']refresh["'][^>]+content=["'][^"']*url=([^"'>]+)["']/i);
   if (metaRefresh) return metaRefresh[1];
+
+  // Method 2: canonical link (non-Google)
   const canonical = html.match(/<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i);
   if (canonical && !canonical[1].includes('news.google.com')) return canonical[1];
+
+  // Method 3: JS window.location redirect
   const jsRedirect = html.match(/(?:window\.location|location\.href)\s*=\s*["']([^"']+)["']/i);
-  if (jsRedirect) return jsRedirect[1];
+  if (jsRedirect && !jsRedirect[1].includes('news.google.com')) return jsRedirect[1];
+
+  // Method 4: data-n-au attribute (old Google News format)
   const dataNUrl = html.match(/data-n-au="([^"]+)"/i);
   if (dataNUrl) return dataNUrl[1];
+
+  // Method 5: og:url meta tag pointing to real article
+  const ogUrl = html.match(/<meta[^>]+property=["']og:url["'][^>]+content=["']([^"']+)["']/i) ||
+                html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:url["']/i);
+  if (ogUrl && !ogUrl[1].includes('news.google.com')) return ogUrl[1];
+
+  // Method 6: c-wiz data attribute (newer Google News format)
+  const cwizMatch = html.match(/c-wiz[^>]+jsdata="[^"]*"[^>]*data-url="([^"]+)"/i);
+  if (cwizMatch) return cwizMatch[1];
+
+  // Method 7: Extract from Google News article URL directly
+  // Google News URLs look like: https://news.google.com/articles/CBMi...
+  // Try to decode the base64 article ID
+  try {
+    const articleMatch = originalUrl.match(/articles\/([^?&]+)/);
+    if (articleMatch) {
+      // The encoded URL sometimes decodes to the real URL
+      const decoded = Buffer.from(articleMatch[1], 'base64').toString('utf-8');
+      const urlMatch = decoded.match(/https?:\/\/[^\s"'<>]+/);
+      if (urlMatch && !urlMatch[0].includes('google.com')) return urlMatch[0];
+    }
+  } catch {}
+
   return null;
 }
 
 async function fetchHtml(url) {
-  const res = await fetch(url, {
-    headers: { 'User-Agent': 'Mozilla/5.0 (compatible; NewsOracleBot/1.0)' },
-    redirect: 'follow'
-  });
-  if (!res.ok) return null;
-  const html = await res.text();
-  return { html, finalUrl: res.url };
+  try {
+    const res = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5',
+      },
+      redirect: 'follow'
+    });
+    if (!res.ok) return null;
+    const html = await res.text();
+    return { html, finalUrl: res.url };
+  } catch {
+    return null;
+  }
 }
 
-async function fetchFullArticle(url) {
+// CHANGE 3 — fetchFullArticle now skips Google News items that fail extraction (Option A)
+async function fetchFullArticle(url, isGoogleNews = false) {
   try {
     let result = await fetchHtml(url);
     if (!result) return null;
-    if (result.finalUrl.includes('news.google.com')) {
-      const realUrl = await extractRealUrlFromGoogleWrapper(result.html);
+
+    if (result.finalUrl.includes('news.google.com') || isGoogleNews) {
+      const realUrl = await extractRealUrlFromGoogleWrapper(result.html, url);
       if (realUrl) {
+        console.log(`Google News unwrapped to: ${realUrl}`);
         const secondResult = await fetchHtml(realUrl);
         if (secondResult) result = secondResult;
+      } else {
+        // Option A: Google News extraction failed — skip this item entirely
+        console.log(`Google News extraction failed for: ${url} — skipping`);
+        return null;
       }
     }
+
     const paragraphs = [...result.html.matchAll(/<p[^>]*>(.*?)<\/p>/gis)]
       .map(m => m[1].replace(/<[^>]*>/g, '').trim())
       .filter(p => p.length > 40);
@@ -199,20 +271,39 @@ async function fetchFullArticle(url) {
   }
 }
 
-function scoreRSSItem(title, description, pubDate) {
+// CHANGE 4 — scoreRSSItem now penalizes Google News (-3) and rewards direct sources (+2)
+function scoreRSSItem(title, description, pubDate, sourceUrl = '') {
   let score = 0;
+
+  // Source quality scoring — direct sources preferred over Google News wrappers
+  if (GOOGLE_NEWS_SOURCES.has(sourceUrl)) {
+    score -= 3; // Google News penalty — last resort
+  } else {
+    score += 2; // Direct source bonus — always preferred
+  }
+
+  // Recency scoring
   if (pubDate) {
     const ageMs = Date.now() - new Date(pubDate).getTime();
     const ageHours = ageMs / (1000 * 60 * 60);
     if (ageHours > 6) return -999;
     if (ageHours <= 2) score += 2;
   }
+
+  // Has a number in title (+3)
   if (/\d/.test(title)) score += 3;
+
+  // Named entity in first 5 words (+2)
   const firstFive = title.split(' ').slice(0, 5).join(' ');
   if (/[A-Z][a-z]+/.test(firstFive)) score += 2;
+
+  // Change-of-state verb (+2)
   const stateVerbs = /\b(falls|surges|rises|drops|wins|loses|dies|launches|bans|hits|ousts|faces|cuts|raises|crashes|soars|resigns|fires|arrests|indicts|acquits|sanctions)\b/i;
   if (stateVerbs.test(title)) score += 2;
+
+  // Description richness (+1)
   if (description.length > 300) score += 1;
+
   return score;
 }
 
@@ -244,17 +335,19 @@ async function fetchRSS(url) {
       const pubDate = pubDateMatch ? pubDateMatch[1].trim() : null;
       if (!title || title.length < 10) continue;
       if (!description || description.length < 100) continue;
-      const score = scoreRSSItem(title, description, pubDate);
+      // Pass sourceUrl so score reflects direct vs Google News
+      const score = scoreRSSItem(title, description, pubDate, url);
       if (score === -999) {
         console.log(`Skipped (stale >6hr): ${title}`);
         continue;
       }
-      candidates.push({ title, description, image, sourceUrl: url, originalTitle: title, itemLink: itemLink || title, sourceName, pubDate, score });
+      const isGoogleNews = GOOGLE_NEWS_SOURCES.has(url);
+      candidates.push({ title, description, image, sourceUrl: url, originalTitle: title, itemLink: itemLink || title, sourceName, pubDate, score, isGoogleNews });
     }
     if (candidates.length === 0) return null;
     candidates.sort((a, b) => b.score - a.score);
     const best = candidates[0];
-    console.log(`Best item (score ${best.score}): ${best.title}`);
+    console.log(`Best item (score ${best.score}, googleNews: ${best.isGoogleNews}): ${best.title}`);
     return best;
   } catch {
     return null;
@@ -268,6 +361,69 @@ function extractPrimaryEntity(title) {
 
 function extractEntities(title) {
   return title.match(/\b[A-Z][a-z]{3,}\b/g) || [];
+}
+
+// CHANGE 5 — Hard headline validation
+const BANNED_HEADLINE_PHRASES = [
+  'sends clear message',
+  'comments on',
+  'status check',
+  'provides a snapshot',
+  'takes a look',
+  'what it means for',
+  'here\'s why',
+  'you need to know',
+  'everything you need',
+  'here\'s what',
+  'this is why',
+  'finds out',
+  'weighs in',
+  'sounds off',
+  'speaks out',
+  'opens up',
+  'breaks silence',
+  'reacts to',
+  'responds to',
+];
+
+function isWeakHeadline(title) {
+  const lower = title.toLowerCase();
+  return BANNED_HEADLINE_PHRASES.some(phrase => lower.includes(phrase));
+}
+
+// CHANGE 6 — Filler content detection (Quality Gate 4)
+const FILLER_PHRASES = [
+  'provides a snapshot',
+  'sends a clear message',
+  'made one thing abundantly clear',
+  'first extended look',
+  'checks the status',
+  'hype train',
+  'it remains to be seen',
+  'only time will tell',
+  'the landscape of',
+  'in the world of',
+  'in today\'s',
+  'worth noting',
+  'all eyes are on',
+  'the question remains',
+  'sent shockwaves',
+];
+
+function hasTooMuchFiller(summary) {
+  const lower = summary.toLowerCase();
+  const fillerCount = FILLER_PHRASES.filter(phrase => lower.includes(phrase)).length;
+  // Count concrete facts: numbers, named entities, quoted speech
+  const numbers = (summary.match(/\b\d+[\d,.%$£€]*\b/g) || []).length;
+  const quotes = (summary.match(/["'][^"']{10,}["']/g) || []).length;
+  const namedEntities = (summary.match(/\b[A-Z][a-z]+ [A-Z][a-z]+\b/g) || []).length;
+  const factScore = numbers + quotes + namedEntities;
+  // Reject if more than 2 filler phrases AND fewer than 5 concrete facts
+  if (fillerCount > 2 && factScore < 5) {
+    console.log(`Filler detected: ${fillerCount} filler phrases, only ${factScore} concrete facts`);
+    return true;
+  }
+  return false;
 }
 
 async function generateArticle(headline, description, category) {
@@ -296,7 +452,7 @@ async function generateArticle(headline, description, category) {
 
   const fieldsInstruction = {
     sports: `Return ONLY a JSON object with these fields:
-- title: (SEO-optimized headline, max 12 words, HARD LIMIT 100 characters. Write it the way someone would SEARCH for this story on Google. Include names, scores, teams. HEADLINE RULES — all must apply: (1) Put the most recognizable entity in the first 5 words. (2) Include a specific number if the story has one — "Falls 8%" beats "Falls Sharply". (3) Use a change-of-state verb where possible: Falls, Surges, Wins, Loses, Dies, Launches, Bans, Hits, Ousts, Faces, Cuts, Raises, Resigns, Fires. (4) For public figures with health or age context, include age: "84-Year-Old Senator Says..." style. (5) Never start with vague openers like "New Report Shows", "Sources Say", "Report:", "Watch:", "Here's Why". Example: "Lakers Beat Celtics 112-108: LeBron Scores 34 in Playoff Win")
+- title: (SEO-optimized headline, max 12 words, HARD LIMIT 100 characters. Write it the way someone would SEARCH for this story on Google. Include names, scores, teams. HEADLINE RULES — all must apply: (1) Put the most recognizable entity in the first 5 words. (2) Include a specific number if the story has one — "Falls 8%" beats "Falls Sharply". (3) Use a change-of-state verb where possible: Falls, Surges, Wins, Loses, Dies, Launches, Bans, Hits, Ousts, Faces, Cuts, Raises, Resigns, Fires. (4) For public figures with health or age context, include age: "84-Year-Old Senator Says..." style. (5) Never start with vague openers like "New Report Shows", "Sources Say", "Report:", "Watch:", "Here's Why". (6) NEVER use these banned phrases: "Sends Clear Message", "Comments On", "Status Check", "Weighs In", "Speaks Out", "Reacts To". Example: "Lakers Beat Celtics 112-108: LeBron Scores 34 in Playoff Win")
 - metaDescription: (SEO meta description, exactly 1 sentence, 140-155 characters, summarising the key fact — do NOT truncate mid-word)
 - keyPoints: (exactly 3 bullet points separated by \\n, each ONE short sentence summarizing a key fact. Must be DIFFERENT from the article opening. Example: "- Messi scored the equalizer in the 83rd minute.\\n- Argentina advances to the quarterfinals.\\n- Egypt's VAR appeal was denied by the referee.")
 - summary: (full news article, 600-900 words, must contain at least 3 specific named facts from source — names, scores, stats, quotes. Start with dateline. Use \\n\\n between paragraphs. End with a "why this matters" paragraph.)
@@ -304,7 +460,7 @@ async function generateArticle(headline, description, category) {
 - tag: (specific tag like "Premier League", "NBA", "UFC", "Tennis", "Cricket")
 - disclaimer: ("This article is for informational purposes only. Content is based on publicly available news sources.")`,
     finance: `Return ONLY a JSON object with these fields:
-- title: (SEO-optimized headline, max 12 words, HARD LIMIT 100 characters. Write it the way someone would SEARCH for this story on Google. Include names, numbers. HEADLINE RULES — all must apply: (1) Put the most recognizable entity in the first 5 words. (2) Include a specific number if the story has one — "Falls 8%" beats "Falls Sharply". (3) Use a change-of-state verb where possible: Falls, Surges, Wins, Loses, Dies, Launches, Bans, Hits, Ousts, Faces, Cuts, Raises, Resigns, Fires. (4) For public figures with health or age context, include age: "84-Year-Old Senator Says..." style. (5) Never start with vague openers like "New Report Shows", "Sources Say", "Report:", "Watch:", "Here's Why". Example: "Bitcoin Drops 5% to $62K After Fed Holds Interest Rates")
+- title: (SEO-optimized headline, max 12 words, HARD LIMIT 100 characters. Write it the way someone would SEARCH for this story on Google. Include names, numbers. HEADLINE RULES — all must apply: (1) Put the most recognizable entity in the first 5 words. (2) Include a specific number if the story has one — "Falls 8%" beats "Falls Sharply". (3) Use a change-of-state verb where possible: Falls, Surges, Wins, Loses, Dies, Launches, Bans, Hits, Ousts, Faces, Cuts, Raises, Resigns, Fires. (4) For public figures with health or age context, include age: "84-Year-Old Senator Says..." style. (5) Never start with vague openers like "New Report Shows", "Sources Say", "Report:", "Watch:", "Here's Why". (6) NEVER use these banned phrases: "Sends Clear Message", "Comments On", "Status Check", "Weighs In", "Speaks Out", "Reacts To". Example: "Bitcoin Drops 5% to $62K After Fed Holds Interest Rates")
 - metaDescription: (SEO meta description, exactly 1 sentence, 140-155 characters, summarising the key fact — do NOT truncate mid-word)
 - keyPoints: (exactly 3 bullet points separated by \\n, each ONE short sentence summarizing a key fact. Must be DIFFERENT from the article opening. Example: "- Bitcoin fell 5% to $62,000 after the Fed held rates steady.\\n- Ethereum outperformed with a 2% gain during the same period.\\n- Analysts expect continued volatility through Q3.")
 - summary: (full news article, 600-900 words, must contain at least 3 specific named facts from source — prices, percentages, names, quotes. Start with dateline. Use \\n\\n between paragraphs. End with a "why this matters" paragraph.)
@@ -315,7 +471,7 @@ async function generateArticle(headline, description, category) {
 - confidence: (number between 60-95)
 - disclaimer: ("This article is for informational purposes only. Content is based on publicly available news sources.")`,
     politics: `Return ONLY a JSON object with these fields:
-- title: (SEO-optimized headline, max 12 words, HARD LIMIT 100 characters. Write it the way someone would SEARCH for this story on Google. Include names, policies. HEADLINE RULES — all must apply: (1) Put the most recognizable entity in the first 5 words. (2) Include a specific number if the story has one — "Falls 8%" beats "Falls Sharply". (3) Use a change-of-state verb where possible: Falls, Surges, Wins, Loses, Dies, Launches, Bans, Hits, Ousts, Faces, Cuts, Raises, Resigns, Fires. (4) For public figures with health or age context, include age: "84-Year-Old Senator Says..." style. (5) Never start with vague openers like "New Report Shows", "Sources Say", "Report:", "Watch:", "Here's Why". Example: "Trump Signs Executive Order Banning TikTok: What It Means")
+- title: (SEO-optimized headline, max 12 words, HARD LIMIT 100 characters. Write it the way someone would SEARCH for this story on Google. Include names, policies. HEADLINE RULES — all must apply: (1) Put the most recognizable entity in the first 5 words. (2) Include a specific number if the story has one — "Falls 8%" beats "Falls Sharply". (3) Use a change-of-state verb where possible: Falls, Surges, Wins, Loses, Dies, Launches, Bans, Hits, Ousts, Faces, Cuts, Raises, Resigns, Fires. (4) For public figures with health or age context, include age: "84-Year-Old Senator Says..." style. (5) Never start with vague openers like "New Report Shows", "Sources Say", "Report:", "Watch:", "Here's Why". (6) NEVER use these banned phrases: "Sends Clear Message", "Comments On", "Status Check", "Weighs In", "Speaks Out", "Reacts To". Example: "Trump Signs Executive Order Banning TikTok: What It Means")
 - metaDescription: (SEO meta description, exactly 1 sentence, 140-155 characters, summarising the key fact — do NOT truncate mid-word)
 - keyPoints: (exactly 3 bullet points separated by \\n, each ONE short sentence summarizing a key fact. Must be DIFFERENT from the article opening. Example: "- Trump signed the order banning TikTok from US app stores.\\n- Congress has 90 days to pass legislation before the ban takes effect.\\n- ByteDance says it will challenge the order in court.")
 - summary: (full news article, 600-900 words, must contain at least 3 specific named facts from source — names, decisions, votes, quotes. Start with dateline. Use \\n\\n between paragraphs. End with a "why this matters" paragraph.)
@@ -324,7 +480,7 @@ async function generateArticle(headline, description, category) {
 - tag: (specific tag like "Trump", "Congress", "Supreme Court", "NATO", "Senate")
 - disclaimer: ("This article is for informational purposes only. Content is based on publicly available news sources.")`,
     technology: `Return ONLY a JSON object with these fields:
-- title: (SEO-optimized headline, max 12 words, HARD LIMIT 100 characters. Write it the way someone would SEARCH for this story on Google. Include product/company names. HEADLINE RULES — all must apply: (1) Put the most recognizable entity in the first 5 words. (2) Include a specific number if the story has one — "Falls 8%" beats "Falls Sharply". (3) Use a change-of-state verb where possible: Falls, Surges, Wins, Loses, Dies, Launches, Bans, Hits, Ousts, Faces, Cuts, Raises, Resigns, Fires. (4) For public figures with health or age context, include age: "84-Year-Old Senator Says..." style. (5) Never start with vague openers like "New Report Shows", "Sources Say", "Report:", "Watch:", "Here's Why". Example: "OpenAI Launches GPT-5: Price, Features and Release Date")
+- title: (SEO-optimized headline, max 12 words, HARD LIMIT 100 characters. Write it the way someone would SEARCH for this story on Google. Include product/company names. HEADLINE RULES — all must apply: (1) Put the most recognizable entity in the first 5 words. (2) Include a specific number if the story has one — "Falls 8%" beats "Falls Sharply". (3) Use a change-of-state verb where possible: Falls, Surges, Wins, Loses, Dies, Launches, Bans, Hits, Ousts, Faces, Cuts, Raises, Resigns, Fires. (4) For public figures with health or age context, include age: "84-Year-Old Senator Says..." style. (5) Never start with vague openers like "New Report Shows", "Sources Say", "Report:", "Watch:", "Here's Why". (6) NEVER use these banned phrases: "Sends Clear Message", "Comments On", "Status Check", "Weighs In", "Speaks Out", "Reacts To". Example: "OpenAI Launches GPT-5: Price, Features and Release Date")
 - metaDescription: (SEO meta description, exactly 1 sentence, 140-155 characters, summarising the key fact — do NOT truncate mid-word)
 - keyPoints: (exactly 3 bullet points separated by \\n, each ONE short sentence summarizing a key fact. Must be DIFFERENT from the article opening. Example: "- OpenAI released GPT-5 with 10x faster processing speed.\\n- The new model costs $30/month for Plus subscribers.\\n- Google and Anthropic are expected to respond within weeks.")
 - summary: (full news article, 600-900 words, must contain at least 3 specific named facts from source — product names, specs, prices, quotes, dates. Start with dateline. Use \\n\\n between paragraphs. End with a "why this matters" paragraph.)
@@ -333,6 +489,16 @@ async function generateArticle(headline, description, category) {
 - tag: (specific tag like "Apple", "AI", "Tesla", "Google", "OpenAI", "Meta", "ChatGPT")
 - disclaimer: ("This article is for informational purposes only. Content is based on publicly available news sources.")`
   };
+
+  // CHANGE 7 — Original value element added to prompt for all categories
+  const originalValueInstruction = `
+ORIGINAL VALUE REQUIREMENT — this is mandatory:
+- After reporting the facts, include ONE piece of original analytical value that no single source contains. This could be:
+  * A cross-source comparison: "While [Source A] reports X, [Source B]'s data shows Y, suggesting Z"
+  * A calculated implication: "At this rate, [entity] would reach [milestone] by [timeframe]"
+  * A pattern observation: "This marks the third time in [period] that [entity] has [action], a pattern that suggests..."
+  * A reader-impact connection: specific and personal, not generic
+- This original element must be grounded in the facts provided — do NOT invent data`;
 
   const message = await anthropic.messages.create({
     model: 'claude-haiku-4-5',
@@ -359,6 +525,7 @@ ABSOLUTE RULES — violating any of these makes the article unpublishable:
 - If the article is 350+ words, insert exactly ONE subheading after the 3rd paragraph. Format it on its own line as ## followed by the subheading text (e.g. "## Impact on Global Markets"). The subheading must be specific to THIS story — never generic like "## Background" or "## Analysis"
 - End with a brief "why this matters" paragraph — connect it directly to the READER. Not "This sets a precedent for the industry" but "If you hold Bitcoin, this ruling could directly affect your portfolio" or "If you follow the Premier League, this transfer changes the title race." Make it personal and specific.
 - Do NOT mention AI, Claude, or that this was rewritten
+${originalValueInstruction}
 ${categoryInstructions[category]}
 
 ${fieldsInstruction[category]}
@@ -382,7 +549,7 @@ export default async function handler(req, res) {
     const now = new Date().toISOString();
     const authorNames = { sports: 'Sports Desk', finance: 'Markets Desk', politics: 'Politics Desk', technology: 'Tech Desk' };
 
-    // STEP 1 — Fetch ALL 14 RSS sources in parallel (one fetch, not two)
+    // STEP 1 — Fetch ALL RSS sources in parallel (one fetch, not two)
     const allSourceEntries = [];
     for (const [category, sources] of Object.entries(RSS_SOURCES)) {
       for (const source of sources) {
@@ -404,7 +571,7 @@ export default async function handler(req, res) {
     const allFetchedItems = rssResults.filter(Boolean);
     console.log(`Fetched ${allFetchedItems.length} RSS items from ${allSourceEntries.length} sources`);
 
-    // STEP 2 — Cross-source trending detection (no extra fetches needed)
+    // STEP 2 — Cross-source trending detection
     const entityCounts = {};
     for (const item of allFetchedItems) {
       for (const entity of extractEntities(item.title)) {
@@ -417,7 +584,7 @@ export default async function handler(req, res) {
       return entities.some(e => entityCounts[e] >= 2) ? 3 : 0;
     }
 
-    // STEP 3 — Group fetched items by category, apply trending bonus, sort by score
+    // STEP 3 — Group by category, apply trending bonus, sort by score
     const itemsByCategory = {};
     for (const category of ['finance', 'sports', 'politics', 'technology']) {
       itemsByCategory[category] = allFetchedItems
@@ -429,7 +596,7 @@ export default async function handler(req, res) {
         .sort((a, b) => b.score - a.score);
     }
 
-    // STEP 4 — Fetch recent articles once for duplicate checking across all categories
+    // STEP 4 — Fetch recent articles once for duplicate checking
     const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString();
     const { data: recentArticles } = await supabase
       .from('articles')
@@ -441,12 +608,8 @@ export default async function handler(req, res) {
 
     function isDuplicate(rss) {
       if (recentLinks.has(rss.itemLink)) return true;
-
-      // 8-word keyword match (up from 5)
       const titleWords = rss.title.toLowerCase().split(' ').filter(w => w.length > 3).slice(0, 8).join(' ');
       if (recentTitles.some(t => t.includes(titleWords))) return true;
-
-      // Primary entity + topic match
       const primaryEntity = extractPrimaryEntity(rss.title);
       if (primaryEntity && primaryEntity.length > 4) {
         const entityLower = primaryEntity.toLowerCase();
@@ -455,7 +618,6 @@ export default async function handler(req, res) {
           return true;
         }
       }
-
       return false;
     }
 
@@ -466,7 +628,7 @@ export default async function handler(req, res) {
       for (const item of candidates) {
         if (!isDuplicate(item)) {
           selectedItems[category] = item;
-          console.log(`Selected ${category} (score ${item.score}): ${item.title}`);
+          console.log(`Selected ${category} (score ${item.score}, direct: ${!item.isGoogleNews}): ${item.title}`);
           break;
         } else {
           console.log(`Skipped ${category} duplicate: ${item.title}`);
@@ -474,13 +636,13 @@ export default async function handler(req, res) {
       }
     }
 
-    // STEP 6 — Fetch full articles in parallel
+    // STEP 6 — Fetch full articles in parallel (pass isGoogleNews flag)
     const categoriesToProcess = Object.keys(selectedItems);
     const fullArticleResults = await Promise.all(
       categoriesToProcess.map(async category => {
         const rss = selectedItems[category];
         try {
-          const fullArticle = await fetchFullArticle(rss.itemLink);
+          const fullArticle = await fetchFullArticle(rss.itemLink, rss.isGoogleNews);
           return { category, rss, fullText: fullArticle?.text || null, ogImage: fullArticle?.ogImage || null };
         } catch {
           return { category, rss, fullText: null, ogImage: null };
@@ -488,7 +650,7 @@ export default async function handler(req, res) {
       })
     );
 
-    // STEP 7 — Quality gate 1, then generate all articles in parallel
+    // STEP 7 — Quality gate 1 (thin source)
     const validItems = fullArticleResults.filter(({ rss, fullText }) => {
       if (!fullText && rss.description.length < 200) {
         console.log(`Skipped: thin source (${rss.description.length} chars) for ${rss.title}`);
@@ -497,6 +659,7 @@ export default async function handler(req, res) {
       return true;
     });
 
+    // STEP 8 — Generate all articles in parallel
     const generatedArticles = await Promise.all(
       validItems.map(async ({ category, rss, fullText, ogImage }) => {
         try {
@@ -511,22 +674,40 @@ export default async function handler(req, res) {
       })
     );
 
-    // STEP 8 — Quality gates 2 & 3, fetch images in parallel
+    // STEP 9 — Quality gates 2, 3 & 4 (word count, filler, weak headline)
     const passedGates = generatedArticles.filter(item => {
       if (!item) return false;
-      const { category, rss, article, fullText } = item;
+      const { category, article, fullText } = item;
+
+      // Gate 2: too short
       const wordCount = article.summary?.trim().split(/\s+/).length || 0;
       if (wordCount < 300) {
         console.log(`Skipped ${category}: too short (${wordCount} words)`);
         return false;
       }
+
+      // Gate 3: filler from thin source
       if (!fullText && wordCount > 700) {
-        console.log(`Skipped ${category}: filler detected (${wordCount} words)`);
+        console.log(`Skipped ${category}: likely filler (${wordCount} words from thin source)`);
         return false;
       }
+
+      // Gate 4: filler phrase detection
+      if (hasTooMuchFiller(article.summary)) {
+        console.log(`Skipped ${category}: filler content detected`);
+        return false;
+      }
+
+      // Headline check: flag weak headlines (log but don't block — Claude should have followed rules)
+      if (isWeakHeadline(article.title)) {
+        console.log(`Warning ${category}: weak headline detected — "${article.title}"`);
+        // Still publish but log for monitoring
+      }
+
       return true;
     });
 
+    // STEP 10 — Fetch images in parallel
     const itemsWithImages = await Promise.all(
       passedGates.map(async ({ category, rss, article, ogImage }) => {
         const pexelsQuery = `${article.tag} ${article.title.split(' ').slice(0, 3).join(' ')}`;
@@ -535,7 +716,7 @@ export default async function handler(req, res) {
       })
     );
 
-    // STEP 9 — Build results array
+    // STEP 11 — Build results array
     for (const { category, rss, article, articleImage } of itemsWithImages) {
       results.push({
         link: rss.itemLink,
@@ -562,11 +743,11 @@ export default async function handler(req, res) {
       return res.status(200).json({ message: 'No new articles to publish this run' });
     }
 
-    // STEP 10 — Insert to Supabase
+    // STEP 12 — Insert to Supabase
     const { data: insertedArticles, error } = await supabase.from('articles').insert(results).select();
     if (error) throw error;
 
-    // STEP 11 — Social media posts in parallel
+    // STEP 13 — Social media posts in parallel
     await Promise.all(
       (insertedArticles || []).map(async inserted => {
         const articleWithUrl = {
@@ -581,7 +762,7 @@ export default async function handler(req, res) {
       })
     );
 
-    // STEP 12 — All indexing pings in parallel
+    // STEP 14 — All indexing pings in parallel
     await Promise.all([
       (async () => {
         try {
