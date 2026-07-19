@@ -356,12 +356,52 @@ export default function Home({ articles, categoryFeatured, evergreenArticles, ti
               )}
             </div>
 
-            {/* Sticky Sidebar — filled with 20 articles */}
             <aside>
-              <div className="sticky-sidebar" style={{ position: "sticky", top: "20px" }}>
-                <div style={{ background: "#fff", padding: "20px", boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
-                  <h3 style={{ fontSize: "13px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1.5px", color: "#111", margin: "0 0 16px", paddingBottom: "10px", borderBottom: "2px solid #cc0000" }}>Latest News</h3>
-                  {articles.slice(0, 20).map((article, i) => (
+  <div className="sticky-sidebar" style={{ position: "sticky", top: "20px" }}>
+    <div style={{ background: "#fff", padding: "20px", marginBottom: "20px", boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
+      <h3 style={{ fontSize: "13px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1.5px", color: "#111", margin: "0 0 16px", paddingBottom: "10px", borderBottom: "2px solid #cc0000" }}>Latest News</h3>
+      {articles.slice(0, 8).map(article => (
+        <Link key={article.id} href={articlePath(article)} style={{ textDecoration: "none" }}>
+          <div style={{ display: "flex", gap: "10px", marginBottom: "14px", paddingBottom: "14px", borderBottom: "1px solid #f5f5f5", cursor: "pointer" }}>
+            <img loading="lazy" src={getImage(article)} alt={article.title} style={{ width: "70px", height: "52px", objectFit: "cover", flexShrink: 0 }} />
+            <div>
+              <span style={{ fontSize: "9px", color: CATEGORY_COLORS[article.category] || "#cc0000", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.5px" }}>{article.category}</span>
+              <p style={{ margin: "3px 0 0", fontSize: "12px", fontWeight: "600", color: "#111", lineHeight: "1.4" }}>{article.title}</p>
+              <p style={{ margin: "3px 0 0", fontSize: "10px", color: "#bbb" }}>{timeAgo(article.created_at)}</p>
+            </div>
+          </div>
+        </Link>
+      ))}
+    </div>
+
+    {evergreenArticles?.length > 0 && (
+      <div style={{ background: "#fff", border: "1px solid #eee", borderTop: "3px solid #111", padding: "20px", marginBottom: "20px", boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
+        <h3 style={{ fontSize: "13px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1.5px", color: "#111", margin: "0 0 16px", paddingBottom: "10px", borderBottom: "2px solid #111" }}>📚 Guides</h3>
+        {evergreenArticles.slice(0, 3).map(guide => (
+          <Link key={guide.id} href={articlePath(guide)} style={{ textDecoration: "none" }}>
+            <div style={{ marginBottom: "12px", paddingBottom: "12px", borderBottom: "1px solid #f5f5f5", cursor: "pointer" }}>
+              <p style={{ margin: 0, fontSize: "13px", fontWeight: "600", color: "#111", lineHeight: "1.4" }}>{guide.title}</p>
+              <span style={{ fontSize: "10px", color: "#666", fontWeight: "600" }}>Read guide →</span>
+            </div>
+          </Link>
+        ))}
+        <Link href="/guides" style={{ color: "#333", textDecoration: "none", fontSize: "12px", fontWeight: "600" }}>View all guides →</Link>
+      </div>
+    )}
+
+    <div style={{ background: "#fff", padding: "20px", boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
+      <h3 style={{ fontSize: "13px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1.5px", color: "#111", margin: "0 0 16px", paddingBottom: "10px", borderBottom: "2px solid #cc0000" }}>Browse</h3>
+      {['sports', 'finance', 'politics', 'technology'].map(cat => (
+        <Link key={cat} href={`/category/${cat}`} style={{ textDecoration: "none" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px solid #f5f5f5", cursor: "pointer" }}>
+            <span style={{ fontSize: "13px", fontWeight: "600", color: "#333", textTransform: "capitalize" }}>{cat}</span>
+            <span style={{ width: "8px", height: "8px", background: CATEGORY_COLORS[cat], display: "inline-block", borderRadius: "50%" }} />
+          </div>
+        </Link>
+      ))}
+    </div>
+  </div>
+</aside>
                     <Link key={article.id} href={articlePath(article)} style={{ textDecoration: "none" }}>
                       <div className="sidebar-item" style={{ display: "flex", gap: "10px", marginBottom: "14px", paddingBottom: "14px", borderBottom: i < 19 ? "1px solid #f5f5f5" : "none", cursor: "pointer" }}>
                         <img loading="lazy" src={getImage(article)} alt={article.title} style={{ width: "70px", height: "52px", objectFit: "cover", flexShrink: 0 }} />
