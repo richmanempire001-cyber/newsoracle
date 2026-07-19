@@ -293,7 +293,7 @@ export default function Home({ articles, featuredArticle, evergreenArticles }) {
                 ))}
               </div>
 
-              {/* Guides in Sidebar */}
+              {/* Guides Sidebar */}
               {evergreenArticles?.length > 0 && (
                 <div style={{ background: "#f1f8e9", border: "1px solid #c5e1a5", padding: "20px", marginBottom: "20px" }}>
                   <h3 style={{ fontSize: "14px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px", color: "#2e7d32", margin: "0 0 16px", paddingBottom: "10px", borderBottom: "2px solid #2e7d32" }}>
@@ -364,10 +364,11 @@ export async function getServerSideProps() {
     process.env.NEXT_PUBLIC_SUPABASE_KEY
   );
 
+  // Bug 2 fix — use .or() to handle both false and NULL for existing articles
   const { data: articles } = await supabaseServer
     .from("articles")
     .select("id, title, summary, image, category, tag, created_at, views")
-    .eq("evergreen", false)
+    .or("evergreen.eq.false,evergreen.is.null")
     .order("created_at", { ascending: false })
     .limit(50);
 
