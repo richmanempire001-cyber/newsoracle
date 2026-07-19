@@ -111,7 +111,7 @@ export default function CategoryGuides({ category, config, guides }) {
                       <h3 style={{ fontSize: "16px", fontWeight: "700", lineHeight: "1.4", margin: "0 0 10px", color: "#111" }}>{guide.title}</h3>
                       <p style={{ color: "#777", fontSize: "13px", lineHeight: "1.5", margin: "0 0 16px" }}>{guide.summary?.substring(0, 120)}...</p>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid #f0f0f0", paddingTop: "12px" }}>
-                        <span style={{ fontSize: "11px", color: "#999" }}>Updated regularly</span>
+                        <span style={{ fontSize: "11px", color: "#999" }}>In-depth guide</span>
                         <span style={{ fontSize: "11px", color: config.color, fontWeight: "600" }}>Read guide →</span>
                       </div>
                     </div>
