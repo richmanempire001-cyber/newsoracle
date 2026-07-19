@@ -106,7 +106,7 @@ export default function Home({ articles, categoryFeatured, evergreenArticles, ti
         <meta name="robots" content="index, follow, max-image-preview:large" />
         <link rel="canonical" href="https://www.newsoracle.online" />
         <meta property="og:title" content="NewsOracle — Breaking News in Sports, Finance, Politics & Technology" />
-        <meta property="og:description" content="Breaking news updated every 2 hours. Expert coverage of sports, finance, cryptocurrency, politics and technology." />
+        <meta property="og:description" content="Breaking news updated every 2 hours." />
         <meta property="og:url" content="https://www.newsoracle.online" />
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="NewsOracle" />
@@ -123,23 +123,23 @@ export default function Home({ articles, categoryFeatured, evergreenArticles, ti
 
       <div style={{ fontFamily: "Arial, sans-serif", background: "#f4f4f4", minHeight: "100vh" }}>
 
-        {/* Top Bar with Breaking News Ticker */}
-        <div style={{ background: "#111", color: "#fff", padding: "0", fontSize: "12px", borderBottom: "2px solid #cc0000" }}>
-          <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 20px", display: "flex", alignItems: "stretch", height: "36px" }}>
+        {/* Top Bar — red background, clean ticker, no social icons */}
+        <div style={{ background: "#cc0000", color: "#fff", padding: "0", fontSize: "12px" }}>
+          <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 20px", display: "flex", alignItems: "stretch", height: "34px" }}>
             {/* Left — date/time */}
-            <div style={{ display: "flex", alignItems: "center", paddingRight: "16px", borderRight: "1px solid #333", flexShrink: 0, fontSize: "11px", color: "#aaa" }}>
+            <div style={{ display: "flex", alignItems: "center", paddingRight: "16px", borderRight: "1px solid rgba(255,255,255,0.3)", flexShrink: 0, fontSize: "11px", color: "rgba(255,255,255,0.85)" }}>
               {new Date().toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", year: "numeric" })}
               {currentTime ? ` · ${currentTime} GMT` : ''}
             </div>
 
             {/* Center — Breaking news ticker */}
             <div style={{ display: "flex", alignItems: "center", flex: 1, overflow: "hidden", padding: "0 16px" }}>
-              <span style={{ background: "#cc0000", color: "#fff", padding: "2px 8px", fontSize: "10px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px", flexShrink: 0, marginRight: "12px" }}>BREAKING</span>
+              <span style={{ background: "#fff", color: "#cc0000", padding: "2px 8px", fontSize: "10px", fontWeight: "900", textTransform: "uppercase", letterSpacing: "1px", flexShrink: 0, marginRight: "12px" }}>BREAKING</span>
               <div style={{ overflow: "hidden", flex: 1 }}>
                 {currentTicker && (
                   <Link href={articlePath(currentTicker)} style={{ textDecoration: "none" }}>
                     <span style={{
-                      fontSize: "12px", color: "#fff", fontWeight: "500", letterSpacing: "0.2px",
+                      fontSize: "12px", color: "#fff", fontWeight: "500",
                       opacity: tickerFading ? 0 : 1,
                       transition: "opacity 0.3s ease",
                       display: "block", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis"
@@ -151,20 +151,11 @@ export default function Home({ articles, categoryFeatured, evergreenArticles, ti
               </div>
             </div>
 
-            {/* Right — social links */}
-            <div className="top-bar-right" style={{ display: "flex", alignItems: "center", gap: "12px", paddingLeft: "16px", borderLeft: "1px solid #333", flexShrink: 0 }}>
-              <a href="https://t.me/NewsOracleOfficial" target="_blank" rel="noopener noreferrer" style={{ color: "#aaa", textDecoration: "none", fontSize: "11px", display: "flex", alignItems: "center", gap: "4px" }}>
-                <span style={{ background: "#0088cc", width: "16px", height: "16px", borderRadius: "3px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "9px" }}>T</span>
-                Telegram
-              </a>
-              <a href="https://www.facebook.com/profile.php?id=61591337781640" target="_blank" rel="noopener noreferrer" style={{ color: "#aaa", textDecoration: "none", fontSize: "11px", display: "flex", alignItems: "center", gap: "4px" }}>
-                <span style={{ background: "#1877f2", width: "16px", height: "16px", borderRadius: "3px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "9px" }}>f</span>
-                Facebook
-              </a>
-              <a href="https://twitter.com/NewsOracle" target="_blank" rel="noopener noreferrer" style={{ color: "#aaa", textDecoration: "none", fontSize: "11px", display: "flex", alignItems: "center", gap: "4px" }}>
-                <span style={{ background: "#000", border: "1px solid #333", width: "16px", height: "16px", borderRadius: "3px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "9px" }}>X</span>
-                Twitter
-              </a>
+            {/* Right — clean text links */}
+            <div className="top-bar-right" style={{ display: "flex", alignItems: "center", gap: "16px", paddingLeft: "16px", borderLeft: "1px solid rgba(255,255,255,0.3)", flexShrink: 0 }}>
+              <a href="https://t.me/NewsOracleOfficial" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(255,255,255,0.85)", textDecoration: "none", fontSize: "11px", fontWeight: "600" }}>Telegram</a>
+              <a href="https://www.facebook.com/profile.php?id=61591337781640" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(255,255,255,0.85)", textDecoration: "none", fontSize: "11px", fontWeight: "600" }}>Facebook</a>
+              <a href="https://twitter.com/NewsOracle" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(255,255,255,0.85)", textDecoration: "none", fontSize: "11px", fontWeight: "600" }}>Twitter</a>
             </div>
           </div>
         </div>
@@ -205,12 +196,14 @@ export default function Home({ articles, categoryFeatured, evergreenArticles, ti
             .guides-grid { grid-template-columns: 1fr !important; }
             .main-layout { grid-template-columns: 1fr !important; }
             .carousel-title { font-size: 22px !important; }
+            .sticky-sidebar { position: static !important; }
           }
           @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
           .article-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.12); transition: all 0.2s; }
           .guide-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.12); transition: all 0.2s; }
-          .dot-btn { transition: all 0.2s; }
-          .dot-btn:hover { transform: scale(1.2); }
+          .dot-btn { transition: all 0.3s ease; }
+          .cat-tab:hover { opacity: 0.85; }
+          .sidebar-item:hover p { color: #cc0000 !important; }
         `}</style>
 
         <main style={{ maxWidth: "1200px", margin: "0 auto", padding: "24px 20px" }}>
@@ -229,7 +222,7 @@ export default function Home({ articles, categoryFeatured, evergreenArticles, ti
                       transition: "opacity 0.4s ease"
                     }}
                   />
-                  <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "linear-gradient(transparent, rgba(0,0,0,0.92))", padding: "80px 32px 48px" }}>
+                  <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "linear-gradient(transparent, rgba(0,0,0,0.92))", padding: "80px 32px 52px" }}>
                     <div style={{ display: "flex", gap: "8px", marginBottom: "14px" }}>
                       <span style={{
                         background: CATEGORY_COLORS[currentFeatured.category] || "#cc0000",
@@ -264,39 +257,26 @@ export default function Home({ articles, categoryFeatured, evergreenArticles, ti
                 </div>
               </Link>
 
-              {/* Carousel Dots + Category Tabs */}
-              <div style={{ position: "absolute", bottom: "16px", right: "20px", display: "flex", gap: "8px", alignItems: "center" }}>
+              {/* Dot indicators */}
+              <div style={{ position: "absolute", bottom: "16px", right: "20px", display: "flex", gap: "6px", alignItems: "center" }}>
                 {categoryFeatured.map((item, i) => (
-                  <button
-                    key={i}
-                    className="dot-btn"
-                    onClick={(e) => { e.preventDefault(); goToSlide(i); }}
-                    style={{
-                      width: i === carouselIndex ? "28px" : "8px",
-                      height: "8px",
-                      borderRadius: "4px",
-                      background: i === carouselIndex ? (CATEGORY_COLORS[item.category] || "#cc0000") : "rgba(255,255,255,0.4)",
-                      border: "none", cursor: "pointer", padding: 0,
-                      transition: "all 0.3s ease"
-                    }}
-                  />
+                  <button key={i} className="dot-btn" onClick={(e) => { e.preventDefault(); goToSlide(i); }} style={{
+                    width: i === carouselIndex ? "28px" : "8px", height: "8px", borderRadius: "4px",
+                    background: i === carouselIndex ? (CATEGORY_COLORS[item.category] || "#cc0000") : "rgba(255,255,255,0.4)",
+                    border: "none", cursor: "pointer", padding: 0,
+                  }} />
                 ))}
               </div>
 
-              {/* Category quick nav tabs */}
+              {/* Category tabs */}
               <div style={{ position: "absolute", top: "16px", right: "16px", display: "flex", gap: "6px" }}>
                 {categoryFeatured.map((item, i) => (
-                  <button
-                    key={i}
-                    onClick={(e) => { e.preventDefault(); goToSlide(i); }}
-                    style={{
-                      padding: "4px 10px", border: "none", cursor: "pointer", fontSize: "10px",
-                      fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.5px",
-                      background: i === carouselIndex ? (CATEGORY_COLORS[item.category] || "#cc0000") : "rgba(0,0,0,0.5)",
-                      color: "#fff", backdropFilter: "blur(4px)",
-                      transition: "all 0.2s"
-                    }}
-                  >{item.category}</button>
+                  <button key={i} className="cat-tab" onClick={(e) => { e.preventDefault(); goToSlide(i); }} style={{
+                    padding: "4px 12px", border: "none", cursor: "pointer", fontSize: "10px",
+                    fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.5px",
+                    background: i === carouselIndex ? (CATEGORY_COLORS[item.category] || "#cc0000") : "rgba(0,0,0,0.55)",
+                    color: "#fff", transition: "all 0.2s"
+                  }}>{item.category}</button>
                 ))}
               </div>
             </div>
@@ -319,8 +299,9 @@ export default function Home({ articles, categoryFeatured, evergreenArticles, ti
           </div>
 
           {/* Main Layout */}
-          <div className="main-layout" style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: "32px" }}>
+          <div className="main-layout" style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: "32px", alignItems: "start" }}>
 
+            {/* Articles Grid */}
             <div>
               {filtered.length === 0 ? (
                 <div style={{ textAlign: "center", padding: "60px", color: "#999" }}>
@@ -355,7 +336,7 @@ export default function Home({ articles, categoryFeatured, evergreenArticles, ti
               {evergreenArticles?.length > 0 && (
                 <div style={{ marginTop: "48px" }}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px", borderBottom: "3px solid #111", paddingBottom: "10px" }}>
-                    <h2 style={{ fontSize: "20px", fontWeight: "800", color: "#111", margin: 0, letterSpacing: "-0.5px" }}>📚 Guides & Resources</h2>
+                    <h2 style={{ fontSize: "20px", fontWeight: "800", color: "#111", margin: 0 }}>📚 Guides & Resources</h2>
                     <Link href="/guides" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600" }}>View all guides →</Link>
                   </div>
                   <div className="guides-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "20px" }}>
@@ -375,49 +356,24 @@ export default function Home({ articles, categoryFeatured, evergreenArticles, ti
               )}
             </div>
 
-            {/* Sidebar */}
+            {/* Sticky Sidebar — filled with 20 articles */}
             <aside>
-              <div style={{ background: "#fff", padding: "20px", marginBottom: "20px", boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
-                <h3 style={{ fontSize: "13px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1.5px", color: "#111", margin: "0 0 16px", paddingBottom: "10px", borderBottom: "2px solid #cc0000" }}>Latest News</h3>
-                {articles.slice(0, 8).map(article => (
-                  <Link key={article.id} href={articlePath(article)} style={{ textDecoration: "none" }}>
-                    <div style={{ display: "flex", gap: "10px", marginBottom: "14px", paddingBottom: "14px", borderBottom: "1px solid #f5f5f5", cursor: "pointer" }}>
-                      <img loading="lazy" src={getImage(article)} alt={article.title} style={{ width: "70px", height: "52px", objectFit: "cover", flexShrink: 0 }} />
-                      <div>
-                        <span style={{ fontSize: "9px", color: CATEGORY_COLORS[article.category] || "#cc0000", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.5px" }}>{article.category}</span>
-                        <p style={{ margin: "3px 0 0", fontSize: "12px", fontWeight: "600", color: "#111", lineHeight: "1.4" }}>{article.title}</p>
-                        <p style={{ margin: "3px 0 0", fontSize: "10px", color: "#bbb" }}>{timeAgo(article.created_at)}</p>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-
-              {evergreenArticles?.length > 0 && (
-                <div style={{ background: "#fff", border: "1px solid #eee", borderTop: "3px solid #111", padding: "20px", marginBottom: "20px", boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
-                  <h3 style={{ fontSize: "13px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1.5px", color: "#111", margin: "0 0 16px", paddingBottom: "10px", borderBottom: "2px solid #111" }}>📚 Guides</h3>
-                  {evergreenArticles.slice(0, 3).map(guide => (
-                    <Link key={guide.id} href={articlePath(guide)} style={{ textDecoration: "none" }}>
-                      <div style={{ marginBottom: "12px", paddingBottom: "12px", borderBottom: "1px solid #f5f5f5", cursor: "pointer" }}>
-                        <p style={{ margin: 0, fontSize: "13px", fontWeight: "600", color: "#111", lineHeight: "1.4" }}>{guide.title}</p>
-                        <span style={{ fontSize: "10px", color: "#666", fontWeight: "600" }}>Read guide →</span>
+              <div className="sticky-sidebar" style={{ position: "sticky", top: "20px" }}>
+                <div style={{ background: "#fff", padding: "20px", boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
+                  <h3 style={{ fontSize: "13px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1.5px", color: "#111", margin: "0 0 16px", paddingBottom: "10px", borderBottom: "2px solid #cc0000" }}>Latest News</h3>
+                  {articles.slice(0, 20).map((article, i) => (
+                    <Link key={article.id} href={articlePath(article)} style={{ textDecoration: "none" }}>
+                      <div className="sidebar-item" style={{ display: "flex", gap: "10px", marginBottom: "14px", paddingBottom: "14px", borderBottom: i < 19 ? "1px solid #f5f5f5" : "none", cursor: "pointer" }}>
+                        <img loading="lazy" src={getImage(article)} alt={article.title} style={{ width: "70px", height: "52px", objectFit: "cover", flexShrink: 0 }} />
+                        <div>
+                          <span style={{ fontSize: "9px", color: CATEGORY_COLORS[article.category] || "#cc0000", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.5px" }}>{article.category}</span>
+                          <p style={{ margin: "3px 0 0", fontSize: "12px", fontWeight: "600", color: "#111", lineHeight: "1.4", transition: "color 0.15s" }}>{article.title}</p>
+                          <p style={{ margin: "3px 0 0", fontSize: "10px", color: "#bbb" }}>{timeAgo(article.created_at)}</p>
+                        </div>
                       </div>
                     </Link>
                   ))}
-                  <Link href="/guides" style={{ color: "#333", textDecoration: "none", fontSize: "12px", fontWeight: "600" }}>View all guides →</Link>
                 </div>
-              )}
-
-              <div style={{ background: "#fff", padding: "20px", boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
-                <h3 style={{ fontSize: "13px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1.5px", color: "#111", margin: "0 0 16px", paddingBottom: "10px", borderBottom: "2px solid #cc0000" }}>Browse</h3>
-                {['sports', 'finance', 'politics', 'technology'].map(cat => (
-                  <Link key={cat} href={`/category/${cat}`} style={{ textDecoration: "none" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px solid #f5f5f5", cursor: "pointer" }}>
-                      <span style={{ fontSize: "13px", fontWeight: "600", color: "#333", textTransform: "capitalize" }}>{cat}</span>
-                      <span style={{ width: "8px", height: "8px", background: CATEGORY_COLORS[cat], display: "inline-block", borderRadius: "50%" }} />
-                    </div>
-                  </Link>
-                ))}
               </div>
             </aside>
 
@@ -455,7 +411,7 @@ export async function getServerSideProps() {
     process.env.NEXT_PUBLIC_SUPABASE_KEY
   );
 
-  // Fetch latest article from each category for carousel
+  // Latest article from each category for carousel
   const categoryFeatured = [];
   for (const cat of ['sports', 'finance', 'politics', 'technology']) {
     const { data } = await supabaseServer
@@ -468,7 +424,7 @@ export async function getServerSideProps() {
     if (data?.[0]) categoryFeatured.push(data[0]);
   }
 
-  // Fetch all recent articles for grid
+  // All recent articles for grid + sidebar (fetch 50)
   const { data: articles } = await supabaseServer
     .from("articles")
     .select("id, title, summary, image, category, tag, created_at, views")
@@ -476,7 +432,7 @@ export async function getServerSideProps() {
     .order("created_at", { ascending: false })
     .limit(50);
 
-  // Fetch evergreen guides
+  // Evergreen guides
   const { data: evergreenArticles } = await supabaseServer
     .from("articles")
     .select("id, title, summary, image, category, tag, created_at")
@@ -484,7 +440,7 @@ export async function getServerSideProps() {
     .order("created_at", { ascending: false })
     .limit(6);
 
-  // Ticker headlines — latest 10 articles
+  // Ticker — latest 10
   const tickerHeadlines = (articles || []).slice(0, 10);
 
   return {
