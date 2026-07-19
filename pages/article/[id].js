@@ -506,7 +506,7 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
             {crossCategoryArticles.length > 0 && (
               <div style={{ marginTop: "32px", paddingTop: "24px", borderTop: "1px solid #eee" }}>
                 <h3 style={{ fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "2px", color: "#cc0000", margin: "0 0 16px", fontFamily: "Arial, sans-serif" }}>More from NewsOracle</h3>
-                <div className="cross-category-grid" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "16px" }}>
+                <div className="cross-category-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px" }}>
                   {crossCategoryArticles.map(rel => (
                     <Link key={rel.id} href={articlePath(rel)} style={{ textDecoration: "none" }}>
                       <div style={{ cursor: "pointer" }}>
