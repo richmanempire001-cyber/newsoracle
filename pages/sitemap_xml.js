@@ -10,7 +10,7 @@ function escapeXml(str) {
   return (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-function generateSiteMap(articles) {
+function generateSiteMap(articles, evergreenArticles) {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
@@ -40,6 +40,31 @@ function generateSiteMap(articles) {
     <priority>0.9</priority>
   </url>
   <url>
+    <loc>https://www.newsoracle.online/guides</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.newsoracle.online/guides/sports</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.newsoracle.online/guides/finance</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.newsoracle.online/guides/politics</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.newsoracle.online/guides/technology</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://www.newsoracle.online/about</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -59,6 +84,21 @@ function generateSiteMap(articles) {
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
   </url>
+  ${evergreenArticles.map(article => {
+    const slug = `${article.id}-${slugify(article.title)}`;
+    const imageTag = article.image ? `
+    <image:image>
+      <image:loc>${escapeXml(article.image)}</image:loc>
+      <image:title>${escapeXml(article.title)}</image:title>
+    </image:image>` : '';
+    return `
+  <url>
+    <loc>https://www.newsoracle.online/article/${slug}</loc>
+    <lastmod>${new Date(article.created_at).toISOString()}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>${imageTag}
+  </url>`;
+  }).join('')}
   ${articles.map(article => {
     const slug = `${article.id}-${slugify(article.title)}`;
     const imageTag = article.image ? `
@@ -78,12 +118,20 @@ function generateSiteMap(articles) {
 }
 
 export async function getServerSideProps({ res }) {
-  const { data: articles } = await supabase
-    .from('articles')
-    .select('id, created_at, title, image')
-    .order('created_at', { ascending: false });
+  const [{ data: articles }, { data: evergreenArticles }] = await Promise.all([
+    supabase
+      .from('articles')
+      .select('id, created_at, title, image')
+      .or('evergreen.eq.false,evergreen.is.null')
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('articles')
+      .select('id, created_at, title, image')
+      .eq('evergreen', true)
+      .order('created_at', { ascending: false }),
+  ]);
 
-  const sitemap = generateSiteMap(articles || []);
+  const sitemap = generateSiteMap(articles || [], evergreenArticles || []);
   res.setHeader('Content-Type', 'text/xml');
   res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=7200');
   res.write(sitemap);
