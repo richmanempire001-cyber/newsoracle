@@ -5,7 +5,7 @@ export function slugify(title) {
     .trim()
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-')
-    .substring(0, 60)
+    .substring(0, 75)
     .replace(/-$/, '');
 }
 
