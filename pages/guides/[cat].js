@@ -1,7 +1,7 @@
 import Head from "next/head";
 import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
-import { articlePath } from "../../lib/slugify";
+import { articlePath } from "../../lib/slugify.js";
 
 const CATEGORY_CONFIG = {
   sports: { title: "Sports Guides", description: "Complete guides covering the NFL, NBA, Premier League, World Cup, UFC, tennis, cricket and all major global sporting events.", color: "#cc0000", icon: "🏆" },
