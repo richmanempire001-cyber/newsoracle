@@ -2,7 +2,7 @@ import Head from "next/head";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
-import { slugify, articlePath, articleUrl } from "../../lib/slugify";
+import { slugify, articlePath, articleUrl } from "../lib/slugify";
 
 function getImage(article) {
   if (article.image && !article.image.includes('source.unsplash')) return article.image;
@@ -74,6 +74,104 @@ const CATEGORY_COLORS = {
   technology: "#111111",
 };
 
+// Parse a paragraph for special formatting patterns
+function renderParagraph(para, i, accentColor) {
+  // Tool info labels: **Best for:** / **Pricing:** / **Limitation:**
+  if (/^\*\*(Best for|Pricing|Limitation|Target markets|Coverage|Supported markets):\*\*/.test(para)) {
+    const labelMatch = para.match(/^\*\*([^*]+):\*\*\s*(.*)/s);
+    if (labelMatch) {
+      const label = labelMatch[1];
+      const content = labelMatch[2].replace(/\*\*([^*]+)\*\*/g, '$1');
+      const labelConfig = {
+        'Best for': { bg: '#e8f5e9', color: '#2e7d32', icon: '✅' },
+        'Pricing': { bg: '#e3f2fd', color: '#0052cc', icon: '💰' },
+        'Limitation': { bg: '#fff8e1', color: '#e65100', icon: '⚠️' },
+        'Target markets': { bg: '#f3e5f5', color: '#7b1fa2', icon: '🎯' },
+        'Coverage': { bg: '#f3e5f5', color: '#7b1fa2', icon: '📊' },
+        'Supported markets': { bg: '#f3e5f5', color: '#7b1fa2', icon: '🌍' },
+      };
+      const cfg = labelConfig[label] || { bg: '#f5f5f5', color: '#333', icon: '•' };
+      return (
+        <div key={`label-${i}`} style={{ display: "flex", alignItems: "flex-start", gap: "10px", background: cfg.bg, padding: "10px 14px", marginBottom: "8px", borderRadius: "4px" }}>
+          <span style={{ fontSize: "14px", flexShrink: 0, marginTop: "1px" }}>{cfg.icon}</span>
+          <div>
+            <span style={{ fontSize: "12px", fontWeight: "700", color: cfg.color, textTransform: "uppercase", letterSpacing: "0.5px", fontFamily: "Arial, sans-serif" }}>{label}: </span>
+            <span style={{ fontSize: "14px", color: "#333", fontFamily: "Georgia, serif", lineHeight: "1.6" }}>{content}</span>
+          </div>
+        </div>
+      );
+    }
+  }
+
+  // FAQ questions: **Question?** followed by answer
+  if (/^\*\*[^*]+\?\*\*$/.test(para.trim())) {
+    const question = para.replace(/\*\*/g, '');
+    return (
+      <div key={`faq-q-${i}`} style={{ borderTop: "1px solid #eee", paddingTop: "16px", marginTop: "8px", marginBottom: "4px" }}>
+        <p style={{ margin: 0, fontSize: "16px", fontWeight: "700", color: "#111", fontFamily: "Arial, sans-serif", lineHeight: "1.4" }}>
+          <span style={{ color: accentColor, marginRight: "8px" }}>Q</span>{question}
+        </p>
+      </div>
+    );
+  }
+
+  // Why this matters
+  if (para.toLowerCase().startsWith('why this matters') || para.toLowerCase().startsWith('why it matters')) {
+    const formatted = para.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>').replace(/\*([^*]+)\*/g, '<em>$1</em>');
+    return (
+      <div key={`why-${i}`} style={{ background: "#f0f7ff", borderLeft: "4px solid #1565c0", padding: "16px 20px", margin: "28px 0", borderRadius: "2px" }}>
+        <p style={{ margin: 0, fontSize: "16px", lineHeight: "1.8", color: "#1a1a1a", fontStyle: "italic", fontFamily: "Georgia, serif" }} dangerouslySetInnerHTML={{ __html: formatted }} />
+      </div>
+    );
+  }
+
+  // Bottom line / conclusion
+  if (para.toLowerCase().startsWith('## the bottom line') || para.toLowerCase().startsWith('## conclusion') || para.toLowerCase().startsWith('## verdict')) {
+    const title = para.replace(/^## /, '');
+    return (
+      <div key={`bottom-${i}`} style={{ background: "#111", color: "#fff", padding: "4px 16px", margin: "32px 0 16px", display: "inline-block" }}>
+        <h2 style={{ margin: 0, fontSize: "14px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "2px", color: "#fff", fontFamily: "Arial, sans-serif" }}>{title}</h2>
+      </div>
+    );
+  }
+
+  // Regular subheading ##
+  if (para.startsWith('## ')) {
+    const heading = para.replace(/^## /, '');
+    return (
+      <div key={`h-${i}`} style={{ margin: "36px 0 20px" }}>
+        <h2 style={{ fontSize: "22px", fontWeight: "800", color: "#111", margin: "0 0 8px", lineHeight: "1.3", fontFamily: "Arial, sans-serif", letterSpacing: "-0.3px" }}>{heading}</h2>
+        <div style={{ width: "40px", height: "3px", background: accentColor }} />
+      </div>
+    );
+  }
+
+  // Tool header: **Number. Tool Name — Tagline**
+  if (/^\*\*\d+\.\s/.test(para) && para.endsWith('**')) {
+    const content = para.replace(/\*\*/g, '');
+    const dashIndex = content.indexOf(' — ');
+    const toolName = dashIndex > -1 ? content.substring(0, dashIndex) : content;
+    const tagline = dashIndex > -1 ? content.substring(dashIndex + 3) : '';
+    return (
+      <div key={`tool-${i}`} style={{ background: "#f8f9fa", borderLeft: `4px solid ${accentColor}`, padding: "14px 18px", margin: "28px 0 12px", borderRadius: "2px" }}>
+        <h3 style={{ margin: 0, fontSize: "18px", fontWeight: "800", color: "#111", fontFamily: "Arial, sans-serif", lineHeight: "1.3" }}>{toolName}</h3>
+        {tagline && <p style={{ margin: "4px 0 0", fontSize: "13px", color: "#666", fontFamily: "Arial, sans-serif" }}>{tagline}</p>}
+      </div>
+    );
+  }
+
+  // Regular paragraph with inline bold/italic
+  const formatted = para
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*([^*]+)\*/g, '<em>$1</em>');
+
+  return (
+    <p key={`p-${i}`} style={{ marginTop: 0, marginBottom: "20px", fontSize: "17px", lineHeight: "1.85", color: "#333", fontFamily: "Georgia, serif" }}
+      dangerouslySetInnerHTML={{ __html: formatted }}
+    />
+  );
+}
+
 export default function ArticlePage({ article, related, crossCategoryArticles }) {
   const [scrollProgress, setScrollProgress] = useState(0);
   const [showBackToTop, setShowBackToTop] = useState(false);
@@ -91,7 +189,6 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Real view counting — client side, once per session
   useEffect(() => {
     if (!article?.id) return;
     const key = `viewed_${article.id}`;
@@ -101,9 +198,7 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id: article.id })
-    }).then(() => {
-      setViews(v => v + 1);
-    }).catch(() => {});
+    }).then(() => setViews(v => v + 1)).catch(() => {});
   }, [article?.id]);
 
   if (!article) return (
@@ -239,6 +334,7 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
 
           <article className="article-box" style={{ background: "#fff", padding: "40px", boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
 
+            {/* Breadcrumb */}
             <div style={{ marginBottom: "20px" }}>
               <Link href="/" style={{ color: "#cc0000", textDecoration: "none", fontSize: "13px", fontWeight: "600" }}>Home</Link>
               <span style={{ color: "#999", margin: "0 8px" }}>›</span>
@@ -253,6 +349,7 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
               )}
             </div>
 
+            {/* Tags */}
             <div style={{ marginBottom: "16px", display: "flex", gap: "8px", flexWrap: "wrap" }}>
               {isEvergreen && <span style={{ background: "#111", color: "#fff", padding: "4px 12px", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px" }}>GUIDE</span>}
               {isBreaking && <span style={{ background: "#ff0000", color: "#fff", padding: "4px 12px", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px", animation: "pulse 2s infinite" }}>BREAKING</span>}
@@ -260,8 +357,10 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
               {article.tag && <span style={{ background: "#f0f0f0", color: "#555", padding: "4px 12px", fontSize: "11px", fontWeight: "600", textTransform: "uppercase" }}>{article.tag}</span>}
             </div>
 
+            {/* Title */}
             <h1 style={{ fontSize: "34px", fontWeight: "900", lineHeight: "1.2", margin: "0 0 20px", color: "#111", letterSpacing: "-0.5px" }}>{article.title}</h1>
 
+            {/* Meta */}
             <div style={{ display: "flex", flexWrap: "wrap", gap: "20px", padding: "14px 0", borderTop: "1px solid #eee", borderBottom: "1px solid #eee", marginBottom: "28px" }}>
               <span style={{ fontSize: "13px", color: "#666" }}>By <strong>{article.author || 'NewsOracle Editorial'}</strong></span>
               {isEvergreen ? (
@@ -283,48 +382,31 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
               </div>
             )}
 
+            {/* Hero Image */}
             <img src={imageUrl} alt={article.title} style={{ width: "100%", height: "420px", objectFit: "cover", marginBottom: "28px", display: "block" }} />
 
-            <div style={{ background: isEvergreen ? "#f1f8e9" : "#fafafa", border: `1px solid ${isEvergreen ? "#c5e1a5" : "#eee"}`, borderLeft: `4px solid ${accentColor}`, padding: "20px 24px", marginBottom: "28px" }}>
-              <h3 style={{ color: accentColor, fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 16px" }}>Key Points</h3>
+            {/* Key Points */}
+            <div style={{ background: isEvergreen ? "#f1f8e9" : "#fafafa", border: `1px solid ${isEvergreen ? "#c5e1a5" : "#eee"}`, borderLeft: `4px solid ${accentColor}`, padding: "20px 24px", marginBottom: "32px" }}>
+              <h3 style={{ color: accentColor, fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 16px", fontFamily: "Arial, sans-serif" }}>Key Points</h3>
               <ul style={{ margin: 0, padding: "0 0 0 18px" }}>
                 {(article.key_points ? article.key_points.split('\n').filter(p => p.trim()) : paragraphs.slice(0, 3)).map((point, i) => (
-                  <li key={i} style={{ fontSize: "14px", color: "#333", lineHeight: "1.7", marginBottom: "12px" }}>
+                  <li key={i} style={{ fontSize: "14px", color: "#333", lineHeight: "1.7", marginBottom: "10px", fontFamily: "Georgia, serif" }}>
                     {point.replace(/^[-•]\s*/, '').trim()}
                   </li>
                 ))}
               </ul>
             </div>
 
-            <div style={{ fontSize: "17px", lineHeight: "1.85", color: "#333", fontFamily: "Georgia, serif" }}>
+            {/* Article Body */}
+            <div>
               {bodyParagraphs.map((para, i) => {
-                const isWhy = para.toLowerCase().startsWith('why this matters') || para.toLowerCase().startsWith('why it matters');
-                const isSubheading = para.startsWith('## ');
                 const elements = [];
-
-                if (isSubheading) {
-                  elements.push(
-                    <h2 key={`h-${i}`} style={{ fontSize: "22px", fontWeight: "800", color: "#111", margin: "32px 0 16px", lineHeight: "1.3", fontFamily: "Arial, sans-serif", letterSpacing: "-0.3px" }}>
-                      {para.replace(/^## /, '')}
-                    </h2>
-                  );
-                } else if (isWhy) {
-                  elements.push(
-                    <div key={`w-${i}`} style={{ background: "#f0f7ff", borderLeft: "4px solid #1565c0", padding: "16px 20px", margin: "28px 0", borderRadius: "2px" }}>
-                      <p style={{ margin: 0, fontSize: "16px", lineHeight: "1.8", color: "#1a1a1a", fontStyle: "italic", fontFamily: "Georgia, serif" }}>{para}</p>
-                    </div>
-                  );
-                } else {
-  const formatted = para
-    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*([^*]+)\*/g, '<em>$1</em>');
-  elements.push(<p key={`p-${i}`} style={{ marginTop: 0, marginBottom: "20px" }} dangerouslySetInnerHTML={{ __html: formatted }} />);
-}
+                elements.push(renderParagraph(para, i, accentColor));
 
                 if (!isEvergreen && i === 3 && related.length > 0) {
                   const contextArticle = related[0];
                   elements.push(
-                    <p key="context-link" style={{ marginTop: 0, marginBottom: "20px" }}>
+                    <p key="context-link" style={{ marginTop: 0, marginBottom: "20px", fontSize: "17px", lineHeight: "1.85", color: "#333", fontFamily: "Georgia, serif" }}>
                       <strong>Related coverage:</strong>{' '}
                       <Link href={articlePath(contextArticle)} style={{ color: accentColor, textDecoration: "none", fontWeight: "600" }}>{contextArticle.title}</Link>
                     </p>
@@ -334,13 +416,13 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
                 if (!isEvergreen && i === 1 && readNextArticles.length >= 2) {
                   elements.push(
                     <div key="read-next" style={{ background: "#f8f9fa", border: "1px solid #eee", padding: "20px", margin: "28px 0" }}>
-                      <h4 style={{ fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "2px", color: accentColor, margin: "0 0 16px" }}>Read Next</h4>
+                      <h4 style={{ fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "2px", color: accentColor, margin: "0 0 16px", fontFamily: "Arial, sans-serif" }}>Read Next</h4>
                       {readNextArticles.map(rel => (
                         <Link key={rel.id} href={articlePath(rel)} style={{ textDecoration: "none" }}>
                           <div style={{ display: "flex", gap: "12px", marginBottom: "12px", cursor: "pointer" }}>
                             <img loading="lazy" src={getImage(rel)} alt={rel.title} style={{ width: "80px", height: "56px", objectFit: "cover", flexShrink: 0 }} />
                             <div>
-                              <p style={{ margin: 0, fontSize: "14px", fontWeight: "600", color: "#111", lineHeight: "1.4" }}>{rel.title}</p>
+                              <p style={{ margin: 0, fontSize: "14px", fontWeight: "600", color: "#111", lineHeight: "1.4", fontFamily: "Arial, sans-serif" }}>{rel.title}</p>
                               <p style={{ margin: "4px 0 0", fontSize: "11px", color: "#999" }}>{timeAgo(rel.created_at)}</p>
                             </div>
                           </div>
@@ -354,9 +436,10 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
               })}
             </div>
 
+            {/* Prediction boxes */}
             {!isEvergreen && article.category === 'finance' && article.prediction && (
               <div style={{ background: "#f8f9fa", borderLeft: `4px solid ${categoryColor}`, padding: "24px", margin: "32px 0" }}>
-                <h3 style={{ color: categoryColor, fontSize: "12px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 12px" }}>Market Outlook</h3>
+                <h3 style={{ color: categoryColor, fontSize: "12px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 12px", fontFamily: "Arial, sans-serif" }}>Market Outlook</h3>
                 <p style={{ fontSize: "16px", lineHeight: "1.7", color: "#333", margin: "0 0 16px", fontFamily: "Georgia, serif" }}>{article.prediction}</p>
                 <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", marginTop: "12px" }}>
                   {article.sentiment && <span style={{ display: "inline-block", background: article.sentiment === "positive" ? "#e8f5e9" : article.sentiment === "negative" ? "#ffebee" : "#f5f5f5", color: article.sentiment === "positive" ? "#2e7d32" : article.sentiment === "negative" ? "#c62828" : "#666", padding: "6px 16px", fontSize: "12px", fontWeight: "600", textTransform: "uppercase", borderRadius: "2px" }}>Sentiment: {article.sentiment}</span>}
@@ -366,37 +449,41 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
             )}
             {!isEvergreen && article.category === 'politics' && article.prediction && (
               <div style={{ background: "#f8f9fa", borderLeft: "4px solid #2e7d32", padding: "24px", margin: "32px 0" }}>
-                <h3 style={{ color: "#2e7d32", fontSize: "12px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 12px" }}>What Happens Next</h3>
+                <h3 style={{ color: "#2e7d32", fontSize: "12px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 12px", fontFamily: "Arial, sans-serif" }}>What Happens Next</h3>
                 <p style={{ fontSize: "16px", lineHeight: "1.7", color: "#333", margin: 0, fontFamily: "Georgia, serif" }}>{article.prediction}</p>
               </div>
             )}
             {!isEvergreen && article.category === 'technology' && article.prediction && (
               <div style={{ background: "#f8f9fa", borderLeft: "4px solid #111", padding: "24px", margin: "32px 0" }}>
-                <h3 style={{ color: "#111", fontSize: "12px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 12px" }}>What This Means</h3>
+                <h3 style={{ color: "#111", fontSize: "12px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 12px", fontFamily: "Arial, sans-serif" }}>What This Means</h3>
                 <p style={{ fontSize: "16px", lineHeight: "1.7", color: "#333", margin: 0, fontFamily: "Georgia, serif" }}>{article.prediction}</p>
               </div>
             )}
 
+            {/* Sources */}
             <div style={{ padding: "12px 0", borderTop: "1px solid #eee", marginTop: "24px" }}>
               <p style={{ margin: 0, fontSize: "12px", color: "#999", lineHeight: "1.6" }}>
                 <strong>Sources:</strong> {article.source ? `Based on reporting from ${article.source} and other international news sources.` : 'Based on reporting from international news sources via Google News and leading global publications.'}
               </p>
             </div>
 
+            {/* Share */}
             <div style={{ margin: "32px 0", paddingTop: "24px", borderTop: "1px solid #eee" }}>
-              <p style={{ fontSize: "13px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px", color: "#666", marginBottom: "12px" }}>Share this article</p>
+              <p style={{ fontSize: "13px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px", color: "#666", marginBottom: "12px", fontFamily: "Arial, sans-serif" }}>Share this article</p>
               <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
                 <a href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(article.title)}&url=${encodeURIComponent(canonicalUrl)}`} target="_blank" rel="noopener noreferrer" style={{ background: "#000", color: "#fff", padding: "10px 20px", fontSize: "13px", fontWeight: "600", textDecoration: "none", display: "inline-block" }}>X Twitter</a>
                 <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(canonicalUrl)}`} target="_blank" rel="noopener noreferrer" style={{ background: "#1877f2", color: "#fff", padding: "10px 20px", fontSize: "13px", fontWeight: "600", textDecoration: "none", display: "inline-block" }}>Facebook</a>
                 <a href={`https://wa.me/?text=${encodeURIComponent(article.title + ' ' + canonicalUrl)}`} target="_blank" rel="noopener noreferrer" style={{ background: "#25d366", color: "#fff", padding: "10px 20px", fontSize: "13px", fontWeight: "600", textDecoration: "none", display: "inline-block" }}>WhatsApp</a>
-                <button onClick={() => window.print()} style={{ background: "#666", color: "#fff", padding: "10px 20px", fontSize: "13px", fontWeight: "600", border: "none", cursor: "pointer", display: "inline-block" }}>Print</button>
+                <button onClick={() => window.print()} style={{ background: "#666", color: "#fff", padding: "10px 20px", fontSize: "13px", fontWeight: "600", border: "none", cursor: "pointer" }}>Print</button>
               </div>
             </div>
 
+            {/* Disclaimer */}
             <div style={{ background: "#fffbf0", border: "1px solid #ffe082", padding: "16px", marginTop: "32px" }}>
               <p style={{ margin: 0, fontSize: "12px", color: "#888", lineHeight: "1.6" }}><strong>Disclaimer:</strong> {article.disclaimer}</p>
             </div>
 
+            {/* Author */}
             <div style={{ background: "#f8f9fa", border: "1px solid #eee", padding: "20px", marginTop: "32px", display: "flex", gap: "16px", alignItems: "flex-start" }}>
               <div style={{ width: "48px", height: "48px", background: "#cc0000", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                 <span style={{ color: "#fff", fontWeight: "900", fontSize: "18px" }}>N</span>
@@ -415,16 +502,17 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
               </div>
             </div>
 
+            {/* More from NewsOracle */}
             {crossCategoryArticles.length > 0 && (
               <div style={{ marginTop: "32px", paddingTop: "24px", borderTop: "1px solid #eee" }}>
-                <h3 style={{ fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "2px", color: "#cc0000", margin: "0 0 16px" }}>More from NewsOracle</h3>
+                <h3 style={{ fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "2px", color: "#cc0000", margin: "0 0 16px", fontFamily: "Arial, sans-serif" }}>More from NewsOracle</h3>
                 <div className="cross-category-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px" }}>
                   {crossCategoryArticles.map(rel => (
                     <Link key={rel.id} href={articlePath(rel)} style={{ textDecoration: "none" }}>
                       <div style={{ cursor: "pointer" }}>
                         <img loading="lazy" src={getImage(rel)} alt={rel.title} style={{ width: "100%", height: "120px", objectFit: "cover", display: "block", marginBottom: "8px" }} />
                         <span style={{ fontSize: "10px", color: CATEGORY_COLORS[rel.category] || "#cc0000", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px" }}>{rel.category}</span>
-                        <p style={{ margin: "4px 0 0", fontSize: "13px", fontWeight: "600", color: "#111", lineHeight: "1.4" }}>{rel.title}</p>
+                        <p style={{ margin: "4px 0 0", fontSize: "13px", fontWeight: "600", color: "#111", lineHeight: "1.4", fontFamily: "Arial, sans-serif" }}>{rel.title}</p>
                       </div>
                     </Link>
                   ))}
@@ -434,27 +522,30 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
 
           </article>
 
+          {/* Sidebar */}
           <aside>
-            {isEvergreen && (
-              <div style={{ background: "#f1f8e9", border: "1px solid #c5e1a5", borderLeft: "4px solid #2e7d32", padding: "20px", marginBottom: "20px" }}>
-                <h3 style={{ fontSize: "12px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px", color: "#2e7d32", margin: "0 0 8px" }}>Evergreen Guide</h3>
-                <p style={{ margin: "0 0 12px", fontSize: "13px", color: "#555", lineHeight: "1.5" }}>This guide is regularly updated and covers the complete topic in depth.</p>
-                <Link href="/guides" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600" }}>Browse all guides</Link>
-              </div>
-            )}
-            <div style={{ background: "#fff", padding: "24px", marginBottom: "20px", boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
-              <h3 style={{ fontSize: "13px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1.5px", color: "#111", margin: "0 0 16px", paddingBottom: "10px", borderBottom: `2px solid ${accentColor}` }}>Related Stories</h3>
-              {sidebarArticles.map(rel => (
-                <Link key={rel.id} href={articlePath(rel)} style={{ textDecoration: "none" }}>
-                  <div style={{ display: "flex", gap: "12px", marginBottom: "16px", paddingBottom: "16px", borderBottom: "1px solid #f5f5f5", cursor: "pointer" }}>
-                    <img loading="lazy" src={getImage(rel)} alt={rel.title} style={{ width: "80px", height: "60px", objectFit: "cover", flexShrink: 0 }} />
-                    <div>
-                      <p style={{ margin: 0, fontSize: "13px", fontWeight: "600", color: "#111", lineHeight: "1.4" }}>{rel.title}</p>
-                      <p style={{ margin: "4px 0 0", fontSize: "11px", color: "#bbb" }}>{new Date(rel.created_at).toLocaleDateString()}</p>
+            <div style={{ position: "sticky", top: "20px" }}>
+              {isEvergreen && (
+                <div style={{ background: "#f1f8e9", border: "1px solid #c5e1a5", borderLeft: "4px solid #2e7d32", padding: "20px", marginBottom: "20px" }}>
+                  <h3 style={{ fontSize: "12px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px", color: "#2e7d32", margin: "0 0 8px", fontFamily: "Arial, sans-serif" }}>Evergreen Guide</h3>
+                  <p style={{ margin: "0 0 12px", fontSize: "13px", color: "#555", lineHeight: "1.5" }}>This guide is regularly updated and covers the complete topic in depth.</p>
+                  <Link href="/guides" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600" }}>Browse all guides</Link>
+                </div>
+              )}
+              <div style={{ background: "#fff", padding: "24px", marginBottom: "20px", boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
+                <h3 style={{ fontSize: "13px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1.5px", color: "#111", margin: "0 0 16px", paddingBottom: "10px", borderBottom: `2px solid ${accentColor}`, fontFamily: "Arial, sans-serif" }}>Related Stories</h3>
+                {sidebarArticles.map(rel => (
+                  <Link key={rel.id} href={articlePath(rel)} style={{ textDecoration: "none" }}>
+                    <div style={{ display: "flex", gap: "12px", marginBottom: "16px", paddingBottom: "16px", borderBottom: "1px solid #f5f5f5", cursor: "pointer" }}>
+                      <img loading="lazy" src={getImage(rel)} alt={rel.title} style={{ width: "80px", height: "60px", objectFit: "cover", flexShrink: 0 }} />
+                      <div>
+                        <p style={{ margin: 0, fontSize: "13px", fontWeight: "600", color: "#111", lineHeight: "1.4", fontFamily: "Arial, sans-serif" }}>{rel.title}</p>
+                        <p style={{ margin: "4px 0 0", fontSize: "11px", color: "#bbb" }}>{new Date(rel.created_at).toLocaleDateString()}</p>
+                      </div>
                     </div>
-                  </div>
-                </Link>
-              ))}
+                  </Link>
+                ))}
+              </div>
             </div>
           </aside>
 
@@ -506,7 +597,6 @@ export async function getServerSideProps({ params }) {
     return { redirect: { destination: `/article/${expectedSlug}`, permanent: true } };
   }
 
-  // No view increment here — handled client-side for real counts
   const { data: related } = await supabaseServer.from("articles").select("*").eq("category", article.category).or("evergreen.eq.false,evergreen.is.null").neq("id", article.id).order("created_at", { ascending: false }).limit(3);
   const { data: crossCategory } = await supabaseServer.from("articles").select("*").neq("category", article.category).neq("id", article.id).or("evergreen.eq.false,evergreen.is.null").order("created_at", { ascending: false }).limit(3);
 
