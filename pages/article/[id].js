@@ -2,7 +2,7 @@ import Head from "next/head";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
-import { slugify, articlePath, articleUrl } from "../../lib/slugify";
+import { slugify, articlePath, articleUrl } from "../lib/slugify";
 
 function getImage(article) {
   if (article.image && !article.image.includes('source.unsplash')) return article.image;
@@ -12,6 +12,7 @@ function getImage(article) {
     crypto: "1579621970563-ebec7560ff3e",
     markets: "1444653614773-995cb1ef9efa",
     technology: "1518770660439-4636190af475",
+    politics: "1529107386315-e1a2ed48a620",
   };
   const key = keywords[article.category] || keywords.finance;
   return `https://images.unsplash.com/photo-${key}?w=1200&q=80`;
@@ -31,7 +32,7 @@ function timeAgo(date) {
 }
 
 function formatViews(views) {
-  if (!views || views < 1) return "0 views";
+  if (!views || views < 1) return null;
   if (views < 1000) return `${views} views`;
   if (views < 10000) return `${(views / 1000).toFixed(1)}K views`;
   if (views < 1000000) return `${Math.floor(views / 1000)}K views`;
@@ -53,38 +54,30 @@ function buildFaqSchema(article, paragraphs) {
   const firstPara = paragraphs[0] || '';
   const cleanFirst = firstPara.replace(/^[A-Z\s]+ — /, '');
   if (cleanFirst.length > 30) {
-    faqItems.push({
-      "@type": "Question",
-      "name": `What happened with ${article.tag || article.category}?`,
-      "acceptedAnswer": { "@type": "Answer", "text": cleanFirst }
-    });
+    faqItems.push({ "@type": "Question", "name": `What happened with ${article.tag || article.category}?`, "acceptedAnswer": { "@type": "Answer", "text": cleanFirst } });
   }
   const whyPara = paragraphs.find(p => p.toLowerCase().startsWith('why this matters') || p.toLowerCase().startsWith('why it matters'));
   if (whyPara) {
-    faqItems.push({
-      "@type": "Question",
-      "name": "Why does this matter?",
-      "acceptedAnswer": { "@type": "Answer", "text": whyPara }
-    });
+    faqItems.push({ "@type": "Question", "name": "Why does this matter?", "acceptedAnswer": { "@type": "Answer", "text": whyPara } });
   }
   if (article.prediction) {
-    faqItems.push({
-      "@type": "Question",
-      "name": "What happens next?",
-      "acceptedAnswer": { "@type": "Answer", "text": article.prediction }
-    });
+    faqItems.push({ "@type": "Question", "name": "What happens next?", "acceptedAnswer": { "@type": "Answer", "text": article.prediction } });
   }
   if (faqItems.length === 0) return null;
-  return {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    "mainEntity": faqItems
-  };
+  return { "@context": "https://schema.org", "@type": "FAQPage", "mainEntity": faqItems };
 }
+
+const CATEGORY_COLORS = {
+  finance: "#0052cc",
+  sports: "#cc0000",
+  politics: "#2e7d32",
+  technology: "#111111",
+};
 
 export default function ArticlePage({ article, related, crossCategoryArticles }) {
   const [scrollProgress, setScrollProgress] = useState(0);
   const [showBackToTop, setShowBackToTop] = useState(false);
+  const [views, setViews] = useState(article?.views || 0);
 
   useEffect(() => {
     function handleScroll() {
@@ -98,25 +91,31 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Real view counting — client side, once per session
+  useEffect(() => {
+    if (!article?.id) return;
+    const key = `viewed_${article.id}`;
+    if (sessionStorage.getItem(key)) return;
+    sessionStorage.setItem(key, '1');
+    fetch('/api/view', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: article.id })
+    }).then(() => {
+      setViews(v => v + 1);
+    }).catch(() => {});
+  }, [article?.id]);
+
   if (!article) return (
     <>
-      <Head>
-        <title>Article Not Found — NewsOracle</title>
-        <meta name="robots" content="noindex" />
-      </Head>
+      <Head><title>Article Not Found — NewsOracle</title><meta name="robots" content="noindex" /></Head>
       <div style={{ fontFamily: "Arial, sans-serif", background: "#f4f4f4", minHeight: "100vh" }}>
         <div style={{ background: "#cc0000", color: "#fff", padding: "6px 0", fontSize: "12px" }}>
-          <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 20px" }}>
-            <span>{new Date().toLocaleDateString("en-GB", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</span>
-          </div>
+          <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 20px" }}><span>{new Date().toLocaleDateString("en-GB", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</span></div>
         </div>
         <header style={{ background: "#fff", borderBottom: "3px solid #cc0000", padding: "16px 0" }}>
           <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 20px" }}>
-            <Link href="/" style={{ textDecoration: "none" }}>
-              <h1 style={{ fontSize: "36px", fontWeight: "900", margin: 0, color: "#111", letterSpacing: "-1px" }}>
-                NEWS<span style={{ color: "#cc0000" }}>ORACLE</span>
-              </h1>
-            </Link>
+            <Link href="/" style={{ textDecoration: "none" }}><h1 style={{ fontSize: "36px", fontWeight: "900", margin: 0, color: "#111", letterSpacing: "-1px" }}>NEWS<span style={{ color: "#cc0000" }}>ORACLE</span></h1></Link>
           </div>
         </header>
         <div style={{ maxWidth: "600px", margin: "0 auto", padding: "80px 20px", textAlign: "center" }}>
@@ -135,7 +134,9 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
     </>
   );
 
-  const isEvergreen = article.evergreen === true;
+  const isEvergreen = article.evergreen === true || article.evergreen === 't';
+  const categoryColor = CATEGORY_COLORS[article.category] || "#cc0000";
+  const accentColor = isEvergreen ? "#2e7d32" : categoryColor;
   const paragraphs = article.summary?.split('\n\n') || [];
   const metaDesc = article.meta_description || cleanMetaDescription(article.summary);
   const canonicalUrl = articleUrl(article);
@@ -146,6 +147,7 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
   const bodyParagraphs = isEvergreen ? paragraphs : paragraphs.slice(3);
   const readNextArticles = related.slice(0, 2);
   const sidebarArticles = related.slice(0, 3);
+  const viewsFormatted = formatViews(views);
 
   return (
     <>
@@ -195,18 +197,18 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
         {faqSchema && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />}
       </Head>
 
-      <div style={{ position: "fixed", top: 0, left: 0, width: `${scrollProgress}%`, height: "3px", background: isEvergreen ? "#2e7d32" : "#cc0000", zIndex: 9999, transition: "width 0.1s" }} />
+      <div style={{ position: "fixed", top: 0, left: 0, width: `${scrollProgress}%`, height: "3px", background: accentColor, zIndex: 9999, transition: "width 0.1s" }} />
 
       <div style={{ fontFamily: "Arial, sans-serif", background: "#f4f4f4", minHeight: "100vh" }}>
 
-        <div style={{ background: isEvergreen ? "#2e7d32" : "#cc0000", color: "#fff", padding: "6px 0", fontSize: "12px" }}>
+        <div style={{ background: accentColor, color: "#fff", padding: "6px 0", fontSize: "12px" }}>
           <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 20px", display: "flex", justifyContent: "space-between" }}>
             <span>{new Date().toLocaleDateString("en-GB", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</span>
             <span className="top-bar-right">Sports · Finance · Markets · Analysis</span>
           </div>
         </div>
 
-        <header style={{ background: "#fff", borderBottom: `3px solid ${isEvergreen ? "#2e7d32" : "#cc0000"}`, padding: "16px 0" }}>
+        <header style={{ background: "#fff", borderBottom: `3px solid ${accentColor}`, padding: "16px 0" }}>
           <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <Link href="/" style={{ textDecoration: "none" }}>
               <h1 style={{ fontSize: "36px", fontWeight: "900", margin: 0, color: "#111", letterSpacing: "-1px" }}>NEWS<span style={{ color: "#cc0000" }}>ORACLE</span></h1>
@@ -216,7 +218,7 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
               <Link href="/category/finance" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600", textTransform: "uppercase" }}>Finance</Link>
               <Link href="/category/politics" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600", textTransform: "uppercase" }}>Politics</Link>
               <Link href="/category/technology" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600", textTransform: "uppercase" }}>Technology</Link>
-              <Link href="/guides" style={{ color: "#2e7d32", textDecoration: "none", fontSize: "13px", fontWeight: "700", textTransform: "uppercase" }}>Guides</Link>
+              <Link href="/guides" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600", textTransform: "uppercase" }}>Guides</Link>
             </nav>
           </div>
         </header>
@@ -235,7 +237,7 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
 
         <div className="article-layout" style={{ maxWidth: "1200px", margin: "0 auto", padding: "32px 20px", display: "grid", gridTemplateColumns: "1fr 320px", gap: "32px" }}>
 
-          <article className="article-box" style={{ background: "#fff", padding: "40px" }}>
+          <article className="article-box" style={{ background: "#fff", padding: "40px", boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
 
             <div style={{ marginBottom: "20px" }}>
               <Link href="/" style={{ color: "#cc0000", textDecoration: "none", fontSize: "13px", fontWeight: "600" }}>Home</Link>
@@ -252,13 +254,13 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
             </div>
 
             <div style={{ marginBottom: "16px", display: "flex", gap: "8px", flexWrap: "wrap" }}>
-              {isEvergreen && <span style={{ background: "#2e7d32", color: "#fff", padding: "4px 12px", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px" }}>GUIDE</span>}
+              {isEvergreen && <span style={{ background: "#111", color: "#fff", padding: "4px 12px", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px" }}>GUIDE</span>}
               {isBreaking && <span style={{ background: "#ff0000", color: "#fff", padding: "4px 12px", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px", animation: "pulse 2s infinite" }}>BREAKING</span>}
-              <span style={{ background: isEvergreen ? "#e8f5e9" : "#cc0000", color: isEvergreen ? "#2e7d32" : "#fff", padding: "4px 12px", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px" }}>{article.category}</span>
+              <span style={{ background: accentColor, color: "#fff", padding: "4px 12px", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px" }}>{article.category}</span>
               {article.tag && <span style={{ background: "#f0f0f0", color: "#555", padding: "4px 12px", fontSize: "11px", fontWeight: "600", textTransform: "uppercase" }}>{article.tag}</span>}
             </div>
 
-            <h1 style={{ fontSize: "34px", fontWeight: "900", lineHeight: "1.2", margin: "0 0 20px", color: "#111" }}>{article.title}</h1>
+            <h1 style={{ fontSize: "34px", fontWeight: "900", lineHeight: "1.2", margin: "0 0 20px", color: "#111", letterSpacing: "-0.5px" }}>{article.title}</h1>
 
             <div style={{ display: "flex", flexWrap: "wrap", gap: "20px", padding: "14px 0", borderTop: "1px solid #eee", borderBottom: "1px solid #eee", marginBottom: "28px" }}>
               <span style={{ fontSize: "13px", color: "#666" }}>By <strong>{article.author || 'NewsOracle Editorial'}</strong></span>
@@ -268,11 +270,11 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
                 <>
                   <span style={{ fontSize: "13px", color: "#999" }}>{new Date(article.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}</span>
                   <span style={{ fontSize: "13px", color: "#999" }}>{new Date(article.created_at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })} GMT</span>
-                  <span style={{ fontSize: "13px", color: "#cc0000", fontWeight: "600" }}>Updated {timeAgo(article.created_at)}</span>
+                  <span style={{ fontSize: "13px", color: accentColor, fontWeight: "600" }}>Updated {timeAgo(article.created_at)}</span>
                 </>
               )}
               <span style={{ fontSize: "13px", color: "#999" }}>{getReadTime(article.summary)} min read</span>
-              <span style={{ fontSize: "13px", color: "#666" }}>{formatViews(article.views)}</span>
+              {viewsFormatted && <span style={{ fontSize: "13px", color: "#999" }}>👁 {viewsFormatted}</span>}
             </div>
 
             {!isEvergreen && article.source && (
@@ -283,8 +285,8 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
 
             <img src={imageUrl} alt={article.title} style={{ width: "100%", height: "420px", objectFit: "cover", marginBottom: "28px", display: "block" }} />
 
-            <div style={{ background: isEvergreen ? "#f1f8e9" : "#fff8f8", border: `1px solid ${isEvergreen ? "#c5e1a5" : "#ffcccc"}`, borderLeft: `4px solid ${isEvergreen ? "#2e7d32" : "#cc0000"}`, padding: "20px 24px", marginBottom: "28px" }}>
-              <h3 style={{ color: isEvergreen ? "#2e7d32" : "#cc0000", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 16px" }}>Key Points</h3>
+            <div style={{ background: isEvergreen ? "#f1f8e9" : "#fafafa", border: `1px solid ${isEvergreen ? "#c5e1a5" : "#eee"}`, borderLeft: `4px solid ${accentColor}`, padding: "20px 24px", marginBottom: "28px" }}>
+              <h3 style={{ color: accentColor, fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 16px" }}>Key Points</h3>
               <ul style={{ margin: 0, padding: "0 0 0 18px" }}>
                 {(article.key_points ? article.key_points.split('\n').filter(p => p.trim()) : paragraphs.slice(0, 3)).map((point, i) => (
                   <li key={i} style={{ fontSize: "14px", color: "#333", lineHeight: "1.7", marginBottom: "12px" }}>
@@ -302,7 +304,7 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
 
                 if (isSubheading) {
                   elements.push(
-                    <h2 key={`h-${i}`} style={{ fontSize: "22px", fontWeight: "800", color: "#111", margin: "32px 0 16px", lineHeight: "1.3", fontFamily: "Arial, sans-serif" }}>
+                    <h2 key={`h-${i}`} style={{ fontSize: "22px", fontWeight: "800", color: "#111", margin: "32px 0 16px", lineHeight: "1.3", fontFamily: "Arial, sans-serif", letterSpacing: "-0.3px" }}>
                       {para.replace(/^## /, '')}
                     </h2>
                   );
@@ -321,7 +323,7 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
                   elements.push(
                     <p key="context-link" style={{ marginTop: 0, marginBottom: "20px" }}>
                       <strong>Related coverage:</strong>{' '}
-                      <Link href={articlePath(contextArticle)} style={{ color: "#cc0000", textDecoration: "none", fontWeight: "600" }}>{contextArticle.title}</Link>
+                      <Link href={articlePath(contextArticle)} style={{ color: accentColor, textDecoration: "none", fontWeight: "600" }}>{contextArticle.title}</Link>
                     </p>
                   );
                 }
@@ -329,7 +331,7 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
                 if (!isEvergreen && i === 1 && readNextArticles.length >= 2) {
                   elements.push(
                     <div key="read-next" style={{ background: "#f8f9fa", border: "1px solid #eee", padding: "20px", margin: "28px 0" }}>
-                      <h4 style={{ fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "2px", color: "#cc0000", margin: "0 0 16px" }}>Read Next</h4>
+                      <h4 style={{ fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "2px", color: accentColor, margin: "0 0 16px" }}>Read Next</h4>
                       {readNextArticles.map(rel => (
                         <Link key={rel.id} href={articlePath(rel)} style={{ textDecoration: "none" }}>
                           <div style={{ display: "flex", gap: "12px", marginBottom: "12px", cursor: "pointer" }}>
@@ -350,8 +352,8 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
             </div>
 
             {!isEvergreen && article.category === 'finance' && article.prediction && (
-              <div style={{ background: "#f8f9fa", borderLeft: "4px solid #cc0000", padding: "24px", margin: "32px 0" }}>
-                <h3 style={{ color: "#cc0000", fontSize: "12px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 12px" }}>Market Outlook</h3>
+              <div style={{ background: "#f8f9fa", borderLeft: `4px solid ${categoryColor}`, padding: "24px", margin: "32px 0" }}>
+                <h3 style={{ color: categoryColor, fontSize: "12px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 12px" }}>Market Outlook</h3>
                 <p style={{ fontSize: "16px", lineHeight: "1.7", color: "#333", margin: "0 0 16px", fontFamily: "Georgia, serif" }}>{article.prediction}</p>
                 <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", marginTop: "12px" }}>
                   {article.sentiment && <span style={{ display: "inline-block", background: article.sentiment === "positive" ? "#e8f5e9" : article.sentiment === "negative" ? "#ffebee" : "#f5f5f5", color: article.sentiment === "positive" ? "#2e7d32" : article.sentiment === "negative" ? "#c62828" : "#666", padding: "6px 16px", fontSize: "12px", fontWeight: "600", textTransform: "uppercase", borderRadius: "2px" }}>Sentiment: {article.sentiment}</span>}
@@ -366,8 +368,8 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
               </div>
             )}
             {!isEvergreen && article.category === 'technology' && article.prediction && (
-              <div style={{ background: "#f8f9fa", borderLeft: "4px solid #7b1fa2", padding: "24px", margin: "32px 0" }}>
-                <h3 style={{ color: "#7b1fa2", fontSize: "12px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 12px" }}>What This Means</h3>
+              <div style={{ background: "#f8f9fa", borderLeft: "4px solid #111", padding: "24px", margin: "32px 0" }}>
+                <h3 style={{ color: "#111", fontSize: "12px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 12px" }}>What This Means</h3>
                 <p style={{ fontSize: "16px", lineHeight: "1.7", color: "#333", margin: 0, fontFamily: "Georgia, serif" }}>{article.prediction}</p>
               </div>
             )}
@@ -418,7 +420,7 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
                     <Link key={rel.id} href={articlePath(rel)} style={{ textDecoration: "none" }}>
                       <div style={{ cursor: "pointer" }}>
                         <img loading="lazy" src={getImage(rel)} alt={rel.title} style={{ width: "100%", height: "120px", objectFit: "cover", display: "block", marginBottom: "8px" }} />
-                        <span style={{ fontSize: "10px", color: "#cc0000", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px" }}>{rel.category}</span>
+                        <span style={{ fontSize: "10px", color: CATEGORY_COLORS[rel.category] || "#cc0000", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px" }}>{rel.category}</span>
                         <p style={{ margin: "4px 0 0", fontSize: "13px", fontWeight: "600", color: "#111", lineHeight: "1.4" }}>{rel.title}</p>
                       </div>
                     </Link>
@@ -434,18 +436,18 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
               <div style={{ background: "#f1f8e9", border: "1px solid #c5e1a5", borderLeft: "4px solid #2e7d32", padding: "20px", marginBottom: "20px" }}>
                 <h3 style={{ fontSize: "12px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px", color: "#2e7d32", margin: "0 0 8px" }}>Evergreen Guide</h3>
                 <p style={{ margin: "0 0 12px", fontSize: "13px", color: "#555", lineHeight: "1.5" }}>This guide is regularly updated and covers the complete topic in depth.</p>
-                <Link href="/guides" style={{ color: "#2e7d32", textDecoration: "none", fontSize: "13px", fontWeight: "600" }}>Browse all guides</Link>
+                <Link href="/guides" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600" }}>Browse all guides</Link>
               </div>
             )}
-            <div style={{ background: "#fff", padding: "24px", marginBottom: "20px" }}>
-              <h3 style={{ fontSize: "14px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px", color: "#111", margin: "0 0 16px", paddingBottom: "10px", borderBottom: "2px solid #cc0000" }}>Related Stories</h3>
+            <div style={{ background: "#fff", padding: "24px", marginBottom: "20px", boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
+              <h3 style={{ fontSize: "13px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1.5px", color: "#111", margin: "0 0 16px", paddingBottom: "10px", borderBottom: `2px solid ${accentColor}` }}>Related Stories</h3>
               {sidebarArticles.map(rel => (
                 <Link key={rel.id} href={articlePath(rel)} style={{ textDecoration: "none" }}>
-                  <div style={{ display: "flex", gap: "12px", marginBottom: "16px", paddingBottom: "16px", borderBottom: "1px solid #f0f0f0", cursor: "pointer" }}>
+                  <div style={{ display: "flex", gap: "12px", marginBottom: "16px", paddingBottom: "16px", borderBottom: "1px solid #f5f5f5", cursor: "pointer" }}>
                     <img loading="lazy" src={getImage(rel)} alt={rel.title} style={{ width: "80px", height: "60px", objectFit: "cover", flexShrink: 0 }} />
                     <div>
                       <p style={{ margin: 0, fontSize: "13px", fontWeight: "600", color: "#111", lineHeight: "1.4" }}>{rel.title}</p>
-                      <p style={{ margin: "4px 0 0", fontSize: "11px", color: "#999" }}>{new Date(rel.created_at).toLocaleDateString()}</p>
+                      <p style={{ margin: "4px 0 0", fontSize: "11px", color: "#bbb" }}>{new Date(rel.created_at).toLocaleDateString()}</p>
                     </div>
                   </div>
                 </Link>
@@ -456,7 +458,7 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
         </div>
 
         {showBackToTop && (
-          <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} style={{ position: "fixed", bottom: "30px", right: "30px", width: "48px", height: "48px", background: isEvergreen ? "#2e7d32" : "#cc0000", color: "#fff", border: "none", borderRadius: "50%", fontSize: "20px", fontWeight: "900", cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.2)", zIndex: 999, display: "flex", alignItems: "center", justifyContent: "center" }}>↑</button>
+          <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} style={{ position: "fixed", bottom: "30px", right: "30px", width: "48px", height: "48px", background: accentColor, color: "#fff", border: "none", borderRadius: "50%", fontSize: "20px", fontWeight: "900", cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.2)", zIndex: 999, display: "flex", alignItems: "center", justifyContent: "center" }}>↑</button>
         )}
 
         <footer style={{ background: "#111", color: "#999", padding: "40px 20px", marginTop: "40px" }}>
@@ -491,7 +493,6 @@ export async function getServerSideProps({ params }) {
 
   const rawId = params.id;
   const numericId = parseInt(rawId.split('-')[0], 10);
-
   if (isNaN(numericId)) return { notFound: true };
 
   const { data: article } = await supabaseServer.from("articles").select("*").eq("id", numericId).single();
@@ -502,14 +503,13 @@ export async function getServerSideProps({ params }) {
     return { redirect: { destination: `/article/${expectedSlug}`, permanent: true } };
   }
 
-  await supabaseServer.from("articles").update({ views: (article.views || 0) + 1 }).eq("id", numericId);
-
-  const { data: related } = await supabaseServer.from("articles").select("*").eq("category", article.category).neq("id", article.id).order("created_at", { ascending: false }).limit(3);
-  const { data: crossCategory } = await supabaseServer.from("articles").select("*").neq("category", article.category).neq("id", article.id).order("created_at", { ascending: false }).limit(3);
+  // No view increment here — handled client-side for real counts
+  const { data: related } = await supabaseServer.from("articles").select("*").eq("category", article.category).or("evergreen.eq.false,evergreen.is.null").neq("id", article.id).order("created_at", { ascending: false }).limit(3);
+  const { data: crossCategory } = await supabaseServer.from("articles").select("*").neq("category", article.category).neq("id", article.id).or("evergreen.eq.false,evergreen.is.null").order("created_at", { ascending: false }).limit(3);
 
   return {
     props: {
-      article: { ...article, views: (article.views || 0) + 1 },
+      article,
       related: related || [],
       crossCategoryArticles: crossCategory || [],
     },
