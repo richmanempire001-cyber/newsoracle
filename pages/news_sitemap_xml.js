@@ -17,7 +17,11 @@ function generateNewsSiteMap(articles) {
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   ${articles.map(article => {
     const slug = `${article.id}-${slugify(article.title)}`;
-    const titleKeywords = (article.title || '').split(/\s+/).filter(w => w.length > 3 && !['this','that','with','from','over','into','after','about','been','than','their','what','when','will'].includes(w.toLowerCase())).slice(0, 4).join(', ');
+    const titleKeywords = (article.title || '')
+      .split(/\s+/)
+      .filter(w => w.length > 3 && !['this','that','with','from','over','into','after','about','been','than','their','what','when','will'].includes(w.toLowerCase()))
+      .slice(0, 4)
+      .join(', ');
     const keywordsTag = `
       <news:keywords>${escapeXml(article.tag ? article.tag + ', ' + titleKeywords : titleKeywords)}</news:keywords>`;
     const imageTag = article.image ? `
@@ -48,6 +52,7 @@ export async function getServerSideProps({ res }) {
   const { data: articles } = await supabase
     .from('articles')
     .select('id, created_at, title, tag, image, category')
+    .or('evergreen.eq.false,evergreen.is.null')
     .gte('created_at', twoDaysAgo.toISOString())
     .order('created_at', { ascending: false });
 
