@@ -1,7 +1,7 @@
 import Head from "next/head";
 import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
-import { articlePath } from "../../lib/slugify";
+import { articlePath } from "../../lib/slugify.js";
 
 function getImage(article) {
   if (article.image && !article.image.includes('source.unsplash')) return article.image;
