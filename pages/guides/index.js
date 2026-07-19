@@ -31,7 +31,7 @@ export default function GuidesHub({ guides }) {
     <>
       <Head>
         <title>Guides & Resources — NewsOracle</title>
-        <meta name="description" content="In-depth guides, explainers and evergreen resources covering Sports, Finance, Politics and Technology. Updated regularly by the NewsOracle editorial team." />
+        <meta name="description" content="In-depth guides, explainers and evergreen resources covering Sports, Finance, Politics and Technology. In-depth guide by the NewsOracle editorial team." />
         <meta name="robots" content="index, follow, max-image-preview:large" />
         <link rel="canonical" href="https://www.newsoracle.online/guides" />
         <meta property="og:title" content="Guides & Resources — NewsOracle" />
