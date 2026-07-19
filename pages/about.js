@@ -134,7 +134,7 @@ export default function AboutPage() {
           <div style={{ background: "#fff", padding: "40px", marginBottom: "24px", borderLeft: "4px solid #cc0000" }} className="about-box">
             <h2 style={{ fontSize: "22px", fontWeight: "900", color: "#111", margin: "0 0 16px" }}>Our Mission</h2>
             <p style={{ fontSize: "16px", lineHeight: "1.8", color: "#444", margin: "0 0 16px" }}>
-              NewsOracle was built on a simple belief: everyone deserves access to fast, accurate, and readable news — without paywalls, without bias, and without the noise.
+              Founded in June 2026,NewsOracle was built on a simple belief: everyone deserves access to fast, accurate, and readable news — without paywalls, without bias, and without the noise.
             </p>
             <p style={{ fontSize: "16px", lineHeight: "1.8", color: "#444", margin: 0 }}>
               We combine the speed of modern publishing technology with the discipline of professional journalism to deliver breaking news in Sports, Finance, Politics and Technology — updated continuously, every single day.
@@ -152,7 +152,7 @@ export default function AboutPage() {
                 <p style={{ margin: "0 0 4px", fontSize: "20px", fontWeight: "900", color: "#111" }}>Sourav</p>
                 <p style={{ margin: "0 0 12px", fontSize: "13px", color: "#cc0000", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px" }}>Founder & Editor in Chief</p>
                 <p style={{ margin: 0, fontSize: "15px", color: "#444", lineHeight: "1.8" }}>
-                  Sourav is the founder and Editor in Chief of NewsOracle, a digital news platform delivering breaking news across sports, finance, politics and technology. With a passion for fast, accurate and accessible journalism, he built NewsOracle to give readers around the world instant access to the stories that matter. He oversees all editorial decisions, content quality standards, and the direction of the publication.
+                  Sourav is the founder and Editor in Chief of NewsOracle, based in Toronto, Canada., a digital news platform delivering breaking news across sports, finance, politics and technology. With a passion for fast, accurate and accessible journalism, he built NewsOracle to give readers around the world instant access to the stories that matter. He oversees all editorial decisions, content quality standards, and the direction of the publication.
                 </p>
                 <p style={{ margin: "12px 0 0", fontSize: "13px", color: "#666" }}>
                   Contact: <a href="mailto:news.oracle@outlook.com" style={{ color: "#cc0000", textDecoration: "none" }}>news.oracle@outlook.com</a>
