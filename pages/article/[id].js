@@ -2,7 +2,7 @@ import Head from "next/head";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
-import { slugify, articlePath, articleUrl } from "../lib/slugify";
+import { slugify, articlePath, articleUrl } from "../../lib/slugify";
 
 function getImage(article) {
   if (article.image && !article.image.includes('source.unsplash')) return article.image;
