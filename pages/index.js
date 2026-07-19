@@ -1,8 +1,13 @@
+import { useEffect, useState } from "react";
 import Head from "next/head";
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
-import { slugify, articlePath, articleUrl } from "../lib/slugify";
+import { articlePath } from "../lib/slugify";
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_KEY
+);
 
 function getImage(article) {
   if (article.image && !article.image.includes('source.unsplash')) return article.image;
@@ -11,470 +16,331 @@ function getImage(article) {
     sports: "1461896836934-ffe607ba8211",
     crypto: "1579621970563-ebec7560ff3e",
     markets: "1444653614773-995cb1ef9efa",
-    technology: "1518770660439-4636190af475",
   };
   const key = keywords[article.category] || keywords.finance;
-  return `https://images.unsplash.com/photo-${key}?w=1200&q=80`;
-}
-
-function getReadTime(text) {
-  const words = text?.trim().split(/\s+/).length || 0;
-  return Math.ceil(words / 200);
+  return `https://images.unsplash.com/photo-${key}?w=800&q=80`;
 }
 
 function timeAgo(date) {
   const seconds = Math.floor((new Date() - new Date(date)) / 1000);
   if (seconds < 60) return "Just now";
-  if (seconds < 3600) return `${Math.floor(seconds / 60)} minutes ago`;
-  if (seconds < 86400) return `${Math.floor(seconds / 3600)} hours ago`;
-  return `${Math.floor(seconds / 86400)} days ago`;
+  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+  return `${Math.floor(seconds / 86400)}d ago`;
 }
 
-function formatViews(views) {
-  if (!views || views < 1) return "0 views";
-  if (views < 1000) return `${views} views`;
-  if (views < 10000) return `${(views / 1000).toFixed(1)}K views`;
-  if (views < 1000000) return `${Math.floor(views / 1000)}K views`;
-  return `${(views / 1000000).toFixed(1)}M views`;
-}
+export default function Home({ initialArticles, featuredSports, featuredFinance, featuredPolitics, featuredTechnology }) {
+  const [articles, setArticles] = useState(initialArticles || []);
+  const [filter, setFilter] = useState("all");
+  const [visible, setVisible] = useState(20);
+  const [searchQuery, setSearchQuery] = useState("");
 
-function cleanMetaDescription(summary) {
-  if (!summary) return "";
-  const firstPara = summary.split('\n\n')[0] || summary;
-  const clean = firstPara.replace(/^[A-Z\s]+ — /, '');
-  if (clean.length <= 160) return clean;
-  const truncated = clean.substring(0, 157);
-  const lastSpace = truncated.lastIndexOf(' ');
-  return truncated.substring(0, lastSpace) + '...';
-}
-
-function buildFaqSchema(article, paragraphs) {
-  const faqItems = [];
-  const firstPara = paragraphs[0] || '';
-  const cleanFirst = firstPara.replace(/^[A-Z\s]+ — /, '');
-  if (cleanFirst.length > 30) {
-    faqItems.push({
-      "@type": "Question",
-      "name": `What happened with ${article.tag || article.category}?`,
-      "acceptedAnswer": { "@type": "Answer", "text": cleanFirst }
-    });
-  }
-  const whyPara = paragraphs.find(p => p.toLowerCase().startsWith('why this matters') || p.toLowerCase().startsWith('why it matters'));
-  if (whyPara) {
-    faqItems.push({
-      "@type": "Question",
-      "name": "Why does this matter?",
-      "acceptedAnswer": { "@type": "Answer", "text": whyPara }
-    });
-  }
-  if (article.prediction) {
-    faqItems.push({
-      "@type": "Question",
-      "name": "What happens next?",
-      "acceptedAnswer": { "@type": "Answer", "text": article.prediction }
-    });
-  }
-  if (faqItems.length === 0) return null;
-  return {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    "mainEntity": faqItems
-  };
-}
-
-export default function ArticlePage({ article, related, crossCategoryArticles }) {
-  const [scrollProgress, setScrollProgress] = useState(0);
-  const [showBackToTop, setShowBackToTop] = useState(false);
-
-  useEffect(() => {
-    function handleScroll() {
-      const scrollTop = window.scrollY;
-      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-      const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
-      setScrollProgress(progress);
-      setShowBackToTop(scrollTop > 600);
-    }
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  if (!article) return (
-    <>
-      <Head>
-        <title>Article Not Found — NewsOracle</title>
-        <meta name="robots" content="noindex" />
-      </Head>
-      <div style={{ fontFamily: "Arial, sans-serif", background: "#f4f4f4", minHeight: "100vh" }}>
-        <div style={{ background: "#cc0000", color: "#fff", padding: "6px 0", fontSize: "12px" }}>
-          <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 20px" }}>
-            <span>{new Date().toLocaleDateString("en-GB", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</span>
-          </div>
-        </div>
-        <header style={{ background: "#fff", borderBottom: "3px solid #cc0000", padding: "16px 0" }}>
-          <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 20px" }}>
-            <Link href="/" style={{ textDecoration: "none" }}>
-              <h1 style={{ fontSize: "36px", fontWeight: "900", margin: 0, color: "#111", letterSpacing: "-1px" }}>
-                NEWS<span style={{ color: "#cc0000" }}>ORACLE</span>
-              </h1>
-            </Link>
-          </div>
-        </header>
-        <div style={{ maxWidth: "600px", margin: "0 auto", padding: "80px 20px", textAlign: "center" }}>
-          <div style={{ fontSize: "72px", fontWeight: "900", color: "#cc0000", marginBottom: "16px" }}>404</div>
-          <h2 style={{ fontSize: "24px", fontWeight: "700", color: "#111", margin: "0 0 12px" }}>Article Not Found</h2>
-          <p style={{ fontSize: "16px", color: "#666", lineHeight: "1.6", margin: "0 0 32px" }}>The article you are looking for may have been moved or is no longer available.</p>
-          <Link href="/" style={{ background: "#cc0000", color: "#fff", padding: "12px 32px", fontSize: "14px", fontWeight: "700", textDecoration: "none", display: "inline-block", textTransform: "uppercase", letterSpacing: "1px" }}>Back to Homepage</Link>
-        </div>
-        <footer style={{ background: "#111", color: "#999", padding: "40px 20px", marginTop: "40px" }}>
-          <div style={{ maxWidth: "1200px", margin: "0 auto", textAlign: "center" }}>
-            <h2 style={{ color: "#fff", margin: "0 0 10px", fontSize: "24px", fontWeight: "900" }}>NEWS<span style={{ color: "#cc0000" }}>ORACLE</span></h2>
-            <p style={{ margin: 0, fontSize: "12px" }}>2026 NewsOracle. All content is for informational purposes only.</p>
-          </div>
-        </footer>
-      </div>
-    </>
-  );
-
-  const isEvergreen = article.evergreen === true;
-  const paragraphs = article.summary?.split('\n\n') || [];
-  const metaDesc = article.meta_description || cleanMetaDescription(article.summary);
-  const canonicalUrl = articleUrl(article);
-  const imageUrl = getImage(article);
-  const wordCount = article.summary?.trim().split(/\s+/).length || 0;
-  const faqSchema = buildFaqSchema(article, paragraphs);
-  const isBreaking = !isEvergreen && (new Date() - new Date(article.created_at)) < 7200000;
-  const bodyParagraphs = isEvergreen ? paragraphs : paragraphs.slice(3);
-  const readNextArticles = related.slice(0, 2);
-  const sidebarArticles = related.slice(0, 3);
+  const categoryFiltered = filter === "all" ? articles : articles.filter(a => a.category === filter);
+  const filtered = searchQuery.trim()
+    ? categoryFiltered.filter(a =>
+        a.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        a.summary?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        a.tag?.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : categoryFiltered;
+  const visibleArticles = filtered.slice(0, visible);
+  const hasMore = filtered.length > visible;
 
   return (
     <>
       <Head>
-        <title>{`${article.title} — NewsOracle`}</title>
-        <meta name="description" content={metaDesc} />
-        <link rel="canonical" href={canonicalUrl} />
-        <meta property="og:title" content={article.title} />
-        <meta property="og:description" content={metaDesc} />
-        <meta property="og:image" content={imageUrl} />
-        <meta property="og:url" content={canonicalUrl} />
-        <meta property="og:type" content="article" />
+        <title>NewsOracle — Sports, Finance, Technology & Politics News</title>
+        <meta name="description" content="NewsOracle delivers the latest sports, finance, technology and politics news with in-depth analysis and market predictions. Updated around the clock." />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="robots" content="index, follow, max-image-preview:large" />
+        <meta property="og:title" content="NewsOracle — Sports, Finance, Technology & Politics News" />
+        <meta property="og:description" content="Latest sports, finance, technology and politics news with expert analysis and market predictions. Updated around the clock." />
+        <meta property="og:image" content="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=1200&q=80" />
+        <meta property="og:url" content="https://www.newsoracle.online" />
+        <meta property="og:type" content="website" />
         <meta property="og:site_name" content="NewsOracle" />
-        <meta property="article:published_time" content={article.created_at} />
-        <meta property="article:section" content={article.category} />
-        {article.tag && <meta property="article:tag" content={article.tag} />}
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={article.title} />
-        <meta name="twitter:description" content={metaDesc} />
-        <meta name="twitter:image" content={imageUrl} />
-        <meta name="robots" content="max-image-preview:large" />
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": isEvergreen ? "Article" : "NewsArticle",
-          "headline": article.title,
-          "description": metaDesc,
-          "image": imageUrl,
-          "url": canonicalUrl,
-          "wordCount": wordCount,
-          "articleSection": article.category,
-          "keywords": article.tag || article.category,
-          "mainEntityOfPage": { "@type": "WebPage", "@id": canonicalUrl },
-          "datePublished": article.created_at,
-          "dateModified": article.created_at,
-          "author": { "@type": "Organization", "name": article.author || "NewsOracle Editorial", "url": "https://www.newsoracle.online/about" },
-          "publisher": { "@type": "Organization", "name": "NewsOracle", "url": "https://www.newsoracle.online", "logo": { "@type": "ImageObject", "url": "https://www.newsoracle.online/favicon.ico" } }
-        })}} />
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "BreadcrumbList",
-          "itemListElement": [
-            { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.newsoracle.online" },
-            { "@type": "ListItem", "position": 2, "name": isEvergreen ? "Guides" : article.category?.charAt(0).toUpperCase() + article.category?.slice(1), "item": isEvergreen ? `https://www.newsoracle.online/guides/${article.category}` : `https://www.newsoracle.online/category/${article.category}` },
-            { "@type": "ListItem", "position": 3, "name": article.title }
-          ]
-        })}} />
-        {faqSchema && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />}
+        <meta name="twitter:title" content="NewsOracle — Sports, Finance, Technology & Politics News" />
+        <meta name="twitter:description" content="Latest sports, finance, technology and politics news with expert analysis and market predictions." />
+        <meta name="twitter:image" content="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=1200&q=80" />
+        <link rel="canonical" href="https://www.newsoracle.online" />
+        <meta name="msvalidate.01" content="4FDF3AAFAD2785FF5FD15E9D2AF5EC67" />
+<meta name="p:domain_verify" content="9f32938df0bf0a235828edcb7c2c0048" />
       </Head>
 
-      <div style={{ position: "fixed", top: 0, left: 0, width: `${scrollProgress}%`, height: "3px", background: isEvergreen ? "#2e7d32" : "#cc0000", zIndex: 9999, transition: "width 0.1s" }} />
+      <div style={{ fontFamily: "'Arial', sans-serif", background: "#f4f4f4", minHeight: "100vh" }}>
 
-      <div style={{ fontFamily: "Arial, sans-serif", background: "#f4f4f4", minHeight: "100vh" }}>
-
-        <div style={{ background: isEvergreen ? "#2e7d32" : "#cc0000", color: "#fff", padding: "6px 0", fontSize: "12px" }}>
-          <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 20px", display: "flex", justifyContent: "space-between" }}>
-            <span>{new Date().toLocaleDateString("en-GB", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</span>
-            <span className="top-bar-right">Sports · Finance · Markets · Analysis</span>
+        {/* Breaking News Ticker */}
+        <div style={{ background: "#cc0000", color: "#fff", padding: "8px 0", overflow: "hidden" }}>
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <span style={{ background: "#fff", color: "#cc0000", fontWeight: "900", fontSize: "11px", padding: "4px 12px", whiteSpace: "nowrap", marginRight: "16px", letterSpacing: "1px" }}>
+              BREAKING
+            </span>
+            <div style={{ overflow: "hidden", whiteSpace: "nowrap" }}>
+              <span style={{ display: "inline-block", animation: "ticker 30s linear infinite", fontSize: "13px", fontWeight: "500" }}>
+                {articles.slice(0, 5).map((a) => (
+                  <span key={a.id}>
+                    <Link href={articlePath(a)} style={{ color: "#fff", textDecoration: "none" }}>
+                      {a.title}
+                    </Link>
+                    <span style={{ margin: "0 32px", opacity: 0.5 }}>●</span>
+                  </span>
+                ))}
+              </span>
+            </div>
           </div>
         </div>
 
-        <header style={{ background: "#fff", borderBottom: `3px solid ${isEvergreen ? "#2e7d32" : "#cc0000"}`, padding: "16px 0" }}>
-          <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <Link href="/" style={{ textDecoration: "none" }}>
-              <h1 style={{ fontSize: "36px", fontWeight: "900", margin: 0, color: "#111", letterSpacing: "-1px" }}>NEWS<span style={{ color: "#cc0000" }}>ORACLE</span></h1>
-            </Link>
-            <nav style={{ display: "flex", gap: "20px" }}>
-              <Link href="/category/sports" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600", textTransform: "uppercase" }}>Sports</Link>
-              <Link href="/category/finance" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600", textTransform: "uppercase" }}>Finance</Link>
-              <Link href="/category/politics" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600", textTransform: "uppercase" }}>Politics</Link>
-              <Link href="/category/technology" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600", textTransform: "uppercase" }}>Technology</Link>
-              <Link href="/guides" style={{ color: "#2e7d32", textDecoration: "none", fontSize: "13px", fontWeight: "700", textTransform: "uppercase" }}>Guides</Link>
-            </nav>
+        <style>{`
+          @keyframes ticker {
+            0% { transform: translateX(100vw); }
+            100% { transform: translateX(-100%); }
+          }
+          @media (max-width: 600px) {
+            .desktop-nav { display: none !important; }
+            .header-inner { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; }
+            .logo h1 { font-size: 28px !important; }
+            .logo p { font-size: 9px !important; }
+            .mobile-filters { display: flex !important; }
+            .top-bar-right { display: none !important; }
+            .featured-grid { grid-template-columns: 1fr !important; }
+          }
+          .mobile-filters { display: none; gap: 6px; flex-wrap: wrap; }
+        `}</style>
+
+        {/* Top Bar */}
+        <div style={{ background: "#cc0000", color: "#fff", padding: "6px 0", fontSize: "12px" }}>
+          <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 20px", display: "flex", justifyContent: "space-between" }}>
+            <span>{new Date().toLocaleDateString("en-GB", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</span>
+            <span className="top-bar-right">Sports · Finance · Markets · Politics · Analysis</span>
+          </div>
+        </div>
+
+        {/* Header */}
+        <header style={{ background: "#fff", borderBottom: "3px solid #cc0000" }}>
+          {/* Row 1 — Logo + Utility Links */}
+          <div style={{ borderBottom: "1px solid #eee", padding: "12px 0" }}>
+            <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div>
+                <h1 style={{ fontSize: "42px", fontWeight: "900", margin: 0, color: "#111", letterSpacing: "-1px" }}>
+                  NEWS<span style={{ color: "#cc0000" }}>ORACLE</span>
+                </h1>
+                <p style={{ margin: "2px 0 0", fontSize: "11px", color: "#999", letterSpacing: "3px", textTransform: "uppercase" }}>
+                  Sports · Finance · Politics · Intelligence
+                </p>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "24px" }}>
+                <input
+                  type="text"
+                  placeholder="🔍 Search news..."
+                  value={searchQuery}
+                  onChange={e => { setSearchQuery(e.target.value); setVisible(20); }}
+                  style={{ padding: "8px 16px", fontSize: "13px", border: "1px solid #ddd", outline: "none", width: "220px", boxSizing: "border-box" }}
+                />
+                <div className="utility-nav" style={{ display: "flex", gap: "20px" }}>
+                  <Link href="/about" style={{ color: "#666", textDecoration: "none", fontSize: "13px" }}>About</Link>
+                  <Link href="/contact" style={{ color: "#666", textDecoration: "none", fontSize: "13px" }}>Contact</Link>
+                </div>
+              </div>
+            </div>
+          </div>
+          {/* Row 2 — Category Nav */}
+          <div className="category-nav-row" style={{ background: "#fff" }}>
+            <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 20px", display: "flex", alignItems: "center", gap: "0" }}>
+              {[
+                { label: "All News", value: "all", href: null },
+                { label: "Sports", value: "sports", href: "/category/sports" },
+                { label: "Finance", value: "finance", href: "/category/finance" },
+                { label: "Politics", value: "politics", href: "/category/politics" },
+                { label: "Technology", value: "technology", href: "/category/technology" },
+              ].map(item => (
+                item.href ? (
+                  <Link key={item.value} href={item.href} style={{ textDecoration: "none" }}>
+                    <div style={{
+                      padding: "14px 24px",
+                      fontSize: "13px",
+                      fontWeight: "700",
+                      textTransform: "uppercase",
+                      letterSpacing: "1px",
+                      color: "#333",
+                      borderBottom: "3px solid transparent",
+                      cursor: "pointer",
+                      transition: "all 0.2s",
+                    }}
+                      onMouseEnter={e => { e.currentTarget.style.color = "#cc0000"; e.currentTarget.style.borderBottomColor = "#cc0000"; }}
+                      onMouseLeave={e => { e.currentTarget.style.color = "#333"; e.currentTarget.style.borderBottomColor = "transparent"; }}
+                    >
+                      {item.label}
+                    </div>
+                  </Link>
+                ) : (
+                  <div key={item.value}
+                    onClick={() => { setFilter(item.value); setVisible(20); }}
+                    style={{
+                      padding: "14px 24px",
+                      fontSize: "13px",
+                      fontWeight: "700",
+                      textTransform: "uppercase",
+                      letterSpacing: "1px",
+                      color: filter === item.value ? "#cc0000" : "#333",
+                      borderBottom: filter === item.value ? "3px solid #cc0000" : "3px solid transparent",
+                      cursor: "pointer",
+                    }}
+                  >
+                    {item.label}
+                  </div>
+                )
+              ))}
+            </div>
+          </div>
+          {/* Mobile filters */}
+          <div className="mobile-filters" style={{ padding: "8px 20px", borderTop: "1px solid #eee" }}>
+            {["all", "sports", "finance", "politics", "technology"].map(cat => (
+              <button key={cat} onClick={() => { setFilter(cat); setVisible(20); }} style={{ padding: "6px 14px", background: filter === cat ? "#cc0000" : "transparent", color: filter === cat ? "#fff" : "#333", border: "1px solid #ddd", cursor: "pointer", fontSize: "12px", fontWeight: "600", textTransform: "uppercase" }}>
+                {cat}
+              </button>
+            ))}
           </div>
         </header>
 
-        <style>{`
-          @media (max-width: 600px) {
-            nav { display: none !important; }
-            header h1 { font-size: 28px !important; }
-            .article-box { padding: 16px !important; }
-            .article-layout { grid-template-columns: 1fr !important; }
-            .top-bar-right { display: none !important; }
-            .cross-category-grid { grid-template-columns: 1fr !important; }
-          }
-          @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
-        `}</style>
-
-        <div className="article-layout" style={{ maxWidth: "1200px", margin: "0 auto", padding: "32px 20px", display: "grid", gridTemplateColumns: "1fr 320px", gap: "32px" }}>
-
-          <article className="article-box" style={{ background: "#fff", padding: "40px" }}>
-
-            <div style={{ marginBottom: "20px" }}>
-              <Link href="/" style={{ color: "#cc0000", textDecoration: "none", fontSize: "13px", fontWeight: "600" }}>Home</Link>
-              <span style={{ color: "#999", margin: "0 8px" }}>›</span>
-              {isEvergreen ? (
+        {/* Main Content */}
+        <main style={{ maxWidth: "1200px", margin: "0 auto", padding: "24px 20px" }}>
+          {articles.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "80px", color: "#999" }}>
+              <p style={{ fontSize: "18px" }}>No articles yet. Check back soon.</p>
+            </div>
+          ) : filtered.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "80px", color: "#999" }}>
+              <p style={{ fontSize: "18px" }}>No articles found for "{searchQuery}".</p>
+            </div>
+          ) : (
+            <>
+              {/* Featured Stories — 3 cards, one per category */}
+              {filter === "all" && !searchQuery.trim() && (
                 <>
-                  <Link href="/guides" style={{ color: "#999", textDecoration: "none", fontSize: "13px" }}>Guides</Link>
-                  <span style={{ color: "#999", margin: "0 8px" }}>›</span>
-                  <Link href={`/guides/${article.category}`} style={{ color: "#999", textDecoration: "none", fontSize: "13px", textTransform: "capitalize" }}>{article.category}</Link>
-                </>
-              ) : (
-                <Link href={`/category/${article.category}`} style={{ color: "#999", textDecoration: "none", fontSize: "13px", textTransform: "capitalize" }}>{article.category}</Link>
-              )}
-            </div>
-
-            <div style={{ marginBottom: "16px", display: "flex", gap: "8px", flexWrap: "wrap" }}>
-              {isEvergreen && <span style={{ background: "#2e7d32", color: "#fff", padding: "4px 12px", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px" }}>GUIDE</span>}
-              {isBreaking && <span style={{ background: "#ff0000", color: "#fff", padding: "4px 12px", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px", animation: "pulse 2s infinite" }}>BREAKING</span>}
-              <span style={{ background: isEvergreen ? "#e8f5e9" : "#cc0000", color: isEvergreen ? "#2e7d32" : "#fff", padding: "4px 12px", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px" }}>{article.category}</span>
-              {article.tag && <span style={{ background: "#f0f0f0", color: "#555", padding: "4px 12px", fontSize: "11px", fontWeight: "600", textTransform: "uppercase" }}>{article.tag}</span>}
-            </div>
-
-            <h1 style={{ fontSize: "34px", fontWeight: "900", lineHeight: "1.2", margin: "0 0 20px", color: "#111" }}>{article.title}</h1>
-
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "20px", padding: "14px 0", borderTop: "1px solid #eee", borderBottom: "1px solid #eee", marginBottom: "28px" }}>
-              <span style={{ fontSize: "13px", color: "#666" }}>By <strong>{article.author || 'NewsOracle Editorial'}</strong></span>
-              {isEvergreen ? (
-                <span style={{ fontSize: "13px", color: "#2e7d32", fontWeight: "600" }}>Updated regularly</span>
-              ) : (
-                <>
-                  <span style={{ fontSize: "13px", color: "#999" }}>{new Date(article.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}</span>
-                  <span style={{ fontSize: "13px", color: "#999" }}>{new Date(article.created_at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })} GMT</span>
-                  <span style={{ fontSize: "13px", color: "#cc0000", fontWeight: "600" }}>Updated {timeAgo(article.created_at)}</span>
-                </>
-              )}
-              <span style={{ fontSize: "13px", color: "#999" }}>{getReadTime(article.summary)} min read</span>
-              <span style={{ fontSize: "13px", color: "#666" }}>{formatViews(article.views)}</span>
-            </div>
-
-            {!isEvergreen && article.source && (
-              <div style={{ marginBottom: "20px" }}>
-                <span style={{ fontSize: "12px", color: "#666", fontStyle: "italic" }}>Based on reporting from <strong>{article.source}</strong></span>
-              </div>
-            )}
-
-            <img src={imageUrl} alt={article.title} style={{ width: "100%", height: "420px", objectFit: "cover", marginBottom: "28px", display: "block" }} />
-
-            <div style={{ background: isEvergreen ? "#f1f8e9" : "#fff8f8", border: `1px solid ${isEvergreen ? "#c5e1a5" : "#ffcccc"}`, borderLeft: `4px solid ${isEvergreen ? "#2e7d32" : "#cc0000"}`, padding: "20px 24px", marginBottom: "28px" }}>
-              <h3 style={{ color: isEvergreen ? "#2e7d32" : "#cc0000", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 16px" }}>Key Points</h3>
-              <ul style={{ margin: 0, padding: "0 0 0 18px" }}>
-                {(article.key_points ? article.key_points.split('\n').filter(p => p.trim()) : paragraphs.slice(0, 3)).map((point, i) => (
-                  <li key={i} style={{ fontSize: "14px", color: "#333", lineHeight: "1.7", marginBottom: "12px" }}>
-                    {point.replace(/^[-•]\s*/, '').trim()}
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div style={{ fontSize: "17px", lineHeight: "1.85", color: "#333", fontFamily: "Georgia, serif" }}>
-              {bodyParagraphs.map((para, i) => {
-                const isWhy = para.toLowerCase().startsWith('why this matters') || para.toLowerCase().startsWith('why it matters');
-                const isSubheading = para.startsWith('## ');
-                const elements = [];
-
-                if (isSubheading) {
-                  elements.push(
-                    <h2 key={`h-${i}`} style={{ fontSize: "22px", fontWeight: "800", color: "#111", margin: "32px 0 16px", lineHeight: "1.3", fontFamily: "Arial, sans-serif" }}>
-                      {para.replace(/^## /, '')}
-                    </h2>
-                  );
-                } else if (isWhy) {
-                  elements.push(
-                    <div key={`w-${i}`} style={{ background: "#f0f7ff", borderLeft: "4px solid #1565c0", padding: "16px 20px", margin: "28px 0", borderRadius: "2px" }}>
-                      <p style={{ margin: 0, fontSize: "16px", lineHeight: "1.8", color: "#1a1a1a", fontStyle: "italic", fontFamily: "Georgia, serif" }}>{para}</p>
-                    </div>
-                  );
-                } else {
-                  elements.push(<p key={`p-${i}`} style={{ marginTop: 0, marginBottom: "20px" }}>{para}</p>);
-                }
-
-                if (!isEvergreen && i === 3 && related.length > 0) {
-                  const contextArticle = related[0];
-                  elements.push(
-                    <p key="context-link" style={{ marginTop: 0, marginBottom: "20px" }}>
-                      <strong>Related coverage:</strong>{' '}
-                      <Link href={articlePath(contextArticle)} style={{ color: "#cc0000", textDecoration: "none", fontWeight: "600" }}>{contextArticle.title}</Link>
-                    </p>
-                  );
-                }
-
-                if (!isEvergreen && i === 1 && readNextArticles.length >= 2) {
-                  elements.push(
-                    <div key="read-next" style={{ background: "#f8f9fa", border: "1px solid #eee", padding: "20px", margin: "28px 0" }}>
-                      <h4 style={{ fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "2px", color: "#cc0000", margin: "0 0 16px" }}>Read Next</h4>
-                      {readNextArticles.map(rel => (
-                        <Link key={rel.id} href={articlePath(rel)} style={{ textDecoration: "none" }}>
-                          <div style={{ display: "flex", gap: "12px", marginBottom: "12px", cursor: "pointer" }}>
-                            <img loading="lazy" src={getImage(rel)} alt={rel.title} style={{ width: "80px", height: "56px", objectFit: "cover", flexShrink: 0 }} />
-                            <div>
-                              <p style={{ margin: 0, fontSize: "14px", fontWeight: "600", color: "#111", lineHeight: "1.4" }}>{rel.title}</p>
-                              <p style={{ margin: "4px 0 0", fontSize: "11px", color: "#999" }}>{timeAgo(rel.created_at)}</p>
-                            </div>
-                          </div>
-                        </Link>
-                      ))}
-                    </div>
-                  );
-                }
-
-                return elements;
-              })}
-            </div>
-
-            {!isEvergreen && article.category === 'finance' && article.prediction && (
-              <div style={{ background: "#f8f9fa", borderLeft: "4px solid #cc0000", padding: "24px", margin: "32px 0" }}>
-                <h3 style={{ color: "#cc0000", fontSize: "12px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 12px" }}>Market Outlook</h3>
-                <p style={{ fontSize: "16px", lineHeight: "1.7", color: "#333", margin: "0 0 16px", fontFamily: "Georgia, serif" }}>{article.prediction}</p>
-                <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", marginTop: "12px" }}>
-                  {article.sentiment && <span style={{ display: "inline-block", background: article.sentiment === "positive" ? "#e8f5e9" : article.sentiment === "negative" ? "#ffebee" : "#f5f5f5", color: article.sentiment === "positive" ? "#2e7d32" : article.sentiment === "negative" ? "#c62828" : "#666", padding: "6px 16px", fontSize: "12px", fontWeight: "600", textTransform: "uppercase", borderRadius: "2px" }}>Sentiment: {article.sentiment}</span>}
-                  {article.confidence && <span style={{ display: "inline-block", background: "#e3f2fd", color: "#1565c0", padding: "6px 16px", fontSize: "12px", fontWeight: "600", borderRadius: "2px" }}>Analyst Confidence: {article.confidence}%</span>}
-                </div>
-              </div>
-            )}
-            {!isEvergreen && article.category === 'politics' && article.prediction && (
-              <div style={{ background: "#f8f9fa", borderLeft: "4px solid #2e7d32", padding: "24px", margin: "32px 0" }}>
-                <h3 style={{ color: "#2e7d32", fontSize: "12px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 12px" }}>What Happens Next</h3>
-                <p style={{ fontSize: "16px", lineHeight: "1.7", color: "#333", margin: 0, fontFamily: "Georgia, serif" }}>{article.prediction}</p>
-              </div>
-            )}
-            {!isEvergreen && article.category === 'technology' && article.prediction && (
-              <div style={{ background: "#f8f9fa", borderLeft: "4px solid #7b1fa2", padding: "24px", margin: "32px 0" }}>
-                <h3 style={{ color: "#7b1fa2", fontSize: "12px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 12px" }}>What This Means</h3>
-                <p style={{ fontSize: "16px", lineHeight: "1.7", color: "#333", margin: 0, fontFamily: "Georgia, serif" }}>{article.prediction}</p>
-              </div>
-            )}
-
-            <div style={{ padding: "12px 0", borderTop: "1px solid #eee", marginTop: "24px" }}>
-              <p style={{ margin: 0, fontSize: "12px", color: "#999", lineHeight: "1.6" }}>
-                <strong>Sources:</strong> {article.source ? `Based on reporting from ${article.source} and other international news sources.` : 'Based on reporting from international news sources via Google News and leading global publications.'}
-              </p>
-            </div>
-
-            <div style={{ margin: "32px 0", paddingTop: "24px", borderTop: "1px solid #eee" }}>
-              <p style={{ fontSize: "13px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px", color: "#666", marginBottom: "12px" }}>Share this article</p>
-              <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-                <a href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(article.title)}&url=${encodeURIComponent(canonicalUrl)}`} target="_blank" rel="noopener noreferrer" style={{ background: "#000", color: "#fff", padding: "10px 20px", fontSize: "13px", fontWeight: "600", textDecoration: "none", display: "inline-block" }}>X Twitter</a>
-                <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(canonicalUrl)}`} target="_blank" rel="noopener noreferrer" style={{ background: "#1877f2", color: "#fff", padding: "10px 20px", fontSize: "13px", fontWeight: "600", textDecoration: "none", display: "inline-block" }}>Facebook</a>
-                <a href={`https://wa.me/?text=${encodeURIComponent(article.title + ' ' + canonicalUrl)}`} target="_blank" rel="noopener noreferrer" style={{ background: "#25d366", color: "#fff", padding: "10px 20px", fontSize: "13px", fontWeight: "600", textDecoration: "none", display: "inline-block" }}>WhatsApp</a>
-                <button onClick={() => window.print()} style={{ background: "#666", color: "#fff", padding: "10px 20px", fontSize: "13px", fontWeight: "600", border: "none", cursor: "pointer", display: "inline-block" }}>Print</button>
-              </div>
-            </div>
-
-            <div style={{ background: "#fffbf0", border: "1px solid #ffe082", padding: "16px", marginTop: "32px" }}>
-              <p style={{ margin: 0, fontSize: "12px", color: "#888", lineHeight: "1.6" }}><strong>Disclaimer:</strong> {article.disclaimer}</p>
-            </div>
-
-            <div style={{ background: "#f8f9fa", border: "1px solid #eee", padding: "20px", marginTop: "32px", display: "flex", gap: "16px", alignItems: "flex-start" }}>
-              <div style={{ width: "48px", height: "48px", background: "#cc0000", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <span style={{ color: "#fff", fontWeight: "900", fontSize: "18px" }}>N</span>
-              </div>
-              <div>
-                <Link href={`/author/${(article.author || 'NewsOracle Editorial').toLowerCase().replace(/\s+/g, '-')}`} style={{ textDecoration: "none" }}>
-                  <p style={{ margin: "0 0 6px", fontSize: "14px", fontWeight: "700", color: "#cc0000" }}>{article.author || 'NewsOracle Editorial'}</p>
-                </Link>
-                <p style={{ margin: 0, fontSize: "13px", color: "#666", lineHeight: "1.6" }}>
-                  {article.category === 'sports' && 'The NewsOracle Sports Desk covers breaking sports news from the NFL, NBA, Premier League, UFC, tennis, cricket and major global sporting events.'}
-                  {article.category === 'finance' && 'The NewsOracle Markets Desk covers stock markets, cryptocurrency, economic policy and breaking financial news from Wall Street and global exchanges.'}
-                  {article.category === 'politics' && 'The NewsOracle Politics Desk covers US politics, Congress, the White House, Supreme Court, global elections and international relations.'}
-                  {article.category === 'technology' && 'The NewsOracle Tech Desk covers breaking technology news including AI, Apple, Google, Tesla, Meta, OpenAI and product launches.'}
-                  {!['sports', 'finance', 'politics', 'technology'].includes(article.category) && 'NewsOracle is a digital news platform delivering breaking news and analysis in sports, finance, crypto and politics.'}
-                </p>
-              </div>
-            </div>
-
-            {crossCategoryArticles.length > 0 && (
-              <div style={{ marginTop: "32px", paddingTop: "24px", borderTop: "1px solid #eee" }}>
-                <h3 style={{ fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "2px", color: "#cc0000", margin: "0 0 16px" }}>More from NewsOracle</h3>
-                <div className="cross-category-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px" }}>
-                  {crossCategoryArticles.map(rel => (
-                    <Link key={rel.id} href={articlePath(rel)} style={{ textDecoration: "none" }}>
-                      <div style={{ cursor: "pointer" }}>
-                        <img loading="lazy" src={getImage(rel)} alt={rel.title} style={{ width: "100%", height: "120px", objectFit: "cover", display: "block", marginBottom: "8px" }} />
-                        <span style={{ fontSize: "10px", color: "#cc0000", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px" }}>{rel.category}</span>
-                        <p style={{ margin: "4px 0 0", fontSize: "13px", fontWeight: "600", color: "#111", lineHeight: "1.4" }}>{rel.title}</p>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            )}
-
-          </article>
-
-          <aside>
-            {isEvergreen && (
-              <div style={{ background: "#f1f8e9", border: "1px solid #c5e1a5", borderLeft: "4px solid #2e7d32", padding: "20px", marginBottom: "20px" }}>
-                <h3 style={{ fontSize: "12px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px", color: "#2e7d32", margin: "0 0 8px" }}>Evergreen Guide</h3>
-                <p style={{ margin: "0 0 12px", fontSize: "13px", color: "#555", lineHeight: "1.5" }}>This guide is regularly updated and covers the complete topic in depth.</p>
-                <Link href="/guides" style={{ color: "#2e7d32", textDecoration: "none", fontSize: "13px", fontWeight: "600" }}>Browse all guides</Link>
-              </div>
-            )}
-            <div style={{ background: "#fff", padding: "24px", marginBottom: "20px" }}>
-              <h3 style={{ fontSize: "14px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px", color: "#111", margin: "0 0 16px", paddingBottom: "10px", borderBottom: "2px solid #cc0000" }}>Related Stories</h3>
-              {sidebarArticles.map(rel => (
-                <Link key={rel.id} href={articlePath(rel)} style={{ textDecoration: "none" }}>
-                  <div style={{ display: "flex", gap: "12px", marginBottom: "16px", paddingBottom: "16px", borderBottom: "1px solid #f0f0f0", cursor: "pointer" }}>
-                    <img loading="lazy" src={getImage(rel)} alt={rel.title} style={{ width: "80px", height: "60px", objectFit: "cover", flexShrink: 0 }} />
-                    <div>
-                      <p style={{ margin: 0, fontSize: "13px", fontWeight: "600", color: "#111", lineHeight: "1.4" }}>{rel.title}</p>
-                      <p style={{ margin: "4px 0 0", fontSize: "11px", color: "#999" }}>{new Date(rel.created_at).toLocaleDateString()}</p>
-                    </div>
+                  <div style={{ marginBottom: "12px" }}>
+                    <span style={{ fontSize: "11px", color: "#cc0000", fontWeight: "700", textTransform: "uppercase", letterSpacing: "2px" }}>Top Stories</span>
                   </div>
-                </Link>
-              ))}
-            </div>
-          </aside>
+                  <div className="featured-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "20px", marginBottom: "40px" }}>
+                    {[featuredSports, featuredFinance, featuredPolitics, featuredTechnology].filter(Boolean).map(article => (
+                      <Link key={article.id} href={articlePath(article)} style={{ textDecoration: "none" }}>
+                        <div style={{ background: "#fff", boxShadow: "0 2px 8px rgba(0,0,0,0.08)", cursor: "pointer", height: "100%" }}>
+                          <div style={{ position: "relative", overflow: "hidden" }}>
+                            <img
+                              src={getImage(article)}
+                              alt={article.title}
+                              style={{ width: "100%", height: "200px", objectFit: "cover", display: "block" }}
+                            />
+                            <span style={{ position: "absolute", top: "12px", left: "12px", background: "#cc0000", color: "#fff", padding: "3px 10px", fontSize: "10px", fontWeight: "700", letterSpacing: "1px", textTransform: "uppercase" }}>
+                              {article.category}
+                            </span>
+                          </div>
+                          <div style={{ padding: "16px" }}>
+                            <h2 style={{ fontSize: "16px", fontWeight: "800", lineHeight: "1.3", margin: "0 0 10px", color: "#111" }}>
+                              {article.title}
+                            </h2>
+                            <p style={{ color: "#666", fontSize: "13px", lineHeight: "1.5", margin: "0 0 12px" }}>
+                              {article.summary?.substring(0, 100)}...
+                            </p>
+                            <span style={{ fontSize: "11px", color: "#999" }}>{timeAgo(article.created_at)}</span>
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                  <div style={{ borderBottom: "2px solid #cc0000", marginBottom: "24px", paddingBottom: "8px" }}>
+                    <span style={{ fontSize: "11px", color: "#cc0000", fontWeight: "700", textTransform: "uppercase", letterSpacing: "2px" }}>Latest News</span>
+                  </div>
+                </>
+              )}
 
-        </div>
+              {/* Article Grid */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "20px" }}>
+                {visibleArticles.map(article => (
+                  <Link key={article.id} href={articlePath(article)} style={{ textDecoration: "none" }}>
+                    <div style={{ background: "#fff", cursor: "pointer", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", transition: "transform 0.2s" }}
+                      onMouseEnter={e => e.currentTarget.style.transform = "translateY(-2px)"}
+                      onMouseLeave={e => e.currentTarget.style.transform = "translateY(0)"}
+                    >
+                      <div style={{ position: "relative", overflow: "hidden" }}>
+                        <img
+                          src={getImage(article)}
+                          alt={article.title}
+                          style={{ width: "100%", height: "180px", objectFit: "cover", display: "block" }}
+                        />
+                        <span style={{ position: "absolute", top: "10px", left: "10px", background: article.category === "finance" ? "#0052cc" : "#cc0000", color: "#fff", padding: "3px 8px", fontSize: "10px", fontWeight: "700", letterSpacing: "1px", textTransform: "uppercase" }}>
+                          {article.tag || article.category}
+                        </span>
+                      </div>
+                      <div style={{ padding: "16px" }}>
+                        <h3 style={{ fontSize: "15px", fontWeight: "700", lineHeight: "1.4", margin: "0 0 10px", color: "#111" }}>
+                          {article.title}
+                        </h3>
+                        <p style={{ color: "#777", fontSize: "13px", lineHeight: "1.5", margin: "0 0 12px" }}>
+                          {article.summary?.substring(0, 100)}...
+                        </p>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid #f0f0f0", paddingTop: "10px" }}>
+                          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                            {(new Date() - new Date(article.created_at)) < 7200000 && (
+                              <span style={{ background: "#ff0000", color: "#fff", padding: "2px 6px", fontSize: "9px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px" }}>BREAKING</span>
+                            )}
+                            <span style={{ fontSize: "11px", color: "#999" }}>{timeAgo(article.created_at)}</span>
+                            {article.views > 0 && <span style={{ fontSize: "11px", color: "#999" }}>{article.views >= 1000 ? `${Math.floor(article.views/1000)}K` : article.views} views</span>}
+                          </div>
+                          <span style={{ fontSize: "11px", color: "#cc0000", fontWeight: "600" }}>Read more →</span>
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
 
-        {showBackToTop && (
-          <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} style={{ position: "fixed", bottom: "30px", right: "30px", width: "48px", height: "48px", background: isEvergreen ? "#2e7d32" : "#cc0000", color: "#fff", border: "none", borderRadius: "50%", fontSize: "20px", fontWeight: "900", cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.2)", zIndex: 999, display: "flex", alignItems: "center", justifyContent: "center" }}>↑</button>
-        )}
+              {/* Load More Button */}
+              {hasMore && (
+                <div style={{ textAlign: "center", marginTop: "40px" }}>
+                  <button
+                    onClick={() => setVisible(v => v + 20)}
+                    style={{ background: "#cc0000", color: "#fff", border: "none", padding: "14px 40px", fontSize: "14px", fontWeight: "700", cursor: "pointer", letterSpacing: "1px", textTransform: "uppercase" }}
+                  >
+                    Load More
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+        </main>
 
+        
+
+        {/* Footer */}
         <footer style={{ background: "#111", color: "#999", padding: "40px 20px", marginTop: "40px" }}>
           <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
-            <div style={{ display: "flex", justifyContent: "center", gap: "16px", marginBottom: "16px", flexWrap: "wrap" }}>
-              <a href="https://t.me/NewsOracleOfficial" target="_blank" rel="noopener noreferrer" style={{ color: "#fff", fontSize: "13px", textDecoration: "none", background: "#0088cc", padding: "8px 16px" }}>Telegram</a>
-              <a href="https://www.facebook.com/profile.php?id=61591337781640" target="_blank" rel="noopener noreferrer" style={{ color: "#fff", fontSize: "13px", textDecoration: "none", background: "#1877f2", padding: "8px 16px" }}>Facebook</a>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #333", paddingBottom: "20px", marginBottom: "20px", flexWrap: "wrap", gap: "16px" }}>
+              <h2 style={{ color: "#fff", margin: 0, fontSize: "24px", fontWeight: "900" }}>
+                NEWS<span style={{ color: "#cc0000" }}>ORACLE</span>
+              </h2>
+              <div style={{ display: "flex", gap: "16px", justifyContent: "center" }}>
+                <a href="https://t.me/NewsOracleOfficial" target="_blank" rel="noopener noreferrer" style={{ color: "#fff", fontSize: "13px", textDecoration: "none", background: "#0088cc", padding: "8px 16px" }}>Telegram</a>
+                <a href="https://www.facebook.com/profile.php?id=61591337781640" target="_blank" rel="noopener noreferrer" style={{ color: "#fff", fontSize: "13px", textDecoration: "none", background: "#1877f2", padding: "8px 16px" }}>Facebook</a>
+              </div>
+              <div style={{ display: "flex", gap: "20px", flexWrap: "wrap" }}>
+                <Link href="/category/sports" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600" }}>Sports</Link>
+                  <Link href="/category/finance" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600" }}>Finance</Link>
+                  <Link href="/category/politics" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600" }}>Politics</Link>
+                  <Link href="/category/technology" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600" }}>Technology</Link>
+              </div>
             </div>
             <div style={{ display: "flex", justifyContent: "center", gap: "20px", marginBottom: "16px", flexWrap: "wrap" }}>
               <Link href="/about" style={{ color: "#999", textDecoration: "none", fontSize: "13px" }}>About Us</Link>
-              <Link href="/contact" style={{ color: "#999", textDecoration: "none", fontSize: "13px" }}>Contact</Link>
-              <Link href="/corrections" style={{ color: "#999", textDecoration: "none", fontSize: "13px" }}>Corrections</Link>
-              <Link href="/editorial-guidelines" style={{ color: "#999", textDecoration: "none", fontSize: "13px" }}>Editorial Guidelines</Link>
-              <Link href="/privacy-policy" style={{ color: "#999", textDecoration: "none", fontSize: "13px" }}>Privacy Policy</Link>
-              <Link href="/terms" style={{ color: "#999", textDecoration: "none", fontSize: "13px" }}>Terms of Service</Link>
+<Link href="/contact" style={{ color: "#999", textDecoration: "none", fontSize: "13px" }}>Contact</Link>
+<Link href="/corrections" style={{ color: "#999", textDecoration: "none", fontSize: "13px" }}>Corrections</Link>
+<Link href="/editorial-guidelines" style={{ color: "#999", textDecoration: "none", fontSize: "13px" }}>Editorial Guidelines</Link>
+<Link href="/privacy-policy" style={{ color: "#999", textDecoration: "none", fontSize: "13px" }}>Privacy Policy</Link>
+<Link href="/terms" style={{ color: "#999", textDecoration: "none", fontSize: "13px" }}>Terms of Service</Link>
             </div>
-            <h2 style={{ color: "#fff", margin: "0 0 10px", fontSize: "24px", fontWeight: "900", textAlign: "center" }}>NEWS<span style={{ color: "#cc0000" }}>ORACLE</span></h2>
-            <p style={{ margin: 0, fontSize: "12px", textAlign: "center" }}>2026 NewsOracle. All content is for informational purposes only and does not constitute financial or betting advice.</p>
+            <p style={{ margin: 0, fontSize: "12px", textAlign: "center" }}>
+              © 2026 NewsOracle. All content is for informational purposes only and does not constitute financial or betting advice. We use cookies to improve your experience.
+            </p>
           </div>
         </footer>
 
@@ -483,35 +349,33 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
   );
 }
 
-export async function getServerSideProps({ params }) {
+export async function getServerSideProps({ res }) {
+  res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=120');
   const supabaseServer = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
     process.env.NEXT_PUBLIC_SUPABASE_KEY
   );
 
-  const rawId = params.id;
-  const numericId = parseInt(rawId.split('-')[0], 10);
+  const { data } = await supabaseServer
+    .from("articles")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(40);
 
-  if (isNaN(numericId)) return { notFound: true };
+  const articles = data || [];
 
-  const { data: article } = await supabaseServer.from("articles").select("*").eq("id", numericId).single();
-  if (!article) return { notFound: true };
-
-  const expectedSlug = `${article.id}-${slugify(article.title)}`;
-  if (rawId !== expectedSlug) {
-    return { redirect: { destination: `/article/${expectedSlug}`, permanent: true } };
-  }
-
-  await supabaseServer.from("articles").update({ views: (article.views || 0) + 1 }).eq("id", numericId);
-
-  const { data: related } = await supabaseServer.from("articles").select("*").eq("category", article.category).neq("id", article.id).order("created_at", { ascending: false }).limit(3);
-  const { data: crossCategory } = await supabaseServer.from("articles").select("*").neq("category", article.category).neq("id", article.id).order("created_at", { ascending: false }).limit(3);
+  const featuredSports = articles.find(a => a.category === "sports") || null;
+  const featuredFinance = articles.find(a => a.category === "finance") || null;
+  const featuredPolitics = articles.find(a => a.category === "politics") || null;
+  const featuredTechnology = articles.find(a => a.category === "technology") || null;
 
   return {
     props: {
-      article: { ...article, views: (article.views || 0) + 1 },
-      related: related || [],
-      crossCategoryArticles: crossCategory || [],
+      initialArticles: articles,
+      featuredSports,
+      featuredFinance,
+      featuredPolitics,
+      featuredTechnology,
     },
   };
 }
