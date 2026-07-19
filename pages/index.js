@@ -4,11 +4,6 @@ import { useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { slugify, articlePath, articleUrl } from "../lib/slugify";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_KEY
-);
-
 function getImage(article) {
   if (article.image && !article.image.includes('source.unsplash')) return article.image;
   const keywords = {
@@ -32,17 +27,22 @@ function timeAgo(date) {
 }
 
 function formatViews(views) {
-  if (!views || views < 1) return "0 views";
+  if (!views || views < 1) return "";
   if (views < 1000) return `${views} views`;
   if (views < 1000000) return `${Math.floor(views / 1000)}K views`;
   return `${(views / 1000000).toFixed(1)}M views`;
+}
+
+function getReadTime(summary) {
+  const words = summary?.trim().split(/\s+/).length || 0;
+  return Math.ceil(words / 200);
 }
 
 const CATEGORY_COLORS = {
   finance: "#0052cc",
   sports: "#cc0000",
   politics: "#2e7d32",
-  technology: "#7b1fa2",
+  technology: "#111111",
 };
 
 export default function Home({ articles, featuredArticle, evergreenArticles }) {
@@ -93,11 +93,11 @@ export default function Home({ articles, featuredArticle, evergreenArticles }) {
 
       <div style={{ fontFamily: "Arial, sans-serif", background: "#f4f4f4", minHeight: "100vh" }}>
 
-        {/* Top Bar */}
+        {/* Top Bar — removed "Updated Every 2 Hours" */}
         <div style={{ background: "#cc0000", color: "#fff", padding: "6px 0", fontSize: "12px" }}>
           <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <span>{new Date().toLocaleDateString("en-GB", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}{currentTime ? ` · ${currentTime} GMT` : ''}</span>
-            <span className="top-bar-right">Breaking News · Updated Every 2 Hours</span>
+            <span className="top-bar-right">Breaking News</span>
           </div>
         </div>
 
@@ -114,7 +114,7 @@ export default function Home({ articles, featuredArticle, evergreenArticles }) {
               <Link href="/category/finance" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600", textTransform: "uppercase" }}>Finance</Link>
               <Link href="/category/politics" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600", textTransform: "uppercase" }}>Politics</Link>
               <Link href="/category/technology" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600", textTransform: "uppercase" }}>Technology</Link>
-              <Link href="/guides" style={{ color: "#2e7d32", textDecoration: "none", fontSize: "13px", fontWeight: "700", textTransform: "uppercase" }}>Guides</Link>
+              <Link href="/guides" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600", textTransform: "uppercase" }}>Guides</Link>
             </nav>
             <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
               <input
@@ -133,14 +133,13 @@ export default function Home({ articles, featuredArticle, evergreenArticles }) {
             nav { display: none !important; }
             header h1 { font-size: 28px !important; }
             .top-bar-right { display: none !important; }
-            .featured-grid { grid-template-columns: 1fr !important; }
             .articles-grid { grid-template-columns: 1fr !important; }
             .guides-grid { grid-template-columns: 1fr !important; }
             .main-layout { grid-template-columns: 1fr !important; }
           }
           @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
-          .article-card:hover { transform: translateY(-2px); transition: transform 0.2s; }
-          .guide-card:hover { transform: translateY(-2px); transition: transform 0.2s; }
+          .article-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.12); transition: all 0.2s; }
+          .guide-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.12); transition: all 0.2s; }
         `}</style>
 
         <main style={{ maxWidth: "1200px", margin: "0 auto", padding: "24px 20px" }}>
@@ -148,27 +147,25 @@ export default function Home({ articles, featuredArticle, evergreenArticles }) {
           {/* Featured Article */}
           {featuredArticle && (
             <Link href={articlePath(featuredArticle)} style={{ textDecoration: "none" }}>
-              <div style={{ position: "relative", marginBottom: "32px", cursor: "pointer", overflow: "hidden" }}
+              <div style={{ position: "relative", marginBottom: "32px", cursor: "pointer", overflow: "hidden", boxShadow: "0 4px 20px rgba(0,0,0,0.15)" }}
                 onMouseEnter={e => e.currentTarget.querySelector('img').style.transform = "scale(1.02)"}
                 onMouseLeave={e => e.currentTarget.querySelector('img').style.transform = "scale(1)"}
               >
-                <img
-                  src={getImage(featuredArticle)}
-                  alt={featuredArticle.title}
-                  style={{ width: "100%", height: "480px", objectFit: "cover", display: "block", transition: "transform 0.4s ease" }}
-                />
-                <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "linear-gradient(transparent, rgba(0,0,0,0.85))", padding: "60px 32px 32px" }}>
+                <img src={getImage(featuredArticle)} alt={featuredArticle.title} style={{ width: "100%", height: "480px", objectFit: "cover", display: "block", transition: "transform 0.4s ease" }} />
+                <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "linear-gradient(transparent, rgba(0,0,0,0.88))", padding: "60px 32px 32px" }}>
                   <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
                     <span style={{ background: "#cc0000", color: "#fff", padding: "4px 12px", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px", animation: "pulse 2s infinite" }}>BREAKING</span>
-                    <span style={{ background: "rgba(255,255,255,0.2)", color: "#fff", padding: "4px 12px", fontSize: "11px", fontWeight: "600", textTransform: "uppercase" }}>{featuredArticle.category}</span>
+                    <span style={{ background: "rgba(255,255,255,0.15)", color: "#fff", padding: "4px 12px", fontSize: "11px", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.5px" }}>{featuredArticle.category}</span>
                   </div>
-                  <h2 style={{ fontSize: "32px", fontWeight: "900", color: "#fff", margin: "0 0 12px", lineHeight: "1.2", maxWidth: "800px" }}>{featuredArticle.title}</h2>
-                  <p style={{ color: "rgba(255,255,255,0.8)", fontSize: "15px", margin: "0 0 12px", lineHeight: "1.5", maxWidth: "700px" }}>
+                  <h2 style={{ fontSize: "32px", fontWeight: "900", color: "#fff", margin: "0 0 12px", lineHeight: "1.2", maxWidth: "800px", letterSpacing: "-0.5px" }}>{featuredArticle.title}</h2>
+                  <p style={{ color: "rgba(255,255,255,0.75)", fontSize: "15px", margin: "0 0 14px", lineHeight: "1.6", maxWidth: "700px" }}>
                     {featuredArticle.summary?.split('\n\n')[0]?.substring(0, 180)}...
                   </p>
                   <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
-                    <span style={{ color: "rgba(255,255,255,0.7)", fontSize: "13px" }}>{timeAgo(featuredArticle.created_at)}</span>
-                    <span style={{ color: "rgba(255,255,255,0.7)", fontSize: "13px" }}>{formatViews(featuredArticle.views)}</span>
+                    <span style={{ color: "rgba(255,255,255,0.6)", fontSize: "12px" }}>{timeAgo(featuredArticle.created_at)}</span>
+                    <span style={{ color: "rgba(255,255,255,0.4)", fontSize: "12px" }}>·</span>
+                    <span style={{ color: "rgba(255,255,255,0.6)", fontSize: "12px" }}>{getReadTime(featuredArticle.summary)} min read</span>
+                    {featuredArticle.views > 0 && <><span style={{ color: "rgba(255,255,255,0.4)", fontSize: "12px" }}>·</span><span style={{ color: "rgba(255,255,255,0.6)", fontSize: "12px" }}>{formatViews(featuredArticle.views)}</span></>}
                   </div>
                 </div>
               </div>
@@ -178,23 +175,14 @@ export default function Home({ articles, featuredArticle, evergreenArticles }) {
           {/* Category Filter */}
           <div style={{ display: "flex", gap: "8px", marginBottom: "24px", overflowX: "auto", paddingBottom: "4px" }}>
             {categories.map(cat => (
-              <button
-                key={cat}
-                onClick={() => setActiveCategory(cat)}
-                style={{
-                  padding: "8px 20px",
-                  border: "none",
-                  cursor: "pointer",
-                  fontSize: "13px",
-                  fontWeight: "700",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.5px",
-                  whiteSpace: "nowrap",
-                  background: activeCategory === cat ? (cat === "all" ? "#111" : CATEGORY_COLORS[cat] || "#cc0000") : "#fff",
-                  color: activeCategory === cat ? "#fff" : "#555",
-                  borderBottom: activeCategory === cat ? "none" : "2px solid #eee",
-                }}
-              >
+              <button key={cat} onClick={() => setActiveCategory(cat)} style={{
+                padding: "8px 20px", border: "none", cursor: "pointer", fontSize: "13px", fontWeight: "700",
+                textTransform: "uppercase", letterSpacing: "0.5px", whiteSpace: "nowrap",
+                background: activeCategory === cat ? (cat === "all" ? "#111" : CATEGORY_COLORS[cat] || "#cc0000") : "#fff",
+                color: activeCategory === cat ? "#fff" : "#555",
+                borderBottom: activeCategory === cat ? "none" : "2px solid #eee",
+                transition: "all 0.15s",
+              }}>
                 {cat === "all" ? "All News" : cat.charAt(0).toUpperCase() + cat.slice(1)}
               </button>
             ))}
@@ -203,7 +191,6 @@ export default function Home({ articles, featuredArticle, evergreenArticles }) {
           {/* Main Layout */}
           <div className="main-layout" style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: "32px" }}>
 
-            {/* Articles Grid */}
             <div>
               {filtered.length === 0 ? (
                 <div style={{ textAlign: "center", padding: "60px", color: "#999" }}>
@@ -213,28 +200,19 @@ export default function Home({ articles, featuredArticle, evergreenArticles }) {
                 <div className="articles-grid" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "24px" }}>
                   {filtered.map(article => (
                     <Link key={article.id} href={articlePath(article)} style={{ textDecoration: "none" }}>
-                      <div className="article-card" style={{ background: "#fff", cursor: "pointer", height: "100%" }}>
+                      <div className="article-card" style={{ background: "#fff", cursor: "pointer", height: "100%", boxShadow: "0 1px 4px rgba(0,0,0,0.08)", borderRadius: "2px" }}>
                         <div style={{ position: "relative" }}>
-                          <img
-                            src={getImage(article)}
-                            alt={article.title}
-                            loading="lazy"
-                            style={{ width: "100%", height: "200px", objectFit: "cover", display: "block" }}
-                          />
-                          <span style={{
-                            position: "absolute", top: "12px", left: "12px",
-                            background: CATEGORY_COLORS[article.category] || "#cc0000",
-                            color: "#fff", padding: "3px 10px", fontSize: "10px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px"
-                          }}>{article.category}</span>
+                          <img src={getImage(article)} alt={article.title} loading="lazy" style={{ width: "100%", height: "200px", objectFit: "cover", display: "block" }} />
+                          <span style={{ position: "absolute", top: "12px", left: "12px", background: CATEGORY_COLORS[article.category] || "#cc0000", color: "#fff", padding: "3px 10px", fontSize: "10px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px" }}>{article.category}</span>
                         </div>
                         <div style={{ padding: "16px" }}>
-                          <h3 style={{ fontSize: "16px", fontWeight: "700", lineHeight: "1.4", margin: "0 0 10px", color: "#111" }}>{article.title}</h3>
-                          <p style={{ color: "#666", fontSize: "13px", lineHeight: "1.5", margin: "0 0 12px" }}>
-                            {article.summary?.split('\n\n')[0]?.substring(0, 120)}...
+                          <h3 style={{ fontSize: "15px", fontWeight: "700", lineHeight: "1.45", margin: "0 0 10px", color: "#111", letterSpacing: "-0.2px" }}>{article.title}</h3>
+                          <p style={{ color: "#777", fontSize: "13px", lineHeight: "1.55", margin: "0 0 12px" }}>
+                            {article.summary?.split('\n\n')[0]?.replace(/^[A-Z\s]+ — /, '')?.substring(0, 110)}...
                           </p>
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid #f0f0f0", paddingTop: "10px" }}>
                             <span style={{ fontSize: "11px", color: "#999" }}>{timeAgo(article.created_at)}</span>
-                            <span style={{ fontSize: "11px", color: "#999" }}>{formatViews(article.views)}</span>
+                            <span style={{ fontSize: "11px", color: "#bbb" }}>{getReadTime(article.summary)} min read</span>
                           </div>
                         </div>
                       </div>
@@ -246,22 +224,17 @@ export default function Home({ articles, featuredArticle, evergreenArticles }) {
               {/* Guides Section */}
               {evergreenArticles?.length > 0 && (
                 <div style={{ marginTop: "48px" }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px", borderBottom: "3px solid #2e7d32", paddingBottom: "10px" }}>
-                    <h2 style={{ fontSize: "20px", fontWeight: "800", color: "#111", margin: 0 }}>📚 Guides & Resources</h2>
-                    <Link href="/guides" style={{ color: "#2e7d32", textDecoration: "none", fontSize: "13px", fontWeight: "600" }}>View all guides →</Link>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px", borderBottom: "3px solid #111", paddingBottom: "10px" }}>
+                    <h2 style={{ fontSize: "20px", fontWeight: "800", color: "#111", margin: 0, letterSpacing: "-0.5px" }}>📚 Guides & Resources</h2>
+                    <Link href="/guides" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600" }}>View all guides →</Link>
                   </div>
                   <div className="guides-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "20px" }}>
                     {evergreenArticles.map(guide => (
                       <Link key={guide.id} href={articlePath(guide)} style={{ textDecoration: "none" }}>
-                        <div className="guide-card" style={{ background: "#fff", borderTop: "3px solid #2e7d32", cursor: "pointer" }}>
-                          <img
-                            src={guide.image || getImage(guide)}
-                            alt={guide.title}
-                            loading="lazy"
-                            style={{ width: "100%", height: "140px", objectFit: "cover", display: "block" }}
-                          />
+                        <div className="guide-card" style={{ background: "#fff", borderTop: "3px solid #111", cursor: "pointer", boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
+                          <img src={guide.image || getImage(guide)} alt={guide.title} loading="lazy" style={{ width: "100%", height: "140px", objectFit: "cover", display: "block" }} />
                           <div style={{ padding: "14px" }}>
-                            <span style={{ background: "#2e7d32", color: "#fff", padding: "3px 8px", fontSize: "10px", fontWeight: "700", textTransform: "uppercase" }}>GUIDE</span>
+                            <span style={{ background: "#111", color: "#fff", padding: "3px 8px", fontSize: "10px", fontWeight: "700", textTransform: "uppercase" }}>GUIDE</span>
                             <p style={{ margin: "8px 0 0", fontSize: "14px", fontWeight: "700", color: "#111", lineHeight: "1.4" }}>{guide.title}</p>
                           </div>
                         </div>
@@ -274,51 +247,44 @@ export default function Home({ articles, featuredArticle, evergreenArticles }) {
 
             {/* Sidebar */}
             <aside>
-              {/* Latest News */}
-              <div style={{ background: "#fff", padding: "20px", marginBottom: "20px" }}>
-                <h3 style={{ fontSize: "14px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px", color: "#111", margin: "0 0 16px", paddingBottom: "10px", borderBottom: "2px solid #cc0000" }}>
-                  Latest News
-                </h3>
+              <div style={{ background: "#fff", padding: "20px", marginBottom: "20px", boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
+                <h3 style={{ fontSize: "13px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1.5px", color: "#111", margin: "0 0 16px", paddingBottom: "10px", borderBottom: "2px solid #cc0000" }}>Latest News</h3>
                 {articles.slice(0, 8).map(article => (
                   <Link key={article.id} href={articlePath(article)} style={{ textDecoration: "none" }}>
-                    <div style={{ display: "flex", gap: "10px", marginBottom: "14px", paddingBottom: "14px", borderBottom: "1px solid #f0f0f0", cursor: "pointer" }}>
+                    <div style={{ display: "flex", gap: "10px", marginBottom: "14px", paddingBottom: "14px", borderBottom: "1px solid #f5f5f5", cursor: "pointer" }}>
                       <img loading="lazy" src={getImage(article)} alt={article.title} style={{ width: "70px", height: "52px", objectFit: "cover", flexShrink: 0 }} />
                       <div>
-                        <span style={{ fontSize: "9px", color: CATEGORY_COLORS[article.category] || "#cc0000", fontWeight: "700", textTransform: "uppercase" }}>{article.category}</span>
-                        <p style={{ margin: "2px 0 0", fontSize: "12px", fontWeight: "600", color: "#111", lineHeight: "1.4" }}>{article.title}</p>
-                        <p style={{ margin: "3px 0 0", fontSize: "10px", color: "#999" }}>{timeAgo(article.created_at)}</p>
+                        <span style={{ fontSize: "9px", color: CATEGORY_COLORS[article.category] || "#cc0000", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.5px" }}>{article.category}</span>
+                        <p style={{ margin: "3px 0 0", fontSize: "12px", fontWeight: "600", color: "#111", lineHeight: "1.4" }}>{article.title}</p>
+                        <p style={{ margin: "3px 0 0", fontSize: "10px", color: "#bbb" }}>{timeAgo(article.created_at)}</p>
                       </div>
                     </div>
                   </Link>
                 ))}
               </div>
 
-              {/* Guides Sidebar */}
               {evergreenArticles?.length > 0 && (
-                <div style={{ background: "#f1f8e9", border: "1px solid #c5e1a5", padding: "20px", marginBottom: "20px" }}>
-                  <h3 style={{ fontSize: "14px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px", color: "#2e7d32", margin: "0 0 16px", paddingBottom: "10px", borderBottom: "2px solid #2e7d32" }}>
-                    📚 Guides
-                  </h3>
+                <div style={{ background: "#fff", border: "1px solid #eee", borderTop: "3px solid #111", padding: "20px", marginBottom: "20px", boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
+                  <h3 style={{ fontSize: "13px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1.5px", color: "#111", margin: "0 0 16px", paddingBottom: "10px", borderBottom: "2px solid #111" }}>📚 Guides</h3>
                   {evergreenArticles.slice(0, 3).map(guide => (
                     <Link key={guide.id} href={articlePath(guide)} style={{ textDecoration: "none" }}>
-                      <div style={{ marginBottom: "12px", paddingBottom: "12px", borderBottom: "1px solid #c5e1a5", cursor: "pointer" }}>
+                      <div style={{ marginBottom: "12px", paddingBottom: "12px", borderBottom: "1px solid #f5f5f5", cursor: "pointer" }}>
                         <p style={{ margin: 0, fontSize: "13px", fontWeight: "600", color: "#111", lineHeight: "1.4" }}>{guide.title}</p>
-                        <span style={{ fontSize: "10px", color: "#2e7d32", fontWeight: "600" }}>Read guide →</span>
+                        <span style={{ fontSize: "10px", color: "#666", fontWeight: "600" }}>Read guide →</span>
                       </div>
                     </Link>
                   ))}
-                  <Link href="/guides" style={{ color: "#2e7d32", textDecoration: "none", fontSize: "12px", fontWeight: "600" }}>View all guides →</Link>
+                  <Link href="/guides" style={{ color: "#333", textDecoration: "none", fontSize: "12px", fontWeight: "600" }}>View all guides →</Link>
                 </div>
               )}
 
-              {/* Category Links */}
-              <div style={{ background: "#fff", padding: "20px" }}>
-                <h3 style={{ fontSize: "14px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px", color: "#111", margin: "0 0 16px", paddingBottom: "10px", borderBottom: "2px solid #cc0000" }}>Browse by Category</h3>
+              <div style={{ background: "#fff", padding: "20px", boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
+                <h3 style={{ fontSize: "13px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1.5px", color: "#111", margin: "0 0 16px", paddingBottom: "10px", borderBottom: "2px solid #cc0000" }}>Browse</h3>
                 {['sports', 'finance', 'politics', 'technology'].map(cat => (
                   <Link key={cat} href={`/category/${cat}`} style={{ textDecoration: "none" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px solid #f0f0f0", cursor: "pointer" }}>
-                      <span style={{ fontSize: "14px", fontWeight: "600", color: "#333", textTransform: "capitalize" }}>{cat}</span>
-                      <span style={{ background: CATEGORY_COLORS[cat], color: "#fff", padding: "2px 8px", fontSize: "10px", fontWeight: "700", textTransform: "uppercase" }}>→</span>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px solid #f5f5f5", cursor: "pointer" }}>
+                      <span style={{ fontSize: "13px", fontWeight: "600", color: "#333", textTransform: "capitalize" }}>{cat}</span>
+                      <span style={{ width: "8px", height: "8px", background: CATEGORY_COLORS[cat], display: "inline-block", borderRadius: "50%" }} />
                     </div>
                   </Link>
                 ))}
@@ -328,7 +294,6 @@ export default function Home({ articles, featuredArticle, evergreenArticles }) {
           </div>
         </main>
 
-        {/* Footer */}
         <footer style={{ background: "#111", color: "#999", padding: "40px 20px", marginTop: "40px" }}>
           <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
             <div style={{ display: "flex", justifyContent: "center", gap: "16px", marginBottom: "16px", flexWrap: "wrap" }}>
@@ -342,14 +307,10 @@ export default function Home({ articles, featuredArticle, evergreenArticles }) {
               <Link href="/editorial-guidelines" style={{ color: "#999", textDecoration: "none", fontSize: "13px" }}>Editorial Guidelines</Link>
               <Link href="/privacy-policy" style={{ color: "#999", textDecoration: "none", fontSize: "13px" }}>Privacy Policy</Link>
               <Link href="/terms" style={{ color: "#999", textDecoration: "none", fontSize: "13px" }}>Terms of Service</Link>
-              <Link href="/guides" style={{ color: "#2e7d32", textDecoration: "none", fontSize: "13px", fontWeight: "600" }}>Guides</Link>
+              <Link href="/guides" style={{ color: "#999", textDecoration: "none", fontSize: "13px" }}>Guides</Link>
             </div>
-            <h2 style={{ color: "#fff", margin: "0 0 10px", fontSize: "24px", fontWeight: "900", textAlign: "center" }}>
-              NEWS<span style={{ color: "#cc0000" }}>ORACLE</span>
-            </h2>
-            <p style={{ margin: 0, fontSize: "12px", textAlign: "center" }}>
-              2026 NewsOracle. All content is for informational purposes only and does not constitute financial or betting advice.
-            </p>
+            <h2 style={{ color: "#fff", margin: "0 0 10px", fontSize: "24px", fontWeight: "900", textAlign: "center" }}>NEWS<span style={{ color: "#cc0000" }}>ORACLE</span></h2>
+            <p style={{ margin: 0, fontSize: "12px", textAlign: "center" }}>2026 NewsOracle. All content is for informational purposes only and does not constitute financial or betting advice.</p>
           </div>
         </footer>
 
@@ -364,7 +325,6 @@ export async function getServerSideProps() {
     process.env.NEXT_PUBLIC_SUPABASE_KEY
   );
 
-  // Bug 2 fix — use .or() to handle both false and NULL for existing articles
   const { data: articles } = await supabaseServer
     .from("articles")
     .select("id, title, summary, image, category, tag, created_at, views")
