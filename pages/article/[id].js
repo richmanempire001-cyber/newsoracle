@@ -315,8 +315,11 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
                     </div>
                   );
                 } else {
-                  elements.push(<p key={`p-${i}`} style={{ marginTop: 0, marginBottom: "20px" }}>{para}</p>);
-                }
+  const formatted = para
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*([^*]+)\*/g, '<em>$1</em>');
+  elements.push(<p key={`p-${i}`} style={{ marginTop: 0, marginBottom: "20px" }} dangerouslySetInnerHTML={{ __html: formatted }} />);
+}
 
                 if (!isEvergreen && i === 3 && related.length > 0) {
                   const contextArticle = related[0];
