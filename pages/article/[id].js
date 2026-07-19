@@ -364,7 +364,7 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
             <div style={{ display: "flex", flexWrap: "wrap", gap: "20px", padding: "14px 0", borderTop: "1px solid #eee", borderBottom: "1px solid #eee", marginBottom: "28px" }}>
               <span style={{ fontSize: "13px", color: "#666" }}>By <strong>{article.author || 'NewsOracle Editorial'}</strong></span>
               {isEvergreen ? (
-                <span style={{ fontSize: "13px", color: "#2e7d32", fontWeight: "600" }}>Updated regularly</span>
+                <span style={{ fontSize: "13px", color: "#2e7d32", fontWeight: "600" }}>In-depth guide</span>
               ) : (
                 <>
                   <span style={{ fontSize: "13px", color: "#999" }}>{new Date(article.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}</span>
@@ -528,7 +528,7 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
               {isEvergreen && (
                 <div style={{ background: "#f1f8e9", border: "1px solid #c5e1a5", borderLeft: "4px solid #2e7d32", padding: "20px", marginBottom: "20px" }}>
                   <h3 style={{ fontSize: "12px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px", color: "#2e7d32", margin: "0 0 8px", fontFamily: "Arial, sans-serif" }}>Evergreen Guide</h3>
-                  <p style={{ margin: "0 0 12px", fontSize: "13px", color: "#555", lineHeight: "1.5" }}>This guide is regularly updated and covers the complete topic in depth.</p>
+                  <p style={{ margin: "0 0 12px", fontSize: "13px", color: "#555", lineHeight: "1.5" }}>This is an in-depth guide covering the complete topic with verified information.</p>
                   <Link href="/guides" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600" }}>Browse all guides</Link>
                 </div>
               )}
