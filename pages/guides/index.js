@@ -99,7 +99,7 @@ export default function GuidesHub({ guides }) {
                       </div>
                       <Link href={`/guides/${cat}`} style={{ color: config.color, textDecoration: "none", fontSize: "13px", fontWeight: "600" }}>View all {config.title} →</Link>
                     </div>
-                    <div className="guides-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "20px" }}>
+                    <div className="guides-grid" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "20px" }}>
                       {catGuides.slice(0, 3).map(guide => (
                         <Link key={guide.id} href={articlePath(guide)} style={{ textDecoration: "none" }}>
                           <div style={{ background: "#fff", boxShadow: "0 2px 8px rgba(0,0,0,0.08)", cursor: "pointer", borderTop: `3px solid ${config.color}`, height: "100%" }}
