@@ -666,7 +666,17 @@ export default async function handler(req, res) {
           const sourceMaterial = fullText || rss.description;
           const article = await generateArticle(rss.title, sourceMaterial, category);
           article.category = category;
-          return { category, rss, article, fullText, ogImage };
+          return { category, rss, article, fullText, ogImage };// Internal linking to evergreen guides
+const guideLinks = {
+  'Bitcoin': 'https://www.newsoracle.online/article/416-bitcoin-price-prediction-2026-expert-forecasts-key-factors-and-market-analysis',
+  'Crypto': 'https://www.newsoracle.online/article/416-bitcoin-price-prediction-2026-expert-forecasts-key-factors-and-market-analysis',
+  'AI Trading': 'https://www.newsoracle.online/article/415-best-ai-tools-for-stock-trading-2026-the-ultimate-guide-to-automated-invest',
+  'World Cup 2026': 'https://www.newsoracle.online/article/388-all-fifa-world-cup-winners-1930-2026-complete-history-and-champion-list',
+  'FIFA': 'https://www.newsoracle.online/article/388-all-fifa-world-cup-winners-1930-2026-complete-history-and-champion-list',
+};
+if (article.tag && guideLinks[article.tag]) {
+  article.summary += `\n\nRelated Guide: For deeper analysis, read our complete guide: ${guideLinks[article.tag]}`;
+}
         } catch (err) {
           console.error(`Article generation failed for ${category}:`, err.message);
           return null;
