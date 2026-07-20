@@ -270,28 +270,7 @@ export default function Home({ articles, categoryFeatured, evergreenArticles, ti
                 </div>
               )}
 
-              {/* Guides Section below articles */}
-              {evergreenArticles?.length > 0 && (
-                <div style={{ marginTop: "48px" }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px", borderBottom: "3px solid #111", paddingBottom: "10px" }}>
-                    <h2 style={{ fontSize: "20px", fontWeight: "800", color: "#111", margin: 0 }}>📚 Guides & Resources</h2>
-                    <Link href="/guides" style={{ color: "#333", textDecoration: "none", fontSize: "13px", fontWeight: "600" }}>View all guides →</Link>
-                  </div>
-                  <div className="guides-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "20px" }}>
-                    {evergreenArticles.map(guide => (
-                      <Link key={guide.id} href={articlePath(guide)} style={{ textDecoration: "none" }}>
-                        <div className="guide-card" style={{ background: "#fff", borderTop: "3px solid #111", cursor: "pointer", boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
-                          <img src={guide.image || getImage(guide)} alt={guide.title} loading="lazy" style={{ width: "100%", height: "140px", objectFit: "cover", display: "block" }} />
-                          <div style={{ padding: "14px" }}>
-                            <span style={{ background: "#111", color: "#fff", padding: "3px 8px", fontSize: "10px", fontWeight: "700", textTransform: "uppercase" }}>GUIDE</span>
-                            <p style={{ margin: "8px 0 0", fontSize: "14px", fontWeight: "700", color: "#111", lineHeight: "1.4" }}>{guide.title}</p>
-                          </div>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              )}
+              
             </div>
 
             {/* Sticky Sidebar */}
@@ -418,7 +397,7 @@ export async function getServerSideProps() {
     .select("id, title, summary, image, category, tag, created_at, views")
     .or("evergreen.eq.false,evergreen.is.null")
     .order("created_at", { ascending: false })
-    .limit(50);
+    .limit(20);
 
   const { data: evergreenArticles } = await supabaseServer
     .from("articles")
