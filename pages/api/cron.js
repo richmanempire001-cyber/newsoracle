@@ -666,7 +666,7 @@ export default async function handler(req, res) {
           const sourceMaterial = fullText || rss.description;
           const article = await generateArticle(rss.title, sourceMaterial, category);
           article.category = category;
-          article.category = category;
+          
 
 // Internal linking to evergreen guides
 const guideLinks = {
@@ -680,7 +680,7 @@ if (article.tag && guideLinks[article.tag]) {
   article.summary += `\n\nRelated Guide: For deeper analysis, read our complete guide: ${guideLinks[article.tag]}`;
 }
 
-return { category, rss, article, fullText, ogImage };return { category, rss, article, fullText, ogImage };
+return { category, rss, article, fullText, ogImage };
         } catch (err) {
           console.error(`Article generation failed for ${category}:`, err.message);
           return null;
