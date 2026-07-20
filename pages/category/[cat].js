@@ -1,7 +1,7 @@
 import Head from "next/head";
 import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
-import { articlePath } from "../../lib/slugify";
+import { articlePath } from "../lib/slugify";
 
 const CATEGORY_CONFIG = {
   sports: {
@@ -58,7 +58,7 @@ function getReadTime(summary) {
   return Math.ceil(words / 200);
 }
 
-export default function CategoryPage({ category, config, articles, featuredArticle, totalCount }) {
+export default function CategoryPage({ category, config, articles, featuredArticle, totalCount, sidebarGuides }) {
   if (!config) return null;
 
   return (
@@ -94,7 +94,6 @@ export default function CategoryPage({ category, config, articles, featuredArtic
 
       <div style={{ fontFamily: "Arial, sans-serif", background: "#f4f4f4", minHeight: "100vh" }}>
 
-        {/* Top Bar */}
         <div style={{ background: config.color, color: "#fff", padding: "6px 0", fontSize: "12px" }}>
           <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 20px", display: "flex", justifyContent: "space-between" }}>
             <span>{new Date().toLocaleDateString("en-GB", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</span>
@@ -102,7 +101,6 @@ export default function CategoryPage({ category, config, articles, featuredArtic
           </div>
         </div>
 
-        {/* Header */}
         <header style={{ background: "#fff", borderBottom: `3px solid ${config.color}`, padding: "16px 0" }}>
           <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <Link href="/" style={{ textDecoration: "none" }}>
@@ -131,18 +129,17 @@ export default function CategoryPage({ category, config, articles, featuredArtic
             .cat-layout { grid-template-columns: 1fr !important; }
           }
           .cat-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.12); transition: all 0.2s; }
+          .social-btn:hover { opacity: 0.85; transition: opacity 0.15s; }
         `}</style>
 
         <main style={{ maxWidth: "1200px", margin: "0 auto", padding: "32px 20px" }}>
 
-          {/* Breadcrumb */}
           <div style={{ marginBottom: "20px" }}>
             <Link href="/" style={{ color: "#cc0000", textDecoration: "none", fontSize: "13px", fontWeight: "600" }}>Home</Link>
             <span style={{ color: "#999", margin: "0 8px" }}>›</span>
             <span style={{ color: "#666", fontSize: "13px", fontWeight: "600" }}>{config.title}</span>
           </div>
 
-          {/* Category Header */}
           <div style={{ marginBottom: "32px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "8px" }}>
               <span style={{ fontSize: "28px" }}>{config.icon}</span>
@@ -155,7 +152,6 @@ export default function CategoryPage({ category, config, articles, featuredArtic
           <div className="cat-layout" style={{ display: "grid", gridTemplateColumns: "1fr 280px", gap: "32px" }}>
 
             <div>
-              {/* Featured */}
               {featuredArticle && (
                 <Link href={articlePath(featuredArticle)} style={{ textDecoration: "none" }}>
                   <div style={{ background: "#fff", marginBottom: "28px", cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}
@@ -184,13 +180,11 @@ export default function CategoryPage({ category, config, articles, featuredArtic
                 </Link>
               )}
 
-              {/* Articles Count */}
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
                 <span style={{ fontSize: "12px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "2px", color: config.color }}>Latest {config.title}</span>
                 <span style={{ fontSize: "12px", color: "#999" }}>{totalCount} articles</span>
               </div>
 
-              {/* Articles Grid */}
               <div className="cat-grid" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "20px" }}>
                 {articles.map(article => (
                   <Link key={article.id} href={articlePath(article)} style={{ textDecoration: "none" }}>
@@ -215,37 +209,79 @@ export default function CategoryPage({ category, config, articles, featuredArtic
 
             {/* Sidebar */}
             <aside>
-              <div style={{ background: "#fff", padding: "20px", marginBottom: "20px", boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
-                <h3 style={{ fontSize: "13px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1.5px", color: "#111", margin: "0 0 16px", paddingBottom: "10px", borderBottom: `2px solid ${config.color}` }}>Trending {config.title}</h3>
-                {articles.slice(0, 6).map((article, i) => (
-                  <Link key={article.id} href={articlePath(article)} style={{ textDecoration: "none" }}>
-                    <div style={{ display: "flex", gap: "12px", marginBottom: "14px", paddingBottom: "14px", borderBottom: "1px solid #f5f5f5", cursor: "pointer" }}>
-                      <span style={{ fontSize: "24px", fontWeight: "900", color: "#eee", flexShrink: 0, lineHeight: 1 }}>{String(i + 1).padStart(2, '0')}</span>
-                      <div>
-                        <p style={{ margin: 0, fontSize: "12px", fontWeight: "600", color: "#111", lineHeight: "1.4" }}>{article.title}</p>
-                        <p style={{ margin: "4px 0 0", fontSize: "10px", color: "#bbb" }}>{timeAgo(article.created_at)}</p>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
+              <div style={{ position: "sticky", top: "20px" }}>
 
-              <div style={{ background: "#fff", padding: "20px", boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
-                <h3 style={{ fontSize: "13px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1.5px", color: "#111", margin: "0 0 16px", paddingBottom: "10px", borderBottom: "2px solid #cc0000" }}>Other Categories</h3>
-                {Object.entries(CATEGORY_CONFIG).filter(([cat]) => cat !== category).map(([cat, conf]) => (
-                  <Link key={cat} href={`/category/${cat}`} style={{ textDecoration: "none" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px solid #f5f5f5", cursor: "pointer" }}>
-                      <span style={{ fontSize: "13px", fontWeight: "600", color: "#333" }}>{conf.icon} {conf.title}</span>
-                      <span style={{ width: "8px", height: "8px", background: conf.color, display: "inline-block", borderRadius: "50%" }} />
+                {/* Trending */}
+                <div style={{ background: "#fff", padding: "20px", marginBottom: "20px", boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
+                  <h3 style={{ fontSize: "13px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1.5px", color: "#111", margin: "0 0 16px", paddingBottom: "10px", borderBottom: `2px solid ${config.color}` }}>Trending {config.title}</h3>
+                  {articles.slice(0, 6).map((article, i) => (
+                    <Link key={article.id} href={articlePath(article)} style={{ textDecoration: "none" }}>
+                      <div style={{ display: "flex", gap: "12px", marginBottom: "14px", paddingBottom: "14px", borderBottom: "1px solid #f5f5f5", cursor: "pointer" }}>
+                        <span style={{ fontSize: "24px", fontWeight: "900", color: "#eee", flexShrink: 0, lineHeight: 1 }}>{String(i + 1).padStart(2, '0')}</span>
+                        <div>
+                          <p style={{ margin: 0, fontSize: "12px", fontWeight: "600", color: "#111", lineHeight: "1.4" }}>{article.title}</p>
+                          <p style={{ margin: "4px 0 0", fontSize: "10px", color: "#bbb" }}>{timeAgo(article.created_at)}</p>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+
+                {/* Guides Widget — auto-updates with every new guide */}
+                {sidebarGuides?.length > 0 && (
+                  <div style={{ background: "#fff", padding: "20px", marginBottom: "20px", boxShadow: "0 1px 4px rgba(0,0,0,0.08)", borderTop: "3px solid #111" }}>
+                    <h3 style={{ fontSize: "13px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1.5px", color: "#111", margin: "0 0 16px", paddingBottom: "10px", borderBottom: "2px solid #111" }}>📚 Guides</h3>
+                    {sidebarGuides.map(guide => (
+                      <Link key={guide.id} href={articlePath(guide)} style={{ textDecoration: "none" }}>
+                        <div style={{ marginBottom: "14px", paddingBottom: "14px", borderBottom: "1px solid #f5f5f5", cursor: "pointer" }}>
+                          <span style={{ fontSize: "9px", color: "#cc0000", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.5px" }}>{guide.category}</span>
+                          <p style={{ margin: "3px 0 4px", fontSize: "12px", fontWeight: "600", color: "#111", lineHeight: "1.4" }}>{guide.title}</p>
+                          <span style={{ fontSize: "10px", color: "#666", fontWeight: "600" }}>Read guide →</span>
+                        </div>
+                      </Link>
+                    ))}
+                    <Link href="/guides" style={{ color: "#333", textDecoration: "none", fontSize: "12px", fontWeight: "700" }}>View all guides →</Link>
+                  </div>
+                )}
+
+                {/* Follow Widget */}
+                <div style={{ background: "#fff", padding: "20px", marginBottom: "20px", boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
+                  <h3 style={{ fontSize: "13px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1.5px", color: "#111", margin: "0 0 16px", paddingBottom: "10px", borderBottom: "2px solid #cc0000" }}>Follow NewsOracle</h3>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                    <a href="https://t.me/NewsOracleOfficial" target="_blank" rel="noopener noreferrer" className="social-btn" style={{ display: "flex", alignItems: "center", gap: "10px", background: "#0088cc", color: "#fff", padding: "10px 14px", textDecoration: "none", fontSize: "13px", fontWeight: "600" }}>
+                      <span>✈️</span> Telegram
+                    </a>
+                    <a href="https://www.facebook.com/profile.php?id=61591337781640" target="_blank" rel="noopener noreferrer" className="social-btn" style={{ display: "flex", alignItems: "center", gap: "10px", background: "#1877f2", color: "#fff", padding: "10px 14px", textDecoration: "none", fontSize: "13px", fontWeight: "600" }}>
+                      <span>📘</span> Facebook
+                    </a>
+                    <a href="https://twitter.com/NewsOracle" target="_blank" rel="noopener noreferrer" className="social-btn" style={{ display: "flex", alignItems: "center", gap: "10px", background: "#000", color: "#fff", padding: "10px 14px", textDecoration: "none", fontSize: "13px", fontWeight: "600" }}>
+                      <span>🐦</span> Twitter / X
+                    </a>
+                    <a href="https://www.linkedin.com/in/news-oracle-a7543b423/" target="_blank" rel="noopener noreferrer" className="social-btn" style={{ display: "flex", alignItems: "center", gap: "10px", background: "#0052cc", color: "#fff", padding: "10px 14px", textDecoration: "none", fontSize: "13px", fontWeight: "600" }}>
+                      <span>💼</span> LinkedIn
+                    </a>
+                  </div>
+                </div>
+
+                {/* Other Categories */}
+                <div style={{ background: "#fff", padding: "20px", boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
+                  <h3 style={{ fontSize: "13px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1.5px", color: "#111", margin: "0 0 16px", paddingBottom: "10px", borderBottom: "2px solid #cc0000" }}>Other Categories</h3>
+                  {Object.entries(CATEGORY_CONFIG).filter(([cat]) => cat !== category).map(([cat, conf]) => (
+                    <Link key={cat} href={`/category/${cat}`} style={{ textDecoration: "none" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px solid #f5f5f5", cursor: "pointer" }}>
+                        <span style={{ fontSize: "13px", fontWeight: "600", color: "#333" }}>{conf.icon} {conf.title}</span>
+                        <span style={{ width: "8px", height: "8px", background: conf.color, display: "inline-block", borderRadius: "50%" }} />
+                      </div>
+                    </Link>
+                  ))}
+                  <Link href="/guides" style={{ textDecoration: "none" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", cursor: "pointer" }}>
+                      <span style={{ fontSize: "13px", fontWeight: "600", color: "#333" }}>📚 Guides</span>
+                      <span style={{ width: "8px", height: "8px", background: "#111", display: "inline-block", borderRadius: "50%" }} />
                     </div>
                   </Link>
-                ))}
-                <Link href="/guides" style={{ textDecoration: "none" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", cursor: "pointer" }}>
-                    <span style={{ fontSize: "13px", fontWeight: "600", color: "#333" }}>📚 Guides</span>
-                    <span style={{ width: "8px", height: "8px", background: "#111", display: "inline-block", borderRadius: "50%" }} />
-                  </div>
-                </Link>
+                </div>
+
               </div>
             </aside>
 
@@ -265,9 +301,10 @@ export default function CategoryPage({ category, config, articles, featuredArtic
               <Link href="/editorial-guidelines" style={{ color: "#999", textDecoration: "none", fontSize: "13px" }}>Editorial Guidelines</Link>
               <Link href="/privacy-policy" style={{ color: "#999", textDecoration: "none", fontSize: "13px" }}>Privacy Policy</Link>
               <Link href="/terms" style={{ color: "#999", textDecoration: "none", fontSize: "13px" }}>Terms of Service</Link>
+              <Link href="/guides" style={{ color: "#999", textDecoration: "none", fontSize: "13px" }}>Guides</Link>
             </div>
             <h2 style={{ color: "#fff", margin: "0 0 10px", fontSize: "24px", fontWeight: "900", textAlign: "center" }}>NEWS<span style={{ color: "#cc0000" }}>ORACLE</span></h2>
-            <p style={{ margin: 0, fontSize: "12px", textAlign: "center" }}>2026 NewsOracle. All content is for informational purposes only.</p>
+            <p style={{ margin: 0, fontSize: "12px", textAlign: "center" }}>&copy; 2026 NewsOracle. All Rights Reserved. All content is for informational purposes only.</p>
           </div>
         </footer>
 
@@ -293,6 +330,13 @@ export async function getServerSideProps({ params }) {
     .order("created_at", { ascending: false })
     .limit(31);
 
+  // Fetch all guides for sidebar
+  const { data: sidebarGuides } = await supabaseServer
+    .from("articles")
+    .select("id, title, category, tag")
+    .eq("evergreen", true)
+    .order("created_at", { ascending: false });
+
   const articles = allArticles || [];
   const featuredArticle = articles[0] || null;
   const restArticles = articles.slice(1);
@@ -304,6 +348,7 @@ export async function getServerSideProps({ params }) {
       articles: restArticles,
       featuredArticle,
       totalCount: count || articles.length,
+      sidebarGuides: sidebarGuides || [],
     },
   };
 }
