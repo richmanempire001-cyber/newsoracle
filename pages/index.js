@@ -38,7 +38,7 @@ const CATEGORY_COLORS = {
   technology: "#111111",
 };
 
-export default function Home({ articles, categoryFeatured, evergreenArticles, tickerHeadlines }) {
+export default function Home({ articles, categoryFeatured, evergreenArticles, tickerHeadlines, sidebarGuides }) {
   const [activeCategory, setActiveCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentTime, setCurrentTime] = useState("");
@@ -121,7 +121,7 @@ export default function Home({ articles, categoryFeatured, evergreenArticles, ti
 
       <div style={{ fontFamily: "Arial, sans-serif", background: "#f4f4f4", minHeight: "100vh" }}>
 
-        {/* Top Bar — red, clean ticker */}
+        {/* Top Bar */}
         <div style={{ background: "#cc0000", color: "#fff", fontSize: "12px" }}>
           <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 20px", display: "flex", alignItems: "stretch", height: "34px" }}>
             <div style={{ display: "flex", alignItems: "center", paddingRight: "16px", borderRight: "1px solid rgba(255,255,255,0.3)", flexShrink: 0, fontSize: "11px", color: "rgba(255,255,255,0.85)" }}>
@@ -185,6 +185,8 @@ export default function Home({ articles, categoryFeatured, evergreenArticles, ti
           .guide-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.12); transition: all 0.2s; }
           .dot-btn { transition: all 0.3s ease; }
           .cat-tab:hover { opacity: 0.85; }
+          .social-btn:hover { opacity: 0.85; transform: translateY(-1px); transition: all 0.15s; }
+          .guide-link:hover p { color: #cc0000 !important; transition: color 0.15s; }
         `}</style>
 
         <main style={{ maxWidth: "1200px", margin: "0 auto", padding: "24px 20px" }}>
@@ -268,7 +270,7 @@ export default function Home({ articles, categoryFeatured, evergreenArticles, ti
                 </div>
               )}
 
-              {/* Guides Section */}
+              {/* Guides Section below articles */}
               {evergreenArticles?.length > 0 && (
                 <div style={{ marginTop: "48px" }}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px", borderBottom: "3px solid #111", paddingBottom: "10px" }}>
@@ -292,7 +294,7 @@ export default function Home({ articles, categoryFeatured, evergreenArticles, ti
               )}
             </div>
 
-            {/* Sticky Sidebar — original content */}
+            {/* Sticky Sidebar */}
             <aside>
               <div className="sticky-sidebar" style={{ position: "sticky", top: "20px" }}>
 
@@ -313,21 +315,41 @@ export default function Home({ articles, categoryFeatured, evergreenArticles, ti
                   ))}
                 </div>
 
-                {/* Guides */}
-                {evergreenArticles?.length > 0 && (
-                  <div style={{ background: "#fff", border: "1px solid #eee", borderTop: "3px solid #111", padding: "20px", marginBottom: "20px", boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
+                {/* NEW — Guides Widget (auto-updates with every new guide published) */}
+                {sidebarGuides?.length > 0 && (
+                  <div style={{ background: "#fff", padding: "20px", marginBottom: "20px", boxShadow: "0 1px 4px rgba(0,0,0,0.08)", borderTop: "3px solid #111" }}>
                     <h3 style={{ fontSize: "13px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1.5px", color: "#111", margin: "0 0 16px", paddingBottom: "10px", borderBottom: "2px solid #111" }}>📚 Guides</h3>
-                    {evergreenArticles.slice(0, 3).map(guide => (
-                      <Link key={guide.id} href={articlePath(guide)} style={{ textDecoration: "none" }}>
-                        <div style={{ marginBottom: "12px", paddingBottom: "12px", borderBottom: "1px solid #f5f5f5", cursor: "pointer" }}>
-                          <p style={{ margin: 0, fontSize: "13px", fontWeight: "600", color: "#111", lineHeight: "1.4" }}>{guide.title}</p>
+                    {sidebarGuides.map(guide => (
+                      <Link key={guide.id} href={articlePath(guide)} style={{ textDecoration: "none" }} className="guide-link">
+                        <div style={{ marginBottom: "14px", paddingBottom: "14px", borderBottom: "1px solid #f5f5f5", cursor: "pointer" }}>
+                          <span style={{ fontSize: "9px", color: CATEGORY_COLORS[guide.category] || "#cc0000", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.5px" }}>{guide.category}</span>
+                          <p style={{ margin: "3px 0 4px", fontSize: "12px", fontWeight: "600", color: "#111", lineHeight: "1.4" }}>{guide.title}</p>
                           <span style={{ fontSize: "10px", color: "#666", fontWeight: "600" }}>Read guide →</span>
                         </div>
                       </Link>
                     ))}
-                    <Link href="/guides" style={{ color: "#333", textDecoration: "none", fontSize: "12px", fontWeight: "600" }}>View all guides →</Link>
+                    <Link href="/guides" style={{ color: "#333", textDecoration: "none", fontSize: "12px", fontWeight: "700" }}>View all guides →</Link>
                   </div>
                 )}
+
+                {/* NEW — Follow Us Widget */}
+                <div style={{ background: "#fff", padding: "20px", marginBottom: "20px", boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
+                  <h3 style={{ fontSize: "13px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1.5px", color: "#111", margin: "0 0 16px", paddingBottom: "10px", borderBottom: "2px solid #cc0000" }}>Follow NewsOracle</h3>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                    <a href="https://t.me/NewsOracleOfficial" target="_blank" rel="noopener noreferrer" className="social-btn" style={{ display: "flex", alignItems: "center", gap: "10px", background: "#0088cc", color: "#fff", padding: "10px 14px", textDecoration: "none", fontSize: "13px", fontWeight: "600" }}>
+                      <span style={{ fontSize: "16px" }}>✈️</span> Telegram
+                    </a>
+                    <a href="https://www.facebook.com/profile.php?id=61591337781640" target="_blank" rel="noopener noreferrer" className="social-btn" style={{ display: "flex", alignItems: "center", gap: "10px", background: "#1877f2", color: "#fff", padding: "10px 14px", textDecoration: "none", fontSize: "13px", fontWeight: "600" }}>
+                      <span style={{ fontSize: "16px" }}>📘</span> Facebook
+                    </a>
+                    <a href="https://twitter.com/NewsOracle" target="_blank" rel="noopener noreferrer" className="social-btn" style={{ display: "flex", alignItems: "center", gap: "10px", background: "#000", color: "#fff", padding: "10px 14px", textDecoration: "none", fontSize: "13px", fontWeight: "600" }}>
+                      <span style={{ fontSize: "16px" }}>🐦</span> Twitter / X
+                    </a>
+                    <a href="https://www.linkedin.com/in/news-oracle-a7543b423/" target="_blank" rel="noopener noreferrer" className="social-btn" style={{ display: "flex", alignItems: "center", gap: "10px", background: "#0052cc", color: "#fff", padding: "10px 14px", textDecoration: "none", fontSize: "13px", fontWeight: "600" }}>
+                      <span style={{ fontSize: "16px" }}>💼</span> LinkedIn
+                    </a>
+                  </div>
+                </div>
 
                 {/* Browse */}
                 <div style={{ background: "#fff", padding: "20px", boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
@@ -364,7 +386,7 @@ export default function Home({ articles, categoryFeatured, evergreenArticles, ti
               <Link href="/guides" style={{ color: "#999", textDecoration: "none", fontSize: "13px" }}>Guides</Link>
             </div>
             <h2 style={{ color: "#fff", margin: "0 0 10px", fontSize: "24px", fontWeight: "900", textAlign: "center" }}>NEWS<span style={{ color: "#cc0000" }}>ORACLE</span></h2>
-            <p style={{ margin: 0, fontSize: "12px", textAlign: "center" }}>2026 NewsOracle. All content is for informational purposes only and does not constitute financial or betting advice.</p>
+            <p style={{ margin: 0, fontSize: "12px", textAlign: "center" }}>&copy; 2026 NewsOracle. All Rights Reserved. All content is for informational purposes only.</p>
           </div>
         </footer>
 
@@ -405,6 +427,13 @@ export async function getServerSideProps() {
     .order("created_at", { ascending: false })
     .limit(6);
 
+  // NEW — fetch ALL guides for sidebar (auto-updates with every new guide)
+  const { data: sidebarGuides } = await supabaseServer
+    .from("articles")
+    .select("id, title, category, tag")
+    .eq("evergreen", true)
+    .order("created_at", { ascending: false });
+
   const tickerHeadlines = (articles || []).slice(0, 10);
 
   return {
@@ -413,6 +442,7 @@ export async function getServerSideProps() {
       categoryFeatured,
       evergreenArticles: evergreenArticles || [],
       tickerHeadlines,
+      sidebarGuides: sidebarGuides || [],
     },
   };
 }
