@@ -463,7 +463,11 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
             {/* Sources */}
             <div style={{ padding: "12px 0", borderTop: "1px solid #eee", marginTop: "24px" }}>
               <p style={{ margin: 0, fontSize: "12px", color: "#999", lineHeight: "1.6" }}>
-                <strong>Sources:</strong> {article.source ? `Based on reporting from ${article.source} and other international news sources.` : 'Based on reporting from international news sources via Google News and leading global publications.'}
+                <strong>Sources:</strong> {article.source && article.link ? (
+  <>Based on reporting from <a href={article.link} target="_blank" rel="noopener noreferrer" style={{ color: '#cc0000', textDecoration: 'none', fontWeight: '600' }}>{article.source}</a> and other international news sources.</>
+) : article.source ? (
+  <>Based on reporting from <strong>{article.source}</strong> and other international news sources.</>
+) : 'Based on reporting from AP, Reuters, ESPN, Bloomberg, BBC and other international news sources.'}
               </p>
             </div>
 
