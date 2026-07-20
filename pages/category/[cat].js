@@ -1,7 +1,7 @@
 import Head from "next/head";
 import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
-import { articlePath } from "../lib/slugify";
+import { articlePath } from "../../lib/slugify";
 
 const CATEGORY_CONFIG = {
   sports: {
