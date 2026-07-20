@@ -547,7 +547,7 @@ export default async function handler(req, res) {
   try {
     const results = [];
     const now = new Date().toISOString();
-    const authorNames = { sports: 'Sports Desk', finance: 'Markets Desk', politics: 'Politics Desk', technology: 'Tech Desk' };
+    const authorNames = { sports: 'NewsOracle Editorial', finance: 'NewsOracle Editorial', politics: 'NewsOracle Editorial', technology: 'NewsOracle Editorial' };
 
     // STEP 1 — Fetch ALL RSS sources in parallel (one fetch, not two)
     const allSourceEntries = [];
