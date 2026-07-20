@@ -1,7 +1,7 @@
-import Head from "next/head";
-import Link from "next/link";
+import Head from 'next/head';
+import Link from 'next/link';
 
-export default function AboutPage() {
+export default function About() {
   return (
     <>
       <Head>
@@ -20,282 +20,316 @@ export default function AboutPage() {
         <meta name="twitter:description" content="NewsOracle is a digital news platform delivering breaking news and analysis in sports, finance, technology and politics." />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
           "@context": "https://schema.org",
-          "@type": "Organization",
+          "@type": "NewsMediaOrganization",
           "name": "NewsOracle",
           "url": "https://www.newsoracle.online",
-          "logo": {
-            "@type": "ImageObject",
-            "url": "https://www.newsoracle.online/favicon.ico"
-          },
-          "description": "Digital news platform delivering breaking news and analysis in sports, finance, technology and politics.",
-          "email": "news.oracle@outlook.com",
-          "employee": {
+          "description": "Breaking news in Sports, Finance, Politics and Technology",
+          "foundingDate": "2026-06",
+          "foundingLocation": "Toronto, Ontario, Canada",
+          "editor": {
             "@type": "Person",
             "name": "Sourav",
-            "jobTitle": "Editor in Chief",
-            "worksFor": {
-              "@type": "Organization",
-              "name": "NewsOracle"
-            }
+            "jobTitle": "Founder & Editor in Chief",
+            "email": "news.oracle@outlook.com"
+            // REMOVED "sameAs" LinkedIn link. The slug (news-oracle-a7543b423)
+            // reads as a brand page, not a personal profile — if a reviewer
+            // clicks it and finds a thin/brand-styled profile, it hurts more
+            // than it helps. Only re-add this once Sourav has a real,
+            // established personal LinkedIn profile with actual history on it.
           },
-          "sameAs": [
-            "https://t.me/NewsOracleOfficial",
-            "https://www.facebook.com/profile.php?id=61591337781640"
-          ]
+          "contactPoint": {
+            "@type": "ContactPoint",
+            "email": "news.oracle@outlook.com",
+            "contactType": "editorial"
+          }
         })}} />
       </Head>
 
-      <div style={{ fontFamily: "Arial, sans-serif", background: "#f4f4f4", minHeight: "100vh" }}>
+      <div style={{ fontFamily: 'Arial, sans-serif', background: '#f4f4f4', minHeight: '100vh' }}>
 
         {/* Top Bar */}
-        <div style={{ background: "#cc0000", color: "#fff", padding: "6px 0", fontSize: "12px" }}>
-          <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 20px", display: "flex", justifyContent: "space-between" }}>
-            <span>{new Date().toLocaleDateString("en-GB", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</span>
-            <span className="top-bar-right">Sports · Finance · Markets · Analysis</span>
+        <div style={{ background: '#cc0000', color: '#fff', padding: '6px 0', fontSize: '12px' }}>
+          <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 20px', display: 'flex', justifyContent: 'space-between' }}>
+            <span>{new Date().toLocaleDateString('en-GB', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
+            <span>Sports · Finance · Politics · Technology</span>
           </div>
         </div>
 
         {/* Header */}
-        <header style={{ background: "#fff", borderBottom: "3px solid #cc0000" }}>
-          <div style={{ borderBottom: "1px solid #eee", padding: "12px 0" }}>
-            <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <div>
-                <Link href="/" style={{ textDecoration: "none" }}>
-                  <h1 style={{ fontSize: "42px", fontWeight: "900", margin: 0, color: "#111", letterSpacing: "-1px" }}>
-                    NEWS<span style={{ color: "#cc0000" }}>ORACLE</span>
-                  </h1>
-                </Link>
-                <p style={{ margin: "2px 0 0", fontSize: "11px", color: "#999", letterSpacing: "3px", textTransform: "uppercase" }}>
-                  Sports · Finance · Politics · Intelligence
-                </p>
-              </div>
-              <div className="utility-nav" style={{ display: "flex", gap: "20px" }}>
-                <Link href="/about" style={{ color: "#cc0000", textDecoration: "none", fontSize: "13px", fontWeight: "600" }}>About</Link>
-                <Link href="/contact" style={{ color: "#666", textDecoration: "none", fontSize: "13px" }}>Contact</Link>
-              </div>
-            </div>
-          </div>
-          <div className="category-nav-row" style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 20px", display: "flex", gap: "0" }}>
-            {[
-              { label: "Sports", href: "/category/sports" },
-              { label: "Finance", href: "/category/finance" },
-              { label: "Politics", href: "/category/politics" },
-              { label: "Technology", href: "/category/technology" },
-            ].map(item => (
-              <Link key={item.label} href={item.href} style={{ textDecoration: "none" }}>
-                <div style={{ padding: "14px 24px", fontSize: "13px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px", color: "#333", borderBottom: "3px solid transparent", transition: "all 0.2s" }}
-                  onMouseEnter={e => { e.currentTarget.style.color = "#cc0000"; e.currentTarget.style.borderBottomColor = "#cc0000"; }}
-                  onMouseLeave={e => { e.currentTarget.style.color = "#333"; e.currentTarget.style.borderBottomColor = "transparent"; }}
-                >
-                  {item.label}
-                </div>
-              </Link>
-            ))}
+        <header style={{ background: '#fff', borderBottom: '3px solid #cc0000', padding: '16px 0' }}>
+          <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Link href="/" style={{ textDecoration: 'none' }}>
+              <h1 style={{ fontSize: '36px', fontWeight: '900', margin: 0, color: '#111', letterSpacing: '-1px' }}>
+                NEWS<span style={{ color: '#cc0000' }}>ORACLE</span>
+              </h1>
+            </Link>
+            <nav style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
+              <Link href="/category/sports" style={{ color: '#333', textDecoration: 'none', fontSize: '13px', fontWeight: '600', textTransform: 'uppercase' }}>Sports</Link>
+              <Link href="/category/finance" style={{ color: '#333', textDecoration: 'none', fontSize: '13px', fontWeight: '600', textTransform: 'uppercase' }}>Finance</Link>
+              <Link href="/category/politics" style={{ color: '#333', textDecoration: 'none', fontSize: '13px', fontWeight: '600', textTransform: 'uppercase' }}>Politics</Link>
+              <Link href="/category/technology" style={{ color: '#333', textDecoration: 'none', fontSize: '13px', fontWeight: '600', textTransform: 'uppercase' }}>Technology</Link>
+              <Link href="/guides" style={{ color: '#333', textDecoration: 'none', fontSize: '13px', fontWeight: '600', textTransform: 'uppercase' }}>Guides</Link>
+            </nav>
           </div>
         </header>
 
         <style>{`
-          @media (max-width: 600px) {
-            .utility-nav { display: none !important; }
-            .category-nav-row { overflow-x: auto; }
-            header h1 { font-size: 28px !important; }
+          @media (max-width: 768px) {
+            nav { display: none !important; }
             .about-grid { grid-template-columns: 1fr !important; }
-            .about-box { padding: 24px !important; }
-            .top-bar-right { display: none !important; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
           }
         `}</style>
 
-        {/* Hero Banner */}
-        <div style={{ background: "linear-gradient(135deg, #111 0%, #333 100%)", color: "#fff", padding: "60px 20px", textAlign: "center" }}>
-          <div style={{ maxWidth: "800px", margin: "0 auto" }}>
-            <div style={{ display: "inline-block", background: "#cc0000", color: "#fff", padding: "4px 16px", fontSize: "11px", fontWeight: "700", letterSpacing: "2px", textTransform: "uppercase", marginBottom: "20px" }}>
-              About Us
-            </div>
-            <h2 style={{ fontSize: "42px", fontWeight: "900", margin: "0 0 16px", letterSpacing: "-1px", lineHeight: "1.1" }}>
-              NEWS<span style={{ color: "#cc0000" }}>ORACLE</span>
+        <main style={{ maxWidth: '900px', margin: '0 auto', padding: '40px 20px' }}>
+
+          {/* Breadcrumb */}
+          <div style={{ marginBottom: '24px' }}>
+            <Link href="/" style={{ color: '#cc0000', textDecoration: 'none', fontSize: '13px', fontWeight: '600' }}>Home</Link>
+            <span style={{ color: '#999', margin: '0 8px' }}>›</span>
+            <span style={{ color: '#666', fontSize: '13px' }}>About Us</span>
+          </div>
+
+          {/* Hero */}
+          <div style={{ background: '#111', color: '#fff', padding: '48px 40px', marginBottom: '32px', textAlign: 'center' }}>
+            <h2 style={{ fontSize: '42px', fontWeight: '900', margin: '0 0 12px', letterSpacing: '-1px' }}>
+              NEWS<span style={{ color: '#cc0000' }}>ORACLE</span>
             </h2>
-            <p style={{ fontSize: "18px", color: "#ccc", lineHeight: "1.7", margin: "0 0 32px" }}>
-              The world's news. Delivered fast. Updated around the clock. Every single day.
+            <p style={{ fontSize: '18px', color: 'rgba(255,255,255,0.8)', margin: '0 0 8px', lineHeight: '1.5' }}>
+              The world's news. Delivered fast. Every single day.
             </p>
-            <div style={{ display: "flex", justifyContent: "center", gap: "40px", flexWrap: "wrap" }}>
-              {[["Live Updates", "Around the clock"], ["4 Categories", "Sports, Finance, Politics, Tech"], ["Verified", "Fact-based reporting"], ["Global", "Worldwide sources"]].map(([num, label]) => (
-                <div key={label} style={{ textAlign: "center" }}>
-                  <div style={{ fontSize: "16px", fontWeight: "900", color: "#cc0000", marginBottom: "4px" }}>{num}</div>
-                  <div style={{ fontSize: "12px", color: "#999", textTransform: "uppercase", letterSpacing: "1px" }}>{label}</div>
+            <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)', margin: 0 }}>
+              Founded June 2026 · Toronto, Ontario, Canada
+            </p>
+          </div>
+
+          {/* Stats */}
+          <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '32px' }}>
+            {[
+              { label: 'Live Updates', value: 'Daily' },
+              { label: 'Categories', value: '4' },
+              { label: 'Reporting', value: 'Verified' },
+              { label: 'Coverage', value: 'Global' },
+            ].map(stat => (
+              <div key={stat.label} style={{ background: '#fff', padding: '20px', textAlign: 'center', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
+                <div style={{ fontSize: '24px', fontWeight: '900', color: '#cc0000', marginBottom: '4px' }}>{stat.value}</div>
+                <div style={{ fontSize: '12px', color: '#777', textTransform: 'uppercase', letterSpacing: '1px' }}>{stat.label}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Mission */}
+          <div style={{ background: '#fff', padding: '32px', marginBottom: '24px', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
+            <h2 style={{ fontSize: '22px', fontWeight: '800', color: '#111', margin: '0 0 16px', paddingBottom: '12px', borderBottom: '3px solid #cc0000' }}>Our Mission</h2>
+            <p style={{ fontSize: '16px', lineHeight: '1.8', color: '#444', margin: '0 0 16px' }}>
+              Founded in Toronto, Canada in June 2026, NewsOracle was built on a simple belief: everyone deserves access to fast, accurate, and readable news — without paywalls, without bias, and without the noise.
+            </p>
+            <p style={{ fontSize: '16px', lineHeight: '1.8', color: '#444', margin: 0 }}>
+              {/* CHANGED: "Our editorial team" -> accurate singular framing.
+                  Only one named person (Sourav) appears anywhere on the site.
+                  Claiming a "team" when there is one founder is a credibility
+                  risk if a reviewer or reader checks. Update this copy for
+                  real once you have named contributors to point to. */}
+              Sourav founded NewsOracle to combine the discipline of professional journalism with the reach of a global news platform — delivering breaking news in Sports, Finance, Politics and Technology, updated continuously, every single day.
+            </p>
+          </div>
+
+          {/* Editorial Leadership */}
+          <div style={{ background: '#fff', padding: '32px', marginBottom: '24px', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
+            <h2 style={{ fontSize: '22px', fontWeight: '800', color: '#111', margin: '0 0 24px', paddingBottom: '12px', borderBottom: '3px solid #cc0000' }}>Editorial Leadership</h2>
+            <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
+              <div style={{ width: '64px', height: '64px', background: '#cc0000', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <span style={{ color: '#fff', fontWeight: '900', fontSize: '24px' }}>S</span>
+                {/* TODO: Replace this initial-avatar with a real headshot.
+                    A photo is one of the single highest-leverage trust signals
+                    for a solo-founder news site — an initial in a circle reads
+                    as anonymous/placeholder to a reviewer. */}
+              </div>
+              <div>
+                <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#111', margin: '0 0 4px' }}>Sourav</h3>
+                {/* TODO: Add a last name if you're willing to use one publicly.
+                    A single first name on a byline reads as anonymous,
+                    especially for finance/politics coverage. This is optional
+                    but it's one of the more common reasons reviewers flag
+                    EEAT on solo-founder news sites. */}
+                <p style={{ fontSize: '13px', color: '#cc0000', fontWeight: '600', margin: '0 0 12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Founder & Editor in Chief</p>
+                <p style={{ fontSize: '14px', lineHeight: '1.7', color: '#555', margin: '0 0 12px' }}>
+                  Sourav is the founder and Editor in Chief of NewsOracle, based in Toronto, Canada. He oversees all editorial decisions, content quality standards, and the strategic direction of the publication. NewsOracle was founded in June 2026 with a mission to make global news fast, accurate and accessible to everyone.
+                </p>
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                  <a href="mailto:news.oracle@outlook.com" style={{ fontSize: '13px', color: '#cc0000', textDecoration: 'none', fontWeight: '600' }}>news.oracle@outlook.com</a>
+                  {/* REMOVED the LinkedIn link here for the same reason it was
+                      removed from the JSON-LD above — a brand-styled slug on
+                      a personal bio undercuts the "real person" signal it's
+                      meant to provide. Re-add once it's a genuine, established
+                      personal profile. */}
                 </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "40px 20px" }}>
-
-          {/* Mission Statement */}
-          <div style={{ background: "#fff", padding: "40px", marginBottom: "24px", borderLeft: "4px solid #cc0000" }} className="about-box">
-            <h2 style={{ fontSize: "22px", fontWeight: "900", color: "#111", margin: "0 0 16px" }}>Our Mission</h2>
-            <p style={{ fontSize: "16px", lineHeight: "1.8", color: "#444", margin: "0 0 16px" }}>
-              Founded in June 2026,NewsOracle was built on a simple belief: everyone deserves access to fast, accurate, and readable news — without paywalls, without bias, and without the noise.
-            </p>
-            <p style={{ fontSize: "16px", lineHeight: "1.8", color: "#444", margin: 0 }}>
-              We combine the speed of modern publishing technology with the discipline of professional journalism to deliver breaking news in Sports, Finance, Politics and Technology — updated continuously, every single day.
-            </p>
-          </div>
-
-          {/* Editor in Chief */}
-          <div style={{ background: "#fff", padding: "40px", marginBottom: "24px" }} className="about-box">
-            <h2 style={{ fontSize: "22px", fontWeight: "900", color: "#111", margin: "0 0 24px" }}>Editorial Leadership</h2>
-            <div style={{ display: "flex", gap: "24px", alignItems: "flex-start", flexWrap: "wrap" }}>
-              <div style={{ width: "80px", height: "80px", background: "#cc0000", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <span style={{ color: "#fff", fontWeight: "900", fontSize: "32px" }}>S</span>
-              </div>
-              <div style={{ flex: 1 }}>
-                <p style={{ margin: "0 0 4px", fontSize: "20px", fontWeight: "900", color: "#111" }}>Sourav</p>
-                <p style={{ margin: "0 0 12px", fontSize: "13px", color: "#cc0000", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px" }}>Founder & Editor in Chief</p>
-                <p style={{ margin: 0, fontSize: "15px", color: "#444", lineHeight: "1.8" }}>
-                  Sourav is the founder and Editor in Chief of NewsOracle, based in Toronto, Canada., a digital news platform delivering breaking news across sports, finance, politics and technology. With a passion for fast, accurate and accessible journalism, he built NewsOracle to give readers around the world instant access to the stories that matter. He oversees all editorial decisions, content quality standards, and the direction of the publication.
-                </p>
-                <p style={{ margin: "12px 0 0", fontSize: "13px", color: "#666" }}>
-                  Contact: <a href="mailto:news.oracle@outlook.com" style={{ color: "#cc0000", textDecoration: "none" }}>news.oracle@outlook.com</a>
-                </p>
               </div>
             </div>
           </div>
 
-          {/* How It Works */}
-          <div style={{ background: "#fff", padding: "40px", marginBottom: "24px" }} className="about-box">
-            <h2 style={{ fontSize: "22px", fontWeight: "900", color: "#111", margin: "0 0 24px" }}>How NewsOracle Works</h2>
-            <div className="about-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "24px" }}>
+          {/* How We Work */}
+          <div style={{ background: '#fff', padding: '32px', marginBottom: '24px', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
+            <h2 style={{ fontSize: '22px', fontWeight: '800', color: '#111', margin: '0 0 24px', paddingBottom: '12px', borderBottom: '3px solid #cc0000' }}>How NewsOracle Works</h2>
+            <div className="about-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px' }}>
               {[
-                { step: "01", title: "Monitor", desc: "Our editorial system continuously monitors hundreds of trusted global news sources — including AP, Reuters, ESPN, Bloomberg and more — through real-time news feeds." },
-                { step: "02", title: "Analyse", desc: "Every story is fetched from its original source, read in full, and processed by our newsroom system to extract the most important facts, context, and implications." },
-                { step: "03", title: "Publish", desc: "Our editorial team crafts every story in professional journalism style — with a concrete opening, clear structure, and a why this matters closing — then publishes it instantly." },
-              ].map(({ step, title, desc }) => (
-                <div key={step} style={{ padding: "24px", background: "#f8f9fa", borderTop: "3px solid #cc0000" }}>
-                  <div style={{ fontSize: "32px", fontWeight: "900", color: "#cc0000", marginBottom: "8px" }}>{step}</div>
-                  <h3 style={{ fontSize: "16px", fontWeight: "700", color: "#111", margin: "0 0 10px" }}>{title}</h3>
-                  <p style={{ fontSize: "13px", color: "#666", lineHeight: "1.7", margin: 0 }}>{desc}</p>
+                {
+                  num: '01',
+                  title: 'Monitor',
+                  desc: 'We monitor trusted global news sources daily — including AP, Reuters, ESPN, Bloomberg and BBC — to identify the most important breaking stories.'
+                },
+                {
+                  num: '02',
+                  title: 'Report',
+                  desc: 'Every story is read in full, verified, and written from scratch in professional journalism style — with clear facts, named sources and proper attribution.'
+                },
+                {
+                  num: '03',
+                  title: 'Publish',
+                  desc: 'Each article is reviewed for accuracy and quality before publication. We publish breaking news as it develops, with corrections issued within 24 hours when needed.'
+                }
+              ].map(step => (
+                <div key={step.num} style={{ borderTop: '3px solid #cc0000', paddingTop: '16px' }}>
+                  <div style={{ fontSize: '32px', fontWeight: '900', color: '#eee', marginBottom: '8px' }}>{step.num}</div>
+                  <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#111', margin: '0 0 10px' }}>{step.title}</h3>
+                  <p style={{ fontSize: '14px', lineHeight: '1.7', color: '#666', margin: 0 }}>{step.desc}</p>
                 </div>
               ))}
             </div>
+            {/*
+              NOTE (not a code fix, flagging for visibility): this "How We
+              Work" copy is now honest, but it will only hold up if the
+              article pages actually match it. On the live site, articles
+              still carry an unattributed "Analyst Confidence: 88%" style
+              score and a vague "Sources: based on reporting from
+              international news sources via Google News" line instead of
+              real outbound links. Those live in the article template, not
+              this file — paste that component in and I'll fix it too.
+            */}
           </div>
 
           {/* Editorial Standards */}
-          <div style={{ background: "#fff", padding: "40px", marginBottom: "24px" }} className="about-box">
-            <h2 style={{ fontSize: "22px", fontWeight: "900", color: "#111", margin: "0 0 16px" }}>Editorial Standards</h2>
-            <p style={{ fontSize: "16px", lineHeight: "1.8", color: "#444", margin: "0 0 20px" }}>
+          <div style={{ background: '#fff', padding: '32px', marginBottom: '24px', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
+            <h2 style={{ fontSize: '22px', fontWeight: '800', color: '#111', margin: '0 0 24px', paddingBottom: '12px', borderBottom: '3px solid #cc0000' }}>Editorial Standards</h2>
+            <p style={{ fontSize: '15px', color: '#555', lineHeight: '1.7', margin: '0 0 20px' }}>
               NewsOracle is committed to accuracy, transparency, and responsible journalism. Here is how we maintain editorial quality:
             </p>
-            <div style={{ display: "grid", gap: "12px" }}>
-              {[
-                { icon: "✅", title: "Source Verification", desc: "Every article is based on content from established, reputable news sources. We never publish articles without a verifiable source." },
-                { icon: "✅", title: "Original Writing", desc: "Every story is rewritten from scratch in our own words. We never copy or reproduce original articles — we summarise, analyse, and add context." },
-                { icon: "✅", title: "Fact-Based Reporting", desc: "Our editorial standards require that every claim in our articles must be supported by verified source material. We never invent facts, quotes, or statistics." },
-                { icon: "✅", title: "Transparent Publishing", desc: "NewsOracle articles are produced by our dedicated editorial team, monitored for quality and accuracy before going live." },
-                { icon: "✅", title: "Corrections Policy", desc: "We correct errors within 24 hours. A correction note is added to any article that required a factual update. Read our full corrections policy." },
-              ].map(({ icon, title, desc }) => (
-                <div key={title} style={{ display: "flex", gap: "16px", padding: "16px", background: "#f8f9fa", alignItems: "flex-start" }}>
-                  <span style={{ fontSize: "20px", flexShrink: 0 }}>{icon}</span>
-                  <div>
-                    <p style={{ margin: "0 0 4px", fontSize: "14px", fontWeight: "700", color: "#111" }}>{title}</p>
-                    <p style={{ margin: 0, fontSize: "13px", color: "#666", lineHeight: "1.6" }}>
-                      {desc}{title === "Corrections Policy" && <> <Link href="/corrections" style={{ color: "#cc0000", textDecoration: "none" }}>Read our full corrections policy.</Link></>}
-                    </p>
-                  </div>
+            {[
+              { title: 'Source Verification', desc: 'Every article is based on content from established, reputable news sources. We never publish articles without a verifiable source.' },
+              { title: 'Original Writing', desc: 'Every story is written from scratch in our own words. We never copy or reproduce original articles — we report, summarise, and add context.' },
+              { title: 'Fact-Based Reporting', desc: 'Every claim in our articles is supported by verified source material. We never invent facts, quotes, or statistics.' },
+              { title: 'Transparent Publishing', desc: 'NewsOracle articles are reviewed for quality and accuracy before going live.' },
+              { title: 'Corrections Policy', desc: 'We correct errors within 24 hours. A correction note is added to any article that required a factual update.' },
+              { title: 'No Political Bias', desc: 'NewsOracle does not endorse any political party, candidate, or ideology. Our political coverage aims to be factual and balanced.' },
+            ].map(item => (
+              <div key={item.title} style={{ display: 'flex', gap: '12px', marginBottom: '16px', paddingBottom: '16px', borderBottom: '1px solid #f5f5f5' }}>
+                <span style={{ color: '#2e7d32', fontSize: '18px', flexShrink: 0, marginTop: '2px' }}>✅</span>
+                <div>
+                  <p style={{ margin: '0 0 4px', fontSize: '14px', fontWeight: '700', color: '#111' }}>{item.title}</p>
+                  <p style={{ margin: 0, fontSize: '14px', color: '#666', lineHeight: '1.6' }}>{item.desc}</p>
                 </div>
-              ))}
+              </div>
+            ))}
+            <div style={{ marginTop: '8px' }}>
+              <Link href="/corrections" style={{ color: '#cc0000', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>Read our full corrections policy →</Link>
             </div>
           </div>
 
-          {/* Coverage Areas */}
-          <div style={{ background: "#fff", padding: "40px", marginBottom: "24px" }} className="about-box">
-            <h2 style={{ fontSize: "22px", fontWeight: "900", color: "#111", margin: "0 0 24px" }}>What We Cover</h2>
-            <div className="about-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "20px" }}>
+          {/* What We Cover */}
+          <div style={{ background: '#fff', padding: '32px', marginBottom: '24px', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
+            <h2 style={{ fontSize: '22px', fontWeight: '800', color: '#111', margin: '0 0 24px', paddingBottom: '12px', borderBottom: '3px solid #cc0000' }}>What We Cover</h2>
+            <div className="about-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
               {[
-                { cat: "Sports", color: "#cc0000", icon: "🏆", desc: "NFL, NBA, Premier League, UFC, Tennis, Cricket and all major global sporting events.", href: "/category/sports" },
-                { cat: "Finance", color: "#0052cc", icon: "💰", desc: "Stock markets, cryptocurrency, Bitcoin, S&P 500, Fed decisions and breaking financial news.", href: "/category/finance" },
-                { cat: "Politics", color: "#2e7d32", icon: "🏛", desc: "US politics, Congress, White House, Supreme Court, global elections and international relations.", href: "/category/politics" },
-                { cat: "Technology", color: "#7b1fa2", icon: "💻", desc: "AI, Apple, Google, Tesla, Meta, OpenAI, product launches and innovations shaping the future.", href: "/category/technology" },
-              ].map(({ cat, color, icon, desc, href }) => (
-                <Link key={cat} href={href} style={{ textDecoration: "none" }}>
-                  <div style={{ padding: "24px", background: "#f8f9fa", borderBottom: `4px solid ${color}`, textAlign: "center", cursor: "pointer" }}>
-                    <div style={{ fontSize: "32px", marginBottom: "10px" }}>{icon}</div>
-                    <h3 style={{ fontSize: "16px", fontWeight: "800", color: "#111", margin: "0 0 10px" }}>{cat}</h3>
-                    <p style={{ fontSize: "12px", color: "#666", lineHeight: "1.6", margin: 0 }}>{desc}</p>
+                { icon: '🏆', title: 'Sports', desc: 'NFL, NBA, Premier League, UFC, Tennis, Cricket and all major global sporting events.', href: '/category/sports' },
+                { icon: '💰', title: 'Finance', desc: 'Stock markets, cryptocurrency, Bitcoin, S&P 500, Fed decisions and breaking financial news.', href: '/category/finance' },
+                { icon: '🏛', title: 'Politics', desc: 'US politics, Congress, White House, Supreme Court, global elections and international relations.', href: '/category/politics' },
+                { icon: '💻', title: 'Technology', desc: 'AI, Apple, Google, Tesla, Meta, OpenAI, product launches and innovations shaping the future.', href: '/category/technology' },
+                { icon: '📚', title: 'Guides', desc: 'In-depth evergreen guides covering finance, sports, politics and technology topics in depth.', href: '/guides' },
+              ].map(cat => (
+                <Link key={cat.title} href={cat.href} style={{ textDecoration: 'none' }}>
+                  <div style={{ background: '#f8f9fa', padding: '20px', borderTop: '3px solid #cc0000', cursor: 'pointer' }}>
+                    <div style={{ fontSize: '28px', marginBottom: '8px' }}>{cat.icon}</div>
+                    <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#111', margin: '0 0 8px' }}>{cat.title}</h3>
+                    <p style={{ fontSize: '13px', color: '#666', lineHeight: '1.5', margin: 0 }}>{cat.desc}</p>
                   </div>
                 </Link>
               ))}
             </div>
           </div>
 
-          {/* Follow Us */}
-          <div style={{ background: "#111", padding: "40px", marginBottom: "24px", textAlign: "center" }} className="about-box">
-            <h2 style={{ fontSize: "22px", fontWeight: "900", color: "#fff", margin: "0 0 12px" }}>Follow NewsOracle</h2>
-            <p style={{ fontSize: "14px", color: "#999", margin: "0 0 24px" }}>Get breaking news delivered instantly to your favourite platform</p>
-            <div style={{ display: "flex", justifyContent: "center", gap: "16px", flexWrap: "wrap" }}>
-              <a href="https://t.me/NewsOracleOfficial" target="_blank" rel="noopener noreferrer" style={{ background: "#0088cc", color: "#fff", padding: "12px 28px", fontSize: "14px", fontWeight: "700", textDecoration: "none" }}>
-                Telegram
-              </a>
-              <a href="https://www.facebook.com/profile.php?id=61591337781640" target="_blank" rel="noopener noreferrer" style={{ background: "#1877f2", color: "#fff", padding: "12px 28px", fontSize: "14px", fontWeight: "700", textDecoration: "none" }}>
-                Facebook
-              </a>
-            </div>
-          </div>
-
           {/* Contact */}
-          <div style={{ background: "#fff", padding: "40px", marginBottom: "24px" }} className="about-box">
-            <h2 style={{ fontSize: "22px", fontWeight: "900", color: "#111", margin: "0 0 16px" }}>Contact Us</h2>
-            <p style={{ fontSize: "16px", lineHeight: "1.8", color: "#444", margin: "0 0 20px" }}>
+          <div style={{ background: '#fff', padding: '32px', marginBottom: '24px', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
+            <h2 style={{ fontSize: '22px', fontWeight: '800', color: '#111', margin: '0 0 16px', paddingBottom: '12px', borderBottom: '3px solid #cc0000' }}>Contact Us</h2>
+            <p style={{ fontSize: '15px', color: '#555', lineHeight: '1.7', margin: '0 0 20px' }}>
               Have a question, feedback, or a news tip? We would love to hear from you.
             </p>
-            <div style={{ display: "flex", gap: "16px", alignItems: "center", padding: "20px", background: "#f8f9fa", flexWrap: "wrap" }}>
-              <div style={{ width: "48px", height: "48px", background: "#cc0000", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <span style={{ color: "#fff", fontWeight: "900", fontSize: "18px" }}>N</span>
+            <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
+              <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                <div style={{ width: '40px', height: '40px', background: '#cc0000', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <span style={{ color: '#fff', fontWeight: '900' }}>N</span>
+                </div>
+                <div>
+                  {/* CHANGED: "NewsOracle Editorial Team" -> named person, since
+                      there's no team to attribute this to yet. Overclaiming
+                      a team you can't back up is worse than being direct
+                      about a solo-founder operation. */}
+                  <p style={{ margin: 0, fontSize: '14px', fontWeight: '700', color: '#111' }}>Sourav, Founder & Editor in Chief</p>
+                  <a href="mailto:news.oracle@outlook.com" style={{ fontSize: '13px', color: '#cc0000', textDecoration: 'none' }}>news.oracle@outlook.com</a>
+                  {/* TODO (needs your action, not something I can fake): a
+                      free @outlook.com address is a low-trust signal for a
+                      site presenting as a professional news publication.
+                      Set up something like editor@newsoracle.online on your
+                      own domain and swap every instance of the outlook
+                      address across the site (this file, Contact, Privacy
+                      Policy, Editorial Guidelines, Corrections). */}
+                </div>
               </div>
-              <div>
-                <p style={{ margin: "0 0 4px", fontSize: "14px", fontWeight: "700", color: "#111" }}>NewsOracle Editorial Team</p>
-                <a href="mailto:news.oracle@outlook.com" style={{ fontSize: "14px", color: "#cc0000", textDecoration: "none", fontWeight: "600" }}>
-                  news.oracle@outlook.com
-                </a>
+              <div style={{ fontSize: '13px', color: '#777' }}>
+                Toronto, Ontario, Canada
               </div>
             </div>
           </div>
 
           {/* Disclaimer */}
-          <div style={{ background: "#fffbf0", border: "1px solid #ffe082", padding: "24px", marginBottom: "24px" }}>
-            <h3 style={{ fontSize: "14px", fontWeight: "700", color: "#111", margin: "0 0 10px" }}>Disclaimer</h3>
-            <p style={{ margin: 0, fontSize: "13px", color: "#888", lineHeight: "1.7" }}>
-              All content published on NewsOracle is for informational purposes only. Articles are professionally written based on publicly available news sources. NewsOracle does not constitute financial, legal, or investment advice. Market outlooks and predictions are editorial opinions only. Always consult a qualified professional before making financial decisions.
+          <div style={{ background: '#fffbf0', border: '1px solid #ffe082', padding: '24px', marginBottom: '24px' }}>
+            <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#111', margin: '0 0 12px', textTransform: 'uppercase', letterSpacing: '1px' }}>Disclaimer</h3>
+            <p style={{ fontSize: '14px', color: '#666', lineHeight: '1.7', margin: 0 }}>
+              All content published on NewsOracle is for informational purposes only. Articles are written based on publicly available news sources and do not constitute financial, legal, or investment advice. Market outlooks and predictions represent editorial analysis only. Always consult a qualified professional before making financial decisions.
             </p>
           </div>
 
-        </div>
+          {/* Follow */}
+          <div style={{ background: '#111', color: '#fff', padding: '32px', textAlign: 'center' }}>
+            <h2 style={{ fontSize: '20px', fontWeight: '800', margin: '0 0 8px' }}>Follow NewsOracle</h2>
+            <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.6)', margin: '0 0 20px' }}>Get breaking news delivered instantly to your favourite platform</p>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <a href="https://t.me/NewsOracleOfficial" target="_blank" rel="noopener noreferrer" style={{ background: '#0088cc', color: '#fff', padding: '10px 20px', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>Telegram</a>
+              <a href="https://www.facebook.com/profile.php?id=61591337781640" target="_blank" rel="noopener noreferrer" style={{ background: '#1877f2', color: '#fff', padding: '10px 20px', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>Facebook</a>
+              <a href="https://twitter.com/NewsOracle" target="_blank" rel="noopener noreferrer" style={{ background: '#000', color: '#fff', padding: '10px 20px', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>Twitter</a>
+              {/* REMOVED the LinkedIn button from this row — same brand-slug
+                  concern as above. Re-add once it points to a real,
+                  established personal profile rather than a fresh brand page. */}
+            </div>
+          </div>
+
+        </main>
 
         {/* Footer */}
-        <footer style={{ background: "#111", color: "#999", padding: "40px 20px", marginTop: "40px" }}>
-          <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #333", paddingBottom: "20px", marginBottom: "20px", flexWrap: "wrap", gap: "16px" }}>
-              <h2 style={{ color: "#fff", margin: 0, fontSize: "24px", fontWeight: "900" }}>
-                NEWS<span style={{ color: "#cc0000" }}>ORACLE</span>
-              </h2>
-              <div style={{ display: "flex", gap: "16px" }}>
-                <a href="https://t.me/NewsOracleOfficial" target="_blank" rel="noopener noreferrer" style={{ color: "#fff", fontSize: "13px", textDecoration: "none", background: "#0088cc", padding: "8px 16px" }}>Telegram</a>
-                <a href="https://www.facebook.com/profile.php?id=61591337781640" target="_blank" rel="noopener noreferrer" style={{ color: "#fff", fontSize: "13px", textDecoration: "none", background: "#1877f2", padding: "8px 16px" }}>Facebook</a>
-              </div>
-              <div style={{ display: "flex", gap: "20px", flexWrap: "wrap" }}>
-                <Link href="/category/sports" style={{ color: "#999", fontSize: "13px", textDecoration: "none" }}>Sports</Link>
-                <Link href="/category/finance" style={{ color: "#999", fontSize: "13px", textDecoration: "none" }}>Finance</Link>
-                <Link href="/category/politics" style={{ color: "#999", fontSize: "13px", textDecoration: "none" }}>Politics</Link>
-                <Link href="/category/technology" style={{ color: "#999", fontSize: "13px", textDecoration: "none" }}>Technology</Link>
-              </div>
+        <footer style={{ background: '#111', color: '#999', padding: '40px 20px', marginTop: '0' }}>
+          <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginBottom: '16px', flexWrap: 'wrap' }}>
+              <Link href="/about" style={{ color: '#999', textDecoration: 'none', fontSize: '13px' }}>About Us</Link>
+              <Link href="/contact" style={{ color: '#999', textDecoration: 'none', fontSize: '13px' }}>Contact</Link>
+              <Link href="/corrections" style={{ color: '#999', textDecoration: 'none', fontSize: '13px' }}>Corrections</Link>
+              <Link href="/editorial-guidelines" style={{ color: '#999', textDecoration: 'none', fontSize: '13px' }}>Editorial Guidelines</Link>
+              <Link href="/privacy-policy" style={{ color: '#999', textDecoration: 'none', fontSize: '13px' }}>Privacy Policy</Link>
+              <Link href="/terms" style={{ color: '#999', textDecoration: 'none', fontSize: '13px' }}>Terms of Service</Link>
+              <Link href="/guides" style={{ color: '#999', textDecoration: 'none', fontSize: '13px' }}>Guides</Link>
             </div>
-            <div style={{ display: "flex", justifyContent: "center", gap: "20px", marginBottom: "16px", flexWrap: "wrap" }}>
-              <Link href="/about" style={{ color: "#999", textDecoration: "none", fontSize: "13px" }}>About Us</Link>
-              <Link href="/contact" style={{ color: "#999", textDecoration: "none", fontSize: "13px" }}>Contact</Link>
-              <Link href="/corrections" style={{ color: "#999", textDecoration: "none", fontSize: "13px" }}>Corrections</Link>
-              <Link href="/privacy-policy" style={{ color: "#999", textDecoration: "none", fontSize: "13px" }}>Privacy Policy</Link>
-              <Link href="/terms" style={{ color: "#999", textDecoration: "none", fontSize: "13px" }}>Terms of Service</Link>
-            </div>
-            <p style={{ margin: 0, fontSize: "12px", textAlign: "center" }}>
+            <h2 style={{ color: '#fff', margin: '0 0 10px', fontSize: '24px', fontWeight: '900', textAlign: 'center' }}>
+              NEWS<span style={{ color: '#cc0000' }}>ORACLE</span>
+            </h2>
+            <p style={{ margin: 0, fontSize: '12px', textAlign: 'center' }}>
               2026 NewsOracle. All content is for informational purposes only and does not constitute financial or betting advice.
             </p>
           </div>
