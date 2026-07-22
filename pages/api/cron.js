@@ -687,7 +687,7 @@ export default async function handler(req, res) {
             'Iran Strikes': 'https://www.newsoracle.online/article/469-us-strikes-on-iran-2026-complete-day-by-day-timeline',
           };
           if (article.tag && guideLinks[article.tag]) {
-            article.summary += `\n\nRelated Guide: For deeper analysis, read our complete guide: ${guideLinks[article.tag]}`;
+            article.summary += `\n\n**Related Guide:** <a href="${guideLinks[article.tag]}" style="color:#cc0000;font-weight:600;">Read our complete guide →</a>`;
           }
 
           return { category, rss, article, fullText, ogImage };
