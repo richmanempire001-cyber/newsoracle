@@ -74,9 +74,7 @@ const CATEGORY_COLORS = {
   technology: "#111111",
 };
 
-// Parse a paragraph for special formatting patterns
 function renderParagraph(para, i, accentColor) {
-  // Tool info labels: **Best for:** / **Pricing:** / **Limitation:**
   if (/^\*\*(Best for|Pricing|Limitation|Target markets|Coverage|Supported markets):\*\*/.test(para)) {
     const labelMatch = para.match(/^\*\*([^*]+):\*\*\s*(.*)/s);
     if (labelMatch) {
@@ -103,7 +101,6 @@ function renderParagraph(para, i, accentColor) {
     }
   }
 
-  // FAQ questions: **Question?** followed by answer
   if (/^\*\*[^*]+\?\*\*$/.test(para.trim())) {
     const question = para.replace(/\*\*/g, '');
     return (
@@ -115,7 +112,6 @@ function renderParagraph(para, i, accentColor) {
     );
   }
 
-  // Why this matters
   if (para.toLowerCase().startsWith('why this matters') || para.toLowerCase().startsWith('why it matters')) {
     const formatted = para.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>').replace(/\*([^*]+)\*/g, '<em>$1</em>');
     return (
@@ -125,7 +121,6 @@ function renderParagraph(para, i, accentColor) {
     );
   }
 
-  // Bottom line / conclusion
   if (para.toLowerCase().startsWith('## the bottom line') || para.toLowerCase().startsWith('## conclusion') || para.toLowerCase().startsWith('## verdict')) {
     const title = para.replace(/^## /, '');
     return (
@@ -135,7 +130,6 @@ function renderParagraph(para, i, accentColor) {
     );
   }
 
-  // Regular subheading ##
   if (para.startsWith('## ')) {
     const heading = para.replace(/^## /, '');
     return (
@@ -146,7 +140,6 @@ function renderParagraph(para, i, accentColor) {
     );
   }
 
-  // Tool header: **Number. Tool Name — Tagline**
   if (/^\*\*\d+\.\s/.test(para) && para.endsWith('**')) {
     const content = para.replace(/\*\*/g, '');
     const dashIndex = content.indexOf(' — ');
@@ -160,7 +153,6 @@ function renderParagraph(para, i, accentColor) {
     );
   }
 
-  // Regular paragraph with inline bold/italic
   const formatted = para
     .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
     .replace(/\*([^*]+)\*/g, '<em>$1</em>');
@@ -238,7 +230,8 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
   const imageUrl = getImage(article);
   const wordCount = article.summary?.trim().split(/\s+/).length || 0;
   const faqSchema = buildFaqSchema(article, paragraphs);
-  const isBreaking = !isEvergreen && (new Date() - new Date(article.created_at)) < 7200000;
+  // CHANGE D — BREAKING badge tightened to 1 hour only
+  const isBreaking = !isEvergreen && (new Date() - new Date(article.created_at)) < 3600000;
   const bodyParagraphs = isEvergreen ? paragraphs : paragraphs.slice(3);
   const readNextArticles = related.slice(0, 2);
   const sidebarArticles = related.slice(0, 3);
@@ -257,6 +250,8 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
         <meta property="og:type" content="article" />
         <meta property="og:site_name" content="NewsOracle" />
         <meta property="article:published_time" content={article.created_at} />
+        {/* CHANGE B — article:modified_time uses real updated_at timestamp */}
+        <meta property="article:modified_time" content={article.updated_at || article.created_at} />
         <meta property="article:section" content={article.category} />
         {article.tag && <meta property="article:tag" content={article.tag} />}
         <meta name="twitter:card" content="summary_large_image" />
@@ -276,7 +271,8 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
           "keywords": article.tag || article.category,
           "mainEntityOfPage": { "@type": "WebPage", "@id": canonicalUrl },
           "datePublished": article.created_at,
-          "dateModified": article.created_at,
+          // CHANGE A — dateModified uses real updated_at if available
+          "dateModified": article.updated_at || article.created_at,
           "author": { "@type": "Organization", "name": article.author || "NewsOracle Editorial", "url": "https://www.newsoracle.online/about" },
           "publisher": { "@type": "Organization", "name": "NewsOracle", "url": "https://www.newsoracle.online", "logo": { "@type": "ImageObject", "url": "https://www.newsoracle.online/favicon.ico" } }
         })}} />
@@ -369,7 +365,10 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
                 <>
                   <span style={{ fontSize: "13px", color: "#999" }}>{new Date(article.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}</span>
                   <span style={{ fontSize: "13px", color: "#999" }}>{new Date(article.created_at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })} GMT</span>
-                  <span style={{ fontSize: "13px", color: accentColor, fontWeight: "600" }}>Updated {timeAgo(article.created_at)}</span>
+                  {/* CHANGE A — only show Updated when article was actually updated after publish */}
+                  {article.updated_at && article.updated_at !== article.created_at && (
+                    <span style={{ fontSize: "13px", color: accentColor, fontWeight: "600" }}>Updated {timeAgo(article.updated_at)}</span>
+                  )}
                 </>
               )}
               <span style={{ fontSize: "13px", color: "#999" }}>{getReadTime(article.summary)} min read</span>
@@ -460,14 +459,14 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
               </div>
             )}
 
-            {/* Sources */}
+            {/* Sources — CHANGE C: cleaner attribution, less robotic */}
             <div style={{ padding: "12px 0", borderTop: "1px solid #eee", marginTop: "24px" }}>
               <p style={{ margin: 0, fontSize: "12px", color: "#999", lineHeight: "1.6" }}>
                 <strong>Sources:</strong> {article.source && article.link ? (
-  <>Based on reporting from <a href={article.link} target="_blank" rel="noopener noreferrer" style={{ color: '#cc0000', textDecoration: 'none', fontWeight: '600' }}>{article.source}</a> and other international news sources.</>
-) : article.source ? (
-  <>Based on reporting from <strong>{article.source}</strong> and other international news sources.</>
-) : 'Based on reporting from AP, Reuters, ESPN, Bloomberg, BBC and other international news sources.'}
+                  <><a href={article.link} target="_blank" rel="noopener noreferrer" style={{ color: '#cc0000', textDecoration: 'none', fontWeight: '600' }}>{article.source}</a> and other international news outlets.</>
+                ) : article.source ? (
+                  <><strong>{article.source}</strong> and other international news outlets.</>
+                ) : 'AP, Reuters, ESPN, Bloomberg, BBC and other international news outlets.'}
               </p>
             </div>
 
@@ -487,7 +486,7 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
               <p style={{ margin: 0, fontSize: "12px", color: "#888", lineHeight: "1.6" }}><strong>Disclaimer:</strong> {article.disclaimer}</p>
             </div>
 
-            {/* Author */}
+            {/* Author — CHANGE E: tag link added */}
             <div style={{ background: "#f8f9fa", border: "1px solid #eee", padding: "20px", marginTop: "32px", display: "flex", gap: "16px", alignItems: "flex-start" }}>
               <div style={{ width: "48px", height: "48px", background: "#cc0000", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                 <span style={{ color: "#fff", fontWeight: "900", fontSize: "18px" }}>N</span>
@@ -503,6 +502,12 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
                   {article.category === 'technology' && 'The NewsOracle Tech Desk covers breaking technology news including AI, Apple, Google, Tesla, Meta, OpenAI and product launches.'}
                   {!['sports', 'finance', 'politics', 'technology'].includes(article.category) && 'NewsOracle is a digital news platform delivering breaking news and analysis in sports, finance, crypto and politics.'}
                 </p>
+                {/* CHANGE E — tag link for live category coverage */}
+                {article.tag && (
+                  <p style={{ margin: "8px 0 0", fontSize: "12px", color: "#bbb" }}>
+                    Latest coverage: <Link href={`/category/${article.category}`} style={{ color: accentColor, textDecoration: "none" }}>{article.tag}</Link>
+                  </p>
+                )}
               </div>
             </div>
 
