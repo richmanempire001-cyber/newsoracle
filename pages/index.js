@@ -26,11 +26,6 @@ function timeAgo(date) {
   return `${Math.floor(seconds / 86400)}d ago`;
 }
 
-function getReadTime(summary) {
-  const words = summary?.trim().split(/\s+/).length || 0;
-  return Math.ceil(words / 200);
-}
-
 const CATEGORY_COLORS = {
   finance: "#0052cc",
   sports: "#cc0000",
@@ -204,12 +199,10 @@ export default function Home({ articles, categoryFeatured, evergreenArticles, ti
                     </div>
                     <h2 className="carousel-title" style={{ fontSize: "34px", fontWeight: "900", color: "#fff", margin: "0 0 14px", lineHeight: "1.2", maxWidth: "820px", letterSpacing: "-0.5px", opacity: carouselFading ? 0 : 1, transition: "opacity 0.4s ease" }}>{currentFeatured.title}</h2>
                     <p style={{ color: "rgba(255,255,255,0.75)", fontSize: "15px", margin: "0 0 16px", lineHeight: "1.6", maxWidth: "700px", opacity: carouselFading ? 0 : 1, transition: "opacity 0.4s ease" }}>
-                      {currentFeatured.summary?.split('\n\n')[0]?.replace(/^[A-Z\s]+ — /, '')?.substring(0, 180)}...
+                      {currentFeatured.meta_description?.substring(0, 180)}
                     </p>
                     <div style={{ display: "flex", gap: "16px", alignItems: "center", opacity: carouselFading ? 0 : 1, transition: "opacity 0.4s ease" }}>
                       <span style={{ color: "rgba(255,255,255,0.6)", fontSize: "12px" }}>{timeAgo(currentFeatured.created_at)}</span>
-                      <span style={{ color: "rgba(255,255,255,0.3)" }}>·</span>
-                      <span style={{ color: "rgba(255,255,255,0.6)", fontSize: "12px" }}>{getReadTime(currentFeatured.summary)} min read</span>
                     </div>
                   </div>
                 </div>
@@ -257,11 +250,10 @@ export default function Home({ articles, categoryFeatured, evergreenArticles, ti
                         <div style={{ padding: "16px" }}>
                           <h3 style={{ fontSize: "15px", fontWeight: "700", lineHeight: "1.45", margin: "0 0 10px", color: "#111" }}>{article.title}</h3>
                           <p style={{ color: "#777", fontSize: "13px", lineHeight: "1.55", margin: "0 0 12px" }}>
-                            {article.summary?.split('\n\n')[0]?.replace(/^[A-Z\s]+ — /, '')?.substring(0, 110)}...
+                            {article.meta_description?.substring(0, 110)}...
                           </p>
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid #f0f0f0", paddingTop: "10px" }}>
                             <span style={{ fontSize: "11px", color: "#999" }}>{timeAgo(article.created_at)}</span>
-                            <span style={{ fontSize: "11px", color: "#bbb" }}>{getReadTime(article.summary)} min read</span>
                           </div>
                         </div>
                       </div>
@@ -269,8 +261,6 @@ export default function Home({ articles, categoryFeatured, evergreenArticles, ti
                   ))}
                 </div>
               )}
-
-              
             </div>
 
             {/* Sticky Sidebar */}
@@ -294,7 +284,7 @@ export default function Home({ articles, categoryFeatured, evergreenArticles, ti
                   ))}
                 </div>
 
-                {/* NEW — Guides Widget (auto-updates with every new guide published) */}
+                {/* Guides Widget */}
                 {sidebarGuides?.length > 0 && (
                   <div style={{ background: "#fff", padding: "20px", marginBottom: "20px", boxShadow: "0 1px 4px rgba(0,0,0,0.08)", borderTop: "3px solid #111" }}>
                     <h3 style={{ fontSize: "13px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1.5px", color: "#111", margin: "0 0 16px", paddingBottom: "10px", borderBottom: "2px solid #111" }}>📚 Guides</h3>
@@ -311,7 +301,7 @@ export default function Home({ articles, categoryFeatured, evergreenArticles, ti
                   </div>
                 )}
 
-                {/* NEW — Follow Us Widget */}
+                {/* Follow Us Widget */}
                 <div style={{ background: "#fff", padding: "20px", marginBottom: "20px", boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
                   <h3 style={{ fontSize: "13px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1.5px", color: "#111", margin: "0 0 16px", paddingBottom: "10px", borderBottom: "2px solid #cc0000" }}>Follow NewsOracle</h3>
                   <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
@@ -384,7 +374,7 @@ export async function getServerSideProps() {
   for (const cat of ['sports', 'finance', 'politics', 'technology']) {
     const { data } = await supabaseServer
       .from("articles")
-      .select("id, title, summary, image, category, tag, created_at, views")
+      .select("id, title, meta_description, image, category, tag, created_at, views")
       .eq("category", cat)
       .or("evergreen.eq.false,evergreen.is.null")
       .order("created_at", { ascending: false })
@@ -394,19 +384,18 @@ export async function getServerSideProps() {
 
   const { data: articles } = await supabaseServer
     .from("articles")
-    .select("id, title, summary, image, category, tag, created_at, views")
+    .select("id, title, meta_description, image, category, tag, created_at, views")
     .or("evergreen.eq.false,evergreen.is.null")
     .order("created_at", { ascending: false })
     .limit(20);
 
   const { data: evergreenArticles } = await supabaseServer
     .from("articles")
-    .select("id, title, summary, image, category, tag, created_at")
+    .select("id, title, meta_description, image, category, tag, created_at")
     .eq("evergreen", true)
     .order("created_at", { ascending: false })
     .limit(6);
 
-  // NEW — fetch ALL guides for sidebar (auto-updates with every new guide)
   const { data: sidebarGuides } = await supabaseServer
     .from("articles")
     .select("id, title, category, tag")
