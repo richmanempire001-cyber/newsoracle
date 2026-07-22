@@ -683,6 +683,8 @@ export default async function handler(req, res) {
             'AI Trading': 'https://www.newsoracle.online/article/415-best-ai-tools-for-stock-trading-2026-the-ultimate-guide-to-automated-invest',
             'World Cup 2026': 'https://www.newsoracle.online/article/388-all-fifa-world-cup-winners-1930-2026-complete-history-and-champion-list',
             'FIFA': 'https://www.newsoracle.online/article/388-all-fifa-world-cup-winners-1930-2026-complete-history-and-champion-list',
+            'Iran': 'https://www.newsoracle.online/article/469-us-strikes-on-iran-2026-complete-day-by-day-timeline',
+            'Iran Strikes': 'https://www.newsoracle.online/article/469-us-strikes-on-iran-2026-complete-day-by-day-timeline',
           };
           if (article.tag && guideLinks[article.tag]) {
             article.summary += `\n\nRelated Guide: For deeper analysis, read our complete guide: ${guideLinks[article.tag]}`;
