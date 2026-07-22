@@ -633,11 +633,6 @@ export default async function handler(req, res) {
     const selectedItems = {};
     const categoriesToConsider = ['finance', 'sports', 'politics', 'technology'];
     for (const category of categoriesToConsider) {
-      // 25% chance to skip this category this run — creates uneven, human-like publishing pattern
-      if (Math.random() < 0.25) {
-        console.log(`Random skip: ${category} skipped this run`);
-        continue;
-      }
       const candidates = itemsByCategory[category] || [];
       for (const item of candidates) {
         if (!isDuplicate(item)) {
@@ -761,10 +756,7 @@ export default async function handler(req, res) {
     }
 
     // STEP 12 — Insert to Supabase
-    // CHANGE 10 — Random delay before insert (0-20 min scatter) for human-like timestamps
-    const delayMs = Math.floor(Math.random() * 20 * 60 * 1000);
-    console.log(`Timestamp scatter: delaying insert by ${Math.round(delayMs / 60000)} minutes`);
-    await new Promise(resolve => setTimeout(resolve, delayMs));
+    
 
     const { data: insertedArticles, error } = await supabase.from('articles').insert(results).select();
     if (error) throw error;
