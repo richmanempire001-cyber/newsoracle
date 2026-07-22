@@ -105,49 +105,39 @@ import { createClient } from '@supabase/supabase-js';
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
-// CHANGE 1 — 5 new direct sources added, Google News kept as last-resort fallback
 const RSS_SOURCES = {
   finance: [
-    // Direct sources — always tried first (high quality, full text)
     'https://cointelegraph.com/rss',
     'https://decrypt.co/feed',
     'https://www.coindesk.com/arc/outboundfeeds/rss/',
     'https://feeds.reuters.com/reuters/businessNews',
     'https://www.cnbc.com/id/100003114/device/rss/rss.html',
-    // Google News — last resort fallback only
     'https://news.google.com/rss/search?q=bitcoin+OR+crypto+OR+stocks+OR+nasdaq+OR+S%26P500+OR+inflation+OR+Fed&ceid=US:en&hl=en-US&gl=US',
   ],
   sports: [
-    // Direct sources — always tried first
     'https://www.espn.com/espn/rss/news',
     'https://www.footballtransfers.com/en/rss',
     'https://www.bbc.com/sport/rss.xml',
     'https://www.skysports.com/rss/12040',
-    // Google News — last resort fallback only
     'https://news.google.com/rss/search?q=NFL+OR+NBA+OR+soccer+OR+cricket+OR+tennis+OR+Premier+League+OR+UFC&ceid=US:en&hl=en-US&gl=US',
   ],
   politics: [
-    // Direct sources — always tried first
     'https://www.aljazeera.com/xml/rss/all.xml',
     'https://thehill.com/feed',
     'https://www.politico.com/rss/politicopicks.xml',
     'https://feeds.bbci.co.uk/news/politics/rss.xml',
     'https://rss.dw.com/rdf/rss-en-world',
-    // Google News — last resort fallback only
     'https://news.google.com/rss/search?q=Trump+OR+Congress+OR+White+House+OR+elections+OR+Supreme+Court+OR+Senate&ceid=US:en&hl=en-US&gl=US',
   ],
   technology: [
-    // Direct sources — always tried first
     'https://www.theverge.com/rss/index.xml',
     'https://techcrunch.com/feed/',
     'https://www.wired.com/feed/rss',
     'https://feeds.arstechnica.com/arstechnica/index',
-    // Google News — last resort fallback only
     'https://news.google.com/rss/search?q=AI+OR+Apple+OR+Tesla+OR+Google+OR+Meta+OR+OpenAI+OR+ChatGPT&ceid=US:en&hl=en-US&gl=US',
   ]
 };
 
-// Track which sources are Google News wrappers
 const GOOGLE_NEWS_SOURCES = new Set([
   'https://news.google.com/rss/search?q=bitcoin+OR+crypto+OR+stocks+OR+nasdaq+OR+S%26P500+OR+inflation+OR+Fed&ceid=US:en&hl=en-US&gl=US',
   'https://news.google.com/rss/search?q=NFL+OR+NBA+OR+soccer+OR+cricket+OR+tennis+OR+Premier+League+OR+UFC&ceid=US:en&hl=en-US&gl=US',
@@ -161,6 +151,48 @@ const FALLBACK_IMAGES = {
   politics: 'https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=800&q=80',
   technology: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&q=80'
 };
+
+// CHANGE 8 — Social post tone seeds for variety
+const SOCIAL_TONES = [
+  'fact', // lead with the single strongest number or fact, no emoji opener
+  'question', // pose the key question the story answers
+  'quote', // if a quote exists in title, lead with it
+  'impact', // lead with what this means for the reader
+];
+
+function buildSocialPost(article, platform) {
+  const articleUrl = article.articleUrl || 'https://www.newsoracle.online';
+  const tone = SOCIAL_TONES[Math.floor(Math.random() * SOCIAL_TONES.length)];
+  const summary = article.summary?.substring(0, platform === 'instagram' ? 200 : 500) || '';
+
+  // Extract first strong fact or number from title
+  const numberMatch = article.title.match(/[\$£€]?\d[\d,.%BMK]*/);
+  const strongFact = numberMatch ? `${article.title.split(numberMatch[0])[0].trim()} ${numberMatch[0]}` : article.title;
+
+  let opener = '';
+  if (tone === 'fact' && numberMatch) {
+    opener = `${strongFact}.`;
+  } else if (tone === 'question') {
+    opener = `What just happened with ${article.tag || 'this'}?`;
+  } else if (tone === 'quote' && article.title.includes("'")) {
+    opener = article.title;
+  } else {
+    opener = article.title;
+  }
+
+  const endings = [
+    `Full story: ${articleUrl}`,
+    `Read the full breakdown: ${articleUrl}`,
+    `Details: ${articleUrl}`,
+    `${articleUrl}`,
+  ];
+  const ending = endings[Math.floor(Math.random() * endings.length)];
+
+  if (platform === 'telegram') {
+    return `*${opener}*\n\n${summary}...\n\n${ending}`;
+  }
+  return `${opener}\n\n${summary}...\n\n${ending}`;
+}
 
 async function getPexelsImage(query) {
   try {
@@ -178,46 +210,28 @@ async function getPexelsImage(query) {
   }
 }
 
-// CHANGE 2 — Improved Google News extraction with 7 methods instead of 4
 async function extractRealUrlFromGoogleWrapper(html, originalUrl) {
-  // Method 1: meta refresh
   const metaRefresh = html.match(/<meta[^>]+http-equiv=["']refresh["'][^>]+content=["'][^"']*url=([^"'>]+)["']/i);
   if (metaRefresh) return metaRefresh[1];
-
-  // Method 2: canonical link (non-Google)
   const canonical = html.match(/<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i);
   if (canonical && !canonical[1].includes('news.google.com')) return canonical[1];
-
-  // Method 3: JS window.location redirect
   const jsRedirect = html.match(/(?:window\.location|location\.href)\s*=\s*["']([^"']+)["']/i);
   if (jsRedirect && !jsRedirect[1].includes('news.google.com')) return jsRedirect[1];
-
-  // Method 4: data-n-au attribute (old Google News format)
   const dataNUrl = html.match(/data-n-au="([^"]+)"/i);
   if (dataNUrl) return dataNUrl[1];
-
-  // Method 5: og:url meta tag pointing to real article
   const ogUrl = html.match(/<meta[^>]+property=["']og:url["'][^>]+content=["']([^"']+)["']/i) ||
                 html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:url["']/i);
   if (ogUrl && !ogUrl[1].includes('news.google.com')) return ogUrl[1];
-
-  // Method 6: c-wiz data attribute (newer Google News format)
   const cwizMatch = html.match(/c-wiz[^>]+jsdata="[^"]*"[^>]*data-url="([^"]+)"/i);
   if (cwizMatch) return cwizMatch[1];
-
-  // Method 7: Extract from Google News article URL directly
-  // Google News URLs look like: https://news.google.com/articles/CBMi...
-  // Try to decode the base64 article ID
   try {
     const articleMatch = originalUrl.match(/articles\/([^?&]+)/);
     if (articleMatch) {
-      // The encoded URL sometimes decodes to the real URL
       const decoded = Buffer.from(articleMatch[1], 'base64').toString('utf-8');
       const urlMatch = decoded.match(/https?:\/\/[^\s"'<>]+/);
       if (urlMatch && !urlMatch[0].includes('google.com')) return urlMatch[0];
     }
   } catch {}
-
   return null;
 }
 
@@ -239,12 +253,10 @@ async function fetchHtml(url) {
   }
 }
 
-// CHANGE 3 — fetchFullArticle now skips Google News items that fail extraction (Option A)
 async function fetchFullArticle(url, isGoogleNews = false) {
   try {
     let result = await fetchHtml(url);
     if (!result) return null;
-
     if (result.finalUrl.includes('news.google.com') || isGoogleNews) {
       const realUrl = await extractRealUrlFromGoogleWrapper(result.html, url);
       if (realUrl) {
@@ -252,12 +264,10 @@ async function fetchFullArticle(url, isGoogleNews = false) {
         const secondResult = await fetchHtml(realUrl);
         if (secondResult) result = secondResult;
       } else {
-        // Option A: Google News extraction failed — skip this item entirely
         console.log(`Google News extraction failed for: ${url} — skipping`);
         return null;
       }
     }
-
     const paragraphs = [...result.html.matchAll(/<p[^>]*>(.*?)<\/p>/gis)]
       .map(m => m[1].replace(/<[^>]*>/g, '').trim())
       .filter(p => p.length > 40);
@@ -271,39 +281,25 @@ async function fetchFullArticle(url, isGoogleNews = false) {
   }
 }
 
-// CHANGE 4 — scoreRSSItem now penalizes Google News (-3) and rewards direct sources (+2)
 function scoreRSSItem(title, description, pubDate, sourceUrl = '') {
   let score = 0;
-
-  // Source quality scoring — direct sources preferred over Google News wrappers
   if (GOOGLE_NEWS_SOURCES.has(sourceUrl)) {
-    score -= 3; // Google News penalty — last resort
+    score -= 3;
   } else {
-    score += 2; // Direct source bonus — always preferred
+    score += 2;
   }
-
-  // Recency scoring
   if (pubDate) {
     const ageMs = Date.now() - new Date(pubDate).getTime();
     const ageHours = ageMs / (1000 * 60 * 60);
     if (ageHours > 6) return -999;
     if (ageHours <= 2) score += 2;
   }
-
-  // Has a number in title (+3)
   if (/\d/.test(title)) score += 3;
-
-  // Named entity in first 5 words (+2)
   const firstFive = title.split(' ').slice(0, 5).join(' ');
   if (/[A-Z][a-z]+/.test(firstFive)) score += 2;
-
-  // Change-of-state verb (+2)
   const stateVerbs = /\b(falls|surges|rises|drops|wins|loses|dies|launches|bans|hits|ousts|faces|cuts|raises|crashes|soars|resigns|fires|arrests|indicts|acquits|sanctions)\b/i;
   if (stateVerbs.test(title)) score += 2;
-
-  // Description richness (+1)
   if (description.length > 300) score += 1;
-
   return score;
 }
 
@@ -335,7 +331,6 @@ async function fetchRSS(url) {
       const pubDate = pubDateMatch ? pubDateMatch[1].trim() : null;
       if (!title || title.length < 10) continue;
       if (!description || description.length < 100) continue;
-      // Pass sourceUrl so score reflects direct vs Google News
       const score = scoreRSSItem(title, description, pubDate, url);
       if (score === -999) {
         console.log(`Skipped (stale >6hr): ${title}`);
@@ -363,7 +358,6 @@ function extractEntities(title) {
   return title.match(/\b[A-Z][a-z]{3,}\b/g) || [];
 }
 
-// CHANGE 5 — Hard headline validation
 const BANNED_HEADLINE_PHRASES = [
   'sends clear message',
   'comments on',
@@ -391,7 +385,6 @@ function isWeakHeadline(title) {
   return BANNED_HEADLINE_PHRASES.some(phrase => lower.includes(phrase));
 }
 
-// CHANGE 6 — Filler content detection (Quality Gate 4)
 const FILLER_PHRASES = [
   'provides a snapshot',
   'sends a clear message',
@@ -413,12 +406,10 @@ const FILLER_PHRASES = [
 function hasTooMuchFiller(summary) {
   const lower = summary.toLowerCase();
   const fillerCount = FILLER_PHRASES.filter(phrase => lower.includes(phrase)).length;
-  // Count concrete facts: numbers, named entities, quoted speech
   const numbers = (summary.match(/\b\d+[\d,.%$£€]*\b/g) || []).length;
   const quotes = (summary.match(/["'][^"']{10,}["']/g) || []).length;
   const namedEntities = (summary.match(/\b[A-Z][a-z]+ [A-Z][a-z]+\b/g) || []).length;
   const factScore = numbers + quotes + namedEntities;
-  // Reject if more than 2 filler phrases AND fewer than 5 concrete facts
   if (fillerCount > 2 && factScore < 5) {
     console.log(`Filler detected: ${fillerCount} filler phrases, only ${factScore} concrete facts`);
     return true;
@@ -426,7 +417,20 @@ function hasTooMuchFiller(summary) {
   return false;
 }
 
+// CHANGE 9 — Style-variance seeds for tone variety across articles
+const STYLE_SEEDS = [
+  'Write with a clipped, urgent tone — short punchy sentences. Get to the point fast.',
+  'Write with a slightly more explanatory tone — assume the reader is smart but unfamiliar with this specific story.',
+  'Lead with the human angle — who is affected and how, before getting into the institutional details.',
+  'Lead with the strongest number or data point in the first sentence — make the scale of the story immediately clear.',
+  'Write in the style of a wire reporter — precise, attribution-heavy, no flourishes.',
+];
+
 async function generateArticle(headline, description, category) {
+
+  // CHANGE 9 — Pick a random style seed per article
+  const styleSeed = STYLE_SEEDS[Math.floor(Math.random() * STYLE_SEEDS.length)];
+
   const categoryInstructions = {
     sports: `
 - Start with a dateline in caps (e.g. "LONDON —", "NEW YORK —", "MIAMI —") based on where the event took place.
@@ -434,17 +438,17 @@ async function generateArticle(headline, description, category) {
 - Write like a CNN Sports or ESPN reporter — vivid, immediate, factual.
 - Do NOT generate prediction, sentiment, or confidence fields. Only return: title, summary, keyPoints, category, tag, disclaimer.`,
     finance: `
-- Start with a dateline in caps (e.g. "NEW YORK —", "WASHINGTON —", "LONDON —") based on the market or institution involved.
+- Only use a dateline for major institutional decisions (Fed, central banks, government policy). For company news, crypto, or markets — start directly with the key fact, no dateline.
 - Focus on: exact numbers (price, percentage move, market cap), who said what, what triggered the move, immediate market reaction.
 - Write like a Bloomberg or CNBC reporter — precise, data-driven, authoritative.
-- Include prediction, sentiment, and confidence fields.`,
+- Include prediction field.`,
     politics: `
 - Start with a dateline in caps (e.g. "WASHINGTON —", "BRUSSELS —", "LONDON —") based on where the political event occurred.
 - Focus on: who did what, the specific policy or decision, direct consequences, who opposes it, what happens next.
 - Write like a CNN Politics or AP reporter — neutral, factual, no editorializing.
 - Include a prediction field. Do NOT generate sentiment or confidence fields.`,
     technology: `
-- Start with a dateline in caps (e.g. "SAN FRANCISCO —", "CUPERTINO —", "SEATTLE —") based on where the company or event is located.
+- Do NOT use a dateline. Start directly with the most important fact in a short punchy sentence.
 - Focus on: what was launched/announced, specific specs or numbers, who said what, how it compares to competitors, immediate user/market impact.
 - Write like a Verge or TechCrunch reporter — clear, informed, forward-looking.
 - Include a prediction field. Do NOT generate sentiment or confidence fields.`
@@ -452,45 +456,44 @@ async function generateArticle(headline, description, category) {
 
   const fieldsInstruction = {
     sports: `Return ONLY a JSON object with these fields:
-- title: (SEO-optimized headline, max 12 words, HARD LIMIT 100 characters. Write it the way someone would SEARCH for this story on Google. Include names, scores, teams. HEADLINE RULES — all must apply: (1) Put the most recognizable entity in the first 5 words. (2) Include a specific number if the story has one — "Falls 8%" beats "Falls Sharply". (3) Use a change-of-state verb where possible: Falls, Surges, Wins, Loses, Dies, Launches, Bans, Hits, Ousts, Faces, Cuts, Raises, Resigns, Fires. (4) For public figures with health or age context, include age: "84-Year-Old Senator Says..." style. (5) Never start with vague openers like "New Report Shows", "Sources Say", "Report:", "Watch:", "Here's Why". (6) NEVER use these banned phrases: "Sends Clear Message", "Comments On", "Status Check", "Weighs In", "Speaks Out", "Reacts To". Example: "Lakers Beat Celtics 112-108: LeBron Scores 34 in Playoff Win")
+- title: (SEO-optimized headline, max 12 words, HARD LIMIT 100 characters. Write it the way someone would SEARCH for this story on Google. Include names, scores, teams. HEADLINE RULES — all must apply: (1) Put the most recognizable entity in the first 5 words. (2) Include a specific number if the story has one — "Falls 8%" beats "Falls Sharply". (3) Use a change-of-state verb where possible: Falls, Surges, Wins, Loses, Dies, Launches, Bans, Hits, Ousts, Faces, Cuts, Raises, Resigns, Fires. (4) For public figures with health or age context, include age: "84-Year-Old Senator Says..." style. (5) Never start with vague openers like "New Report Shows", "Sources Say", "Report:", "Watch:", "Here's Why". (6) NEVER use these banned phrases: "Sends Clear Message", "Comments On", "Status Check", "Weighs In", "Speaks Out", "Reacts To". (7) HEADLINE SHAPE VARIETY — rotate between these formats: [Entity] [Verb] [Outcome] e.g. "Liverpool Ban 432 Fans After £1.2m Seizure" OR [Number]: [What happened] e.g. "432 Lifetime Bans: Liverpool Cracks Down on Ticket Touts" OR Quote-driven e.g. "Chelsea Boss Says Rogers Deal 'Changes Everything' After £117m Transfer". Pick the format that best fits THIS story.)
 - metaDescription: (SEO meta description, exactly 1 sentence, 140-155 characters, summarising the key fact — do NOT truncate mid-word)
-- keyPoints: (exactly 3 bullet points separated by \\n, each ONE short sentence summarizing a key fact. Must be DIFFERENT from the article opening. Example: "- Messi scored the equalizer in the 83rd minute.\\n- Argentina advances to the quarterfinals.\\n- Egypt's VAR appeal was denied by the referee.")
-- summary: (full news article, 600-900 words, must contain at least 3 specific named facts from source — names, scores, stats, quotes. Start with dateline. Use \\n\\n between paragraphs. End with a "why this matters" paragraph.)
-- category: MUST be exactly "${category}" — do not change this under any circumstances regardless of article content
+- keyPoints: (exactly 3 bullet points separated by \\n, each ONE short sentence summarizing a key fact. Must be DIFFERENT from the article opening.)
+- summary: (full news article, length matched to story weight — breaking news 250-400 words, developing story 500-700 words, landmark event 700-900 words. Must contain at least 3 specific named facts. Use \\n\\n between paragraphs. End based on story type: if genuine reader impact exists, connect it directly and personally; otherwise end on the strongest remaining fact or what happens next.)
+- category: MUST be exactly "${category}"
 - tag: (specific tag like "Premier League", "NBA", "UFC", "Tennis", "Cricket")
 - disclaimer: ("This article is for informational purposes only. Content is based on publicly available news sources.")`,
     finance: `Return ONLY a JSON object with these fields:
-- title: (SEO-optimized headline, max 12 words, HARD LIMIT 100 characters. Write it the way someone would SEARCH for this story on Google. Include names, numbers. HEADLINE RULES — all must apply: (1) Put the most recognizable entity in the first 5 words. (2) Include a specific number if the story has one — "Falls 8%" beats "Falls Sharply". (3) Use a change-of-state verb where possible: Falls, Surges, Wins, Loses, Dies, Launches, Bans, Hits, Ousts, Faces, Cuts, Raises, Resigns, Fires. (4) For public figures with health or age context, include age: "84-Year-Old Senator Says..." style. (5) Never start with vague openers like "New Report Shows", "Sources Say", "Report:", "Watch:", "Here's Why". (6) NEVER use these banned phrases: "Sends Clear Message", "Comments On", "Status Check", "Weighs In", "Speaks Out", "Reacts To". Example: "Bitcoin Drops 5% to $62K After Fed Holds Interest Rates")
+- title: (SEO-optimized headline, max 12 words, HARD LIMIT 100 characters. Write it the way someone would SEARCH for this story on Google. Include names, numbers. HEADLINE RULES — all must apply: (1) Put the most recognizable entity in the first 5 words. (2) Include a specific number if the story has one — "Falls 8%" beats "Falls Sharply". (3) Use a change-of-state verb where possible: Falls, Surges, Wins, Loses, Dies, Launches, Bans, Hits, Ousts, Faces, Cuts, Raises, Resigns, Fires. (4) For public figures with health or age context, include age: "84-Year-Old Senator Says..." style. (5) Never start with vague openers like "New Report Shows", "Sources Say", "Report:", "Watch:", "Here's Why". (6) NEVER use these banned phrases: "Sends Clear Message", "Comments On", "Status Check", "Weighs In", "Speaks Out", "Reacts To". (7) HEADLINE SHAPE VARIETY — rotate between these formats: [Entity] [Verb] [Number] e.g. "Revolut Hits $115B Valuation in Share Sale" OR [Number]: [What happened] e.g. "$115B: Revolut Now Europe's Most Valuable Startup" OR Quote-driven e.g. "Revolut CEO Says Valuation 'Just the Beginning' After $115B Deal". Pick the format that best fits THIS story.)
 - metaDescription: (SEO meta description, exactly 1 sentence, 140-155 characters, summarising the key fact — do NOT truncate mid-word)
-- keyPoints: (exactly 3 bullet points separated by \\n, each ONE short sentence summarizing a key fact. Must be DIFFERENT from the article opening. Example: "- Bitcoin fell 5% to $62,000 after the Fed held rates steady.\\n- Ethereum outperformed with a 2% gain during the same period.\\n- Analysts expect continued volatility through Q3.")
-- summary: (full news article, 600-900 words, must contain at least 3 specific named facts from source — prices, percentages, names, quotes. Start with dateline. Use \\n\\n between paragraphs. End with a "why this matters" paragraph.)
-- prediction: (future outlook or analysis, written as expert market view, 60-80 words)
-- category: MUST be exactly "${category}" — do not change this under any circumstances regardless of article content
+- keyPoints: (exactly 3 bullet points separated by \\n, each ONE short sentence summarizing a key fact. Must be DIFFERENT from the article opening.)
+- summary: (full news article, length matched to story weight — breaking news 250-400 words, developing story 500-700 words, major market event 700-900 words. Must contain at least 3 specific named facts — prices, percentages, names, quotes. Use \\n\\n between paragraphs. End based on story type: if genuine direct financial impact on readers exists, state it specifically; otherwise end on what happens next.)
+- prediction: (contextual outlook, 60-80 words, based strictly on facts already stated in the article — no invented analyst names, no fabricated forecasts, no "experts believe" unless a named expert was quoted in the source)
+- category: MUST be exactly "${category}"
 - tag: (specific tag like "Bitcoin", "S&P 500", "Fed", "Inflation", "Crypto")
 - sentiment: (either "positive", "negative", or "neutral")
 - confidence: (number between 60-95)
 - disclaimer: ("This article is for informational purposes only. Content is based on publicly available news sources.")`,
     politics: `Return ONLY a JSON object with these fields:
-- title: (SEO-optimized headline, max 12 words, HARD LIMIT 100 characters. Write it the way someone would SEARCH for this story on Google. Include names, policies. HEADLINE RULES — all must apply: (1) Put the most recognizable entity in the first 5 words. (2) Include a specific number if the story has one — "Falls 8%" beats "Falls Sharply". (3) Use a change-of-state verb where possible: Falls, Surges, Wins, Loses, Dies, Launches, Bans, Hits, Ousts, Faces, Cuts, Raises, Resigns, Fires. (4) For public figures with health or age context, include age: "84-Year-Old Senator Says..." style. (5) Never start with vague openers like "New Report Shows", "Sources Say", "Report:", "Watch:", "Here's Why". (6) NEVER use these banned phrases: "Sends Clear Message", "Comments On", "Status Check", "Weighs In", "Speaks Out", "Reacts To". Example: "Trump Signs Executive Order Banning TikTok: What It Means")
+- title: (SEO-optimized headline, max 12 words, HARD LIMIT 100 characters. Write it the way someone would SEARCH for this story on Google. Include names, policies. HEADLINE RULES — all must apply: (1) Put the most recognizable entity in the first 5 words. (2) Include a specific number if the story has one — "Falls 8%" beats "Falls Sharply". (3) Use a change-of-state verb where possible: Falls, Surges, Wins, Loses, Dies, Launches, Bans, Hits, Ousts, Faces, Cuts, Raises, Resigns, Fires. (4) For public figures with health or age context, include age: "84-Year-Old Senator Says..." style. (5) Never start with vague openers like "New Report Shows", "Sources Say", "Report:", "Watch:", "Here's Why". (6) NEVER use these banned phrases: "Sends Clear Message", "Comments On", "Status Check", "Weighs In", "Speaks Out", "Reacts To". (7) HEADLINE SHAPE VARIETY — rotate between these formats: [Entity] [Verb] [Outcome] e.g. "Trump Signs TikTok Ban: What Happens Next" OR Quote-driven e.g. "Peters Calls Hegseth a 'Failure' at $70B Defense Hearing" OR [Number/Fact]: [Context] e.g. "11 Days of Iran Strikes: What the US Has Hit So Far". Pick the format that best fits THIS story.)
 - metaDescription: (SEO meta description, exactly 1 sentence, 140-155 characters, summarising the key fact — do NOT truncate mid-word)
-- keyPoints: (exactly 3 bullet points separated by \\n, each ONE short sentence summarizing a key fact. Must be DIFFERENT from the article opening. Example: "- Trump signed the order banning TikTok from US app stores.\\n- Congress has 90 days to pass legislation before the ban takes effect.\\n- ByteDance says it will challenge the order in court.")
-- summary: (full news article, 600-900 words, must contain at least 3 specific named facts from source — names, decisions, votes, quotes. Start with dateline. Use \\n\\n between paragraphs. End with a "why this matters" paragraph.)
-- prediction: (what happens next politically, written as neutral analysis, 60-80 words)
-- category: MUST be exactly "${category}" — do not change this under any circumstances regardless of article content
+- keyPoints: (exactly 3 bullet points separated by \\n, each ONE short sentence summarizing a key fact. Must be DIFFERENT from the article opening.)
+- summary: (full news article, length matched to story weight — breaking news 250-400 words, developing story 500-700 words, landmark policy 700-900 words. Must contain at least 3 specific named facts — names, decisions, votes, quotes. Use \\n\\n between paragraphs. End based on story type: if genuine reader impact exists, state it specifically and personally; otherwise end on what happens next politically.)
+- prediction: (contextual outlook, 60-80 words, written as neutral analysis based strictly on facts already stated — no invented analyst names, no fabricated forecasts)
+- category: MUST be exactly "${category}"
 - tag: (specific tag like "Trump", "Congress", "Supreme Court", "NATO", "Senate")
 - disclaimer: ("This article is for informational purposes only. Content is based on publicly available news sources.")`,
     technology: `Return ONLY a JSON object with these fields:
-- title: (SEO-optimized headline, max 12 words, HARD LIMIT 100 characters. Write it the way someone would SEARCH for this story on Google. Include product/company names. HEADLINE RULES — all must apply: (1) Put the most recognizable entity in the first 5 words. (2) Include a specific number if the story has one — "Falls 8%" beats "Falls Sharply". (3) Use a change-of-state verb where possible: Falls, Surges, Wins, Loses, Dies, Launches, Bans, Hits, Ousts, Faces, Cuts, Raises, Resigns, Fires. (4) For public figures with health or age context, include age: "84-Year-Old Senator Says..." style. (5) Never start with vague openers like "New Report Shows", "Sources Say", "Report:", "Watch:", "Here's Why". (6) NEVER use these banned phrases: "Sends Clear Message", "Comments On", "Status Check", "Weighs In", "Speaks Out", "Reacts To". Example: "OpenAI Launches GPT-5: Price, Features and Release Date")
+- title: (SEO-optimized headline, max 12 words, HARD LIMIT 100 characters. Write it the way someone would SEARCH for this story on Google. Include product/company names. HEADLINE RULES — all must apply: (1) Put the most recognizable entity in the first 5 words. (2) Include a specific number if the story has one — "Falls 8%" beats "Falls Sharply". (3) Use a change-of-state verb where possible: Falls, Surges, Wins, Loses, Dies, Launches, Bans, Hits, Ousts, Faces, Cuts, Raises, Resigns, Fires. (4) For public figures with health or age context, include age: "84-Year-Old Senator Says..." style. (5) Never start with vague openers like "New Report Shows", "Sources Say", "Report:", "Watch:", "Here's Why". (6) NEVER use these banned phrases: "Sends Clear Message", "Comments On", "Status Check", "Weighs In", "Speaks Out", "Reacts To". (7) HEADLINE SHAPE VARIETY — rotate between these formats: [Entity] [Verb] [Outcome] e.g. "OpenAI Launches GPT-5: Price, Features and Release Date" OR Quote-driven e.g. "OpenAI CEO Says GPT-5 Is 'Most Capable Model Ever Built'" OR [Number/Fact]: [Context] e.g. "33% of Ransomware Victims Hit Twice, Proofpoint Study Finds". Pick the format that best fits THIS story.)
 - metaDescription: (SEO meta description, exactly 1 sentence, 140-155 characters, summarising the key fact — do NOT truncate mid-word)
-- keyPoints: (exactly 3 bullet points separated by \\n, each ONE short sentence summarizing a key fact. Must be DIFFERENT from the article opening. Example: "- OpenAI released GPT-5 with 10x faster processing speed.\\n- The new model costs $30/month for Plus subscribers.\\n- Google and Anthropic are expected to respond within weeks.")
-- summary: (full news article, 600-900 words, must contain at least 3 specific named facts from source — product names, specs, prices, quotes, dates. Start with dateline. Use \\n\\n between paragraphs. End with a "why this matters" paragraph.)
-- prediction: (what this means for the tech industry or consumers, written as informed analysis, 60-80 words)
-- category: MUST be exactly "${category}" — do not change this under any circumstances regardless of article content
+- keyPoints: (exactly 3 bullet points separated by \\n, each ONE short sentence summarizing a key fact. Must be DIFFERENT from the article opening.)
+- summary: (full news article, length matched to story weight — breaking news 250-400 words, developing story 500-700 words, major launch or policy 700-900 words. Must contain at least 3 specific named facts — product names, specs, prices, quotes, dates. Use \\n\\n between paragraphs. End based on story type: if genuine user or market impact exists, state it specifically; otherwise end on what comes next.)
+- prediction: (contextual outlook, 60-80 words, based strictly on facts already stated — no invented analyst names, no fabricated forecasts)
+- category: MUST be exactly "${category}"
 - tag: (specific tag like "Apple", "AI", "Tesla", "Google", "OpenAI", "Meta", "ChatGPT")
 - disclaimer: ("This article is for informational purposes only. Content is based on publicly available news sources.")`
   };
 
-  // CHANGE 7 — Original value element added to prompt for all categories
   const originalValueInstruction = `
 ORIGINAL VALUE REQUIREMENT — this is mandatory:
 - After reporting the facts, include ONE piece of original analytical value that no single source contains. This could be:
@@ -507,24 +510,28 @@ ORIGINAL VALUE REQUIREMENT — this is mandatory:
       role: 'user',
       content: `You are a senior journalist at a major international newsroom like CNN, BBC, or Reuters. Based on this real news headline and source material, write a professional news article.
 
+STYLE DIRECTION FOR THIS ARTICLE: ${styleSeed}
+
 Headline: "${headline}"
 Source material: "${description}"
-Source quality: ${description.length > 1000 ? 'Full article available — write a comprehensive 600-900 word article' : 'Limited source — write a focused 400-500 word article using only available facts, do not pad'}
+Source quality: ${description.length > 1000 ? 'Full article available — write a comprehensive article matched to story weight' : 'Limited source — write a focused 300-450 word article using only available facts, do not pad'}
 
 ABSOLUTE RULES — violating any of these makes the article unpublishable:
 - Write ONLY based on facts in the headline and source material. Do NOT invent quotes, statistics, names, or details.
-- The first sentence MUST be a dateline followed by the single most important concrete fact. Example: "WASHINGTON — The Senate voted 52-48 on Thursday to confirm..."
+- The first sentence MUST contain the single most important concrete fact from this story. No throat-clearing, no scene-setting — the fact first.
 - The article MUST contain at least 3 specific named facts from the source material (names, numbers, scores, quotes, dates, locations). If the source doesn't have 3 facts, use every fact it does have and keep the article short.
-- Title MUST be optimized for Google Search — write headlines the way someone would search for this story. Include specific names, numbers, or outcomes people would type into Google. Example: instead of "Team wins game" write "Lakers Beat Celtics 112-108: LeBron Scores 34 in Playoff Victory"
-- NEVER write generic background explaining what something generally is (e.g. "Executive orders are a tool presidents use...", "Small-cap stocks are companies with...", "The Supreme Court is the highest court..."). Only explain THIS specific event.
+- Title MUST be optimized for Google Search — write headlines the way someone would search for this story. Include specific names, numbers, or outcomes people would type into Google.
+- NEVER write generic background explaining what something generally is. Only explain THIS specific event.
 - NEVER start any sentence with these banned phrases: "In a move that", "This comes as", "It remains to be seen", "Only time will tell", "In today's", "In the world of", "The landscape of", "It's worth noting"
 - NEVER use the phrase "the question remains" or "all eyes are on" or "sent shockwaves"
-- Every paragraph must contain at least one specific fact — no paragraph should be pure commentary or filler
-- Include ONE brief historical comparison or precedent (e.g. "The last time a company of this size filed similar claims was in 2020 when..." or "This marks only the second time since 2018 that..."). Keep it to one sentence and base it on real knowledge if possible.
-- Match article length to available facts. If the source material is thin, write 400 words. Do NOT pad with filler to reach a word count.
-- If the article is 350+ words, insert exactly ONE subheading after the 3rd paragraph. Format it on its own line as ## followed by the subheading text (e.g. "## Impact on Global Markets"). The subheading must be specific to THIS story — never generic like "## Background" or "## Analysis"
-- End with a brief "why this matters" paragraph — connect it directly to the READER. Not "This sets a precedent for the industry" but "If you hold Bitcoin, this ruling could directly affect your portfolio" or "If you follow the Premier League, this transfer changes the title race." Make it personal and specific.
-- Do NOT mention AI, Claude, or that this was rewritten
+- Every paragraph must contain at least one specific fact — no paragraph should be pure commentary or filler.
+- Vary sentence lengths deliberately every paragraph. Include at least two sentences under 8 words somewhere in the article. Never write three consecutive sentences of similar length.
+- Attribute every non-obvious fact to its source within the sentence. Examples: "according to the filing", "the company confirmed", "per ESPN's report", "the senator said in a statement". Never state a fact as if it is your own knowledge.
+- Match article length to story weight: breaking news (event just happened) = 250-400 words, no subheading; developing story (ongoing situation) = 500-700 words; landmark event (major policy, record, historic) = 700-900 words with one subheading. Never pad a breaking story to reach a word count.
+- Only insert a subheading if the story is a developing or analysis-worthy story — not breaking news. If used, place it after the 3rd paragraph as ## Subheading specific to THIS story. Never use generic subheadings like "## Background" or "## Analysis".
+- Include ONE brief historical comparison or precedent. Keep it to one sentence. Base it on real knowledge only.
+- Only end with a reader-impact paragraph when there is genuine direct impact on the reader's life, money, or daily routine. When there is no strong direct impact, end on the strongest remaining fact or what happens next. Never use second-person "If you..." more than once per article.
+- Do NOT mention AI, Claude, or that this was rewritten.
 ${originalValueInstruction}
 ${categoryInstructions[category]}
 
@@ -549,7 +556,7 @@ export default async function handler(req, res) {
     const now = new Date().toISOString();
     const authorNames = { sports: 'NewsOracle Editorial', finance: 'NewsOracle Editorial', politics: 'NewsOracle Editorial', technology: 'NewsOracle Editorial' };
 
-    // STEP 1 — Fetch ALL RSS sources in parallel (one fetch, not two)
+    // STEP 1 — Fetch ALL RSS sources in parallel
     const allSourceEntries = [];
     for (const [category, sources] of Object.entries(RSS_SOURCES)) {
       for (const source of sources) {
@@ -622,8 +629,15 @@ export default async function handler(req, res) {
     }
 
     // STEP 5 — Pick best non-duplicate item per category
+    // CHANGE 10 — Random category skip (~25% chance) for human-like irregular publishing rhythm
     const selectedItems = {};
-    for (const category of ['finance', 'sports', 'politics', 'technology']) {
+    const categoriesToConsider = ['finance', 'sports', 'politics', 'technology'];
+    for (const category of categoriesToConsider) {
+      // 25% chance to skip this category this run — creates uneven, human-like publishing pattern
+      if (Math.random() < 0.25) {
+        console.log(`Random skip: ${category} skipped this run`);
+        continue;
+      }
       const candidates = itemsByCategory[category] || [];
       for (const item of candidates) {
         if (!isDuplicate(item)) {
@@ -636,7 +650,7 @@ export default async function handler(req, res) {
       }
     }
 
-    // STEP 6 — Fetch full articles in parallel (pass isGoogleNews flag)
+    // STEP 6 — Fetch full articles in parallel
     const categoriesToProcess = Object.keys(selectedItems);
     const fullArticleResults = await Promise.all(
       categoriesToProcess.map(async category => {
@@ -666,21 +680,20 @@ export default async function handler(req, res) {
           const sourceMaterial = fullText || rss.description;
           const article = await generateArticle(rss.title, sourceMaterial, category);
           article.category = category;
-          
 
-// Internal linking to evergreen guides
-const guideLinks = {
-  'Bitcoin': 'https://www.newsoracle.online/article/416-bitcoin-price-prediction-2026-expert-forecasts-key-factors-and-market-analysis',
-  'Crypto': 'https://www.newsoracle.online/article/416-bitcoin-price-prediction-2026-expert-forecasts-key-factors-and-market-analysis',
-  'AI Trading': 'https://www.newsoracle.online/article/415-best-ai-tools-for-stock-trading-2026-the-ultimate-guide-to-automated-invest',
-  'World Cup 2026': 'https://www.newsoracle.online/article/388-all-fifa-world-cup-winners-1930-2026-complete-history-and-champion-list',
-  'FIFA': 'https://www.newsoracle.online/article/388-all-fifa-world-cup-winners-1930-2026-complete-history-and-champion-list',
-};
-if (article.tag && guideLinks[article.tag]) {
-  article.summary += `\n\nRelated Guide: For deeper analysis, read our complete guide: ${guideLinks[article.tag]}`;
-}
+          // Internal linking to evergreen guides
+          const guideLinks = {
+            'Bitcoin': 'https://www.newsoracle.online/article/416-bitcoin-price-prediction-2026-expert-forecasts-key-factors-and-market-analysis',
+            'Crypto': 'https://www.newsoracle.online/article/416-bitcoin-price-prediction-2026-expert-forecasts-key-factors-and-market-analysis',
+            'AI Trading': 'https://www.newsoracle.online/article/415-best-ai-tools-for-stock-trading-2026-the-ultimate-guide-to-automated-invest',
+            'World Cup 2026': 'https://www.newsoracle.online/article/388-all-fifa-world-cup-winners-1930-2026-complete-history-and-champion-list',
+            'FIFA': 'https://www.newsoracle.online/article/388-all-fifa-world-cup-winners-1930-2026-complete-history-and-champion-list',
+          };
+          if (article.tag && guideLinks[article.tag]) {
+            article.summary += `\n\nRelated Guide: For deeper analysis, read our complete guide: ${guideLinks[article.tag]}`;
+          }
 
-return { category, rss, article, fullText, ogImage };
+          return { category, rss, article, fullText, ogImage };
         } catch (err) {
           console.error(`Article generation failed for ${category}:`, err.message);
           return null;
@@ -688,36 +701,26 @@ return { category, rss, article, fullText, ogImage };
       })
     );
 
-    // STEP 9 — Quality gates 2, 3 & 4 (word count, filler, weak headline)
+    // STEP 9 — Quality gates 2, 3 & 4
     const passedGates = generatedArticles.filter(item => {
       if (!item) return false;
       const { category, article, fullText } = item;
-
-      // Gate 2: too short
       const wordCount = article.summary?.trim().split(/\s+/).length || 0;
       if (wordCount < 300) {
         console.log(`Skipped ${category}: too short (${wordCount} words)`);
         return false;
       }
-
-      // Gate 3: filler from thin source
       if (!fullText && wordCount > 700) {
         console.log(`Skipped ${category}: likely filler (${wordCount} words from thin source)`);
         return false;
       }
-
-      // Gate 4: filler phrase detection
       if (hasTooMuchFiller(article.summary)) {
         console.log(`Skipped ${category}: filler content detected`);
         return false;
       }
-
-      // Headline check: flag weak headlines (log but don't block — Claude should have followed rules)
       if (isWeakHeadline(article.title)) {
         console.log(`Warning ${category}: weak headline detected — "${article.title}"`);
-        // Still publish but log for monitoring
       }
-
       return true;
     });
 
@@ -758,20 +761,75 @@ return { category, rss, article, fullText, ogImage };
     }
 
     // STEP 12 — Insert to Supabase
+    // CHANGE 10 — Random delay before insert (0-20 min scatter) for human-like timestamps
+    const delayMs = Math.floor(Math.random() * 20 * 60 * 1000);
+    console.log(`Timestamp scatter: delaying insert by ${Math.round(delayMs / 60000)} minutes`);
+    await new Promise(resolve => setTimeout(resolve, delayMs));
+
     const { data: insertedArticles, error } = await supabase.from('articles').insert(results).select();
     if (error) throw error;
 
-    // STEP 13 — Social media posts in parallel
+    // STEP 13 — Social media posts in parallel (CHANGE 8 — varied tone, no fixed emoji formula)
     await Promise.all(
       (insertedArticles || []).map(async inserted => {
         const articleWithUrl = {
           ...inserted,
           articleUrl: `https://www.newsoracle.online/article/${inserted.id}-${slugify(inserted.title)}`
         };
+
+        const telegramCaption = buildSocialPost(articleWithUrl, 'telegram');
+        const facebookMessage = buildSocialPost(articleWithUrl, 'facebook');
+        const threadsText = buildSocialPost(articleWithUrl, 'threads');
+
         await Promise.all([
-          postToTelegram(articleWithUrl),
-          postToFacebook(articleWithUrl),
-          postToThreads(articleWithUrl)
+          // Telegram
+          fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendPhoto`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              chat_id: process.env.TELEGRAM_CHAT_ID,
+              photo: articleWithUrl.image,
+              caption: telegramCaption,
+              parse_mode: 'Markdown'
+            })
+          }).catch(err => console.error('Telegram error:', err)),
+
+          // Facebook
+          fetch(`https://graph.facebook.com/${process.env.FACEBOOK_PAGE_ID}/photos`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              message: facebookMessage,
+              url: articleWithUrl.image,
+              access_token: process.env.FACEBOOK_PAGE_TOKEN
+            })
+          }).catch(err => console.error('Facebook error:', err)),
+
+          // Threads
+          (async () => {
+            try {
+              const containerRes = await fetch(`https://graph.threads.net/v1.0/${process.env.THREADS_USER_ID}/threads`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  media_type: 'IMAGE',
+                  image_url: articleWithUrl.image,
+                  text: threadsText,
+                  access_token: process.env.THREADS_ACCESS_TOKEN
+                })
+              });
+              const container = await containerRes.json();
+              if (!container.id) return;
+              await fetch(`https://graph.threads.net/v1.0/${process.env.THREADS_USER_ID}/threads_publish`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  creation_id: container.id,
+                  access_token: process.env.THREADS_ACCESS_TOKEN
+                })
+              });
+            } catch (err) { console.error('Threads error:', err); }
+          })()
         ]);
       })
     );
