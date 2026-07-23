@@ -152,23 +152,19 @@ const FALLBACK_IMAGES = {
   technology: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&q=80'
 };
 
-// CHANGE 8 — Social post tone seeds for variety
 const SOCIAL_TONES = [
-  'fact', // lead with the single strongest number or fact, no emoji opener
-  'question', // pose the key question the story answers
-  'quote', // if a quote exists in title, lead with it
-  'impact', // lead with what this means for the reader
+  'fact',
+  'question',
+  'quote',
+  'impact',
 ];
 
 function buildSocialPost(article, platform) {
   const articleUrl = article.articleUrl || 'https://www.newsoracle.online';
   const tone = SOCIAL_TONES[Math.floor(Math.random() * SOCIAL_TONES.length)];
   const summary = article.summary?.substring(0, platform === 'instagram' ? 200 : 500) || '';
-
-  // Extract first strong fact or number from title
   const numberMatch = article.title.match(/[\$£€]?\d[\d,.%BMK]*/);
   const strongFact = numberMatch ? `${article.title.split(numberMatch[0])[0].trim()} ${numberMatch[0]}` : article.title;
-
   let opener = '';
   if (tone === 'fact' && numberMatch) {
     opener = `${strongFact}.`;
@@ -179,7 +175,6 @@ function buildSocialPost(article, platform) {
   } else {
     opener = article.title;
   }
-
   const endings = [
     `Full story: ${articleUrl}`,
     `Read the full breakdown: ${articleUrl}`,
@@ -187,7 +182,6 @@ function buildSocialPost(article, platform) {
     `${articleUrl}`,
   ];
   const ending = endings[Math.floor(Math.random() * endings.length)];
-
   if (platform === 'telegram') {
     return `*${opener}*\n\n${summary}...\n\n${ending}`;
   }
@@ -282,6 +276,13 @@ async function fetchFullArticle(url, isGoogleNews = false) {
 }
 
 function scoreRSSItem(title, description, pubDate, sourceUrl = '') {
+  // CHANGE B — Commercial blacklist at RSS scoring time (zero cost rejection)
+  const COMMERCIAL_BLACKLIST = /^(best|top \d+|the \d+ best)\b|\b(buying guide|gift guide|roundup|our picks|we tested|review:|ranked|deal of|coupon)\b/i;
+  if (COMMERCIAL_BLACKLIST.test(title)) {
+    console.log(`Commercial blacklist rejected: ${title}`);
+    return -999;
+  }
+
   let score = 0;
   if (GOOGLE_NEWS_SOURCES.has(sourceUrl)) {
     score -= 3;
@@ -333,7 +334,7 @@ async function fetchRSS(url) {
       if (!description || description.length < 100) continue;
       const score = scoreRSSItem(title, description, pubDate, url);
       if (score === -999) {
-        console.log(`Skipped (stale >6hr): ${title}`);
+        console.log(`Skipped (stale or blacklisted): ${title}`);
         continue;
       }
       const isGoogleNews = GOOGLE_NEWS_SOURCES.has(url);
@@ -385,39 +386,6 @@ function isWeakHeadline(title) {
   return BANNED_HEADLINE_PHRASES.some(phrase => lower.includes(phrase));
 }
 
-const FILLER_PHRASES = [
-  'provides a snapshot',
-  'sends a clear message',
-  'made one thing abundantly clear',
-  'first extended look',
-  'checks the status',
-  'hype train',
-  'it remains to be seen',
-  'only time will tell',
-  'the landscape of',
-  'in the world of',
-  'in today\'s',
-  'worth noting',
-  'all eyes are on',
-  'the question remains',
-  'sent shockwaves',
-];
-
-function hasTooMuchFiller(summary) {
-  const lower = summary.toLowerCase();
-  const fillerCount = FILLER_PHRASES.filter(phrase => lower.includes(phrase)).length;
-  const numbers = (summary.match(/\b\d+[\d,.%$£€]*\b/g) || []).length;
-  const quotes = (summary.match(/["'][^"']{10,}["']/g) || []).length;
-  const namedEntities = (summary.match(/\b[A-Z][a-z]+ [A-Z][a-z]+\b/g) || []).length;
-  const factScore = numbers + quotes + namedEntities;
-  if (fillerCount > 2 && factScore < 5) {
-    console.log(`Filler detected: ${fillerCount} filler phrases, only ${factScore} concrete facts`);
-    return true;
-  }
-  return false;
-}
-
-// CHANGE 9 — Style-variance seeds for tone variety across articles
 const STYLE_SEEDS = [
   'Write with a clipped, urgent tone — short punchy sentences. Get to the point fast.',
   'Write with a slightly more explanatory tone — assume the reader is smart but unfamiliar with this specific story.',
@@ -427,8 +395,6 @@ const STYLE_SEEDS = [
 ];
 
 async function generateArticle(headline, description, category) {
-
-  // CHANGE 9 — Pick a random style seed per article
   const styleSeed = STYLE_SEEDS[Math.floor(Math.random() * STYLE_SEEDS.length)];
 
   const categoryInstructions = {
@@ -541,9 +507,25 @@ Return ONLY the JSON object. No markdown, no backticks, no extra text.`
     }]
   });
 
+  // CHANGE E — JSON parse with retry on failure
   const text = message.content[0].text;
   const clean = text.replace(/```json/g, '').replace(/```/g, '').trim();
-  return JSON.parse(clean);
+  try {
+    return JSON.parse(clean);
+  } catch (e) {
+    console.log(`JSON parse failed, retrying once...`);
+    const retry = await anthropic.messages.create({
+      model: 'claude-haiku-4-5',
+      max_tokens: 4096,
+      messages: [{
+        role: 'user',
+        content: `Return ONLY a valid JSON object. No markdown, no backticks, no extra text before or after. Original headline: "${headline}". Category: "${category}". Return the JSON now.`
+      }]
+    });
+    const retryText = retry.content[0].text;
+    const retryClean = retryText.replace(/```json/g, '').replace(/```/g, '').trim();
+    return JSON.parse(retryClean);
+  }
 }
 
 export default async function handler(req, res) {
@@ -629,7 +611,6 @@ export default async function handler(req, res) {
     }
 
     // STEP 5 — Pick best non-duplicate item per category
-    // CHANGE 10 — Random category skip (~25% chance) for human-like irregular publishing rhythm
     const selectedItems = {};
     const categoriesToConsider = ['finance', 'sports', 'politics', 'technology'];
     for (const category of categoriesToConsider) {
@@ -659,10 +640,19 @@ export default async function handler(req, res) {
       })
     );
 
-    // STEP 7 — Quality gate 1 (thin source)
+    // STEP 7 — Quality gates BEFORE Claude
     const validItems = fullArticleResults.filter(({ rss, fullText }) => {
+      // Gate 1a: thin source
       if (!fullText && rss.description.length < 200) {
         console.log(`Skipped: thin source (${rss.description.length} chars) for ${rss.title}`);
+        return false;
+      }
+      // CHANGE C — Gate 1b: commercial source content pre-check
+      const sourceText = (fullText || rss.description).toLowerCase();
+      const commercialPhrases = ['affiliate', 'we tested', 'our pick', 'editor\'s choice', 'buy now', 'best price', 'sponsored'];
+      const commercialCount = commercialPhrases.filter(p => sourceText.includes(p)).length;
+      if (commercialCount >= 2) {
+        console.log(`Skipped: commercial source detected for ${rss.title}`);
         return false;
       }
       return true;
@@ -698,26 +688,23 @@ export default async function handler(req, res) {
       })
     );
 
-    // STEP 9 — Quality gates 2, 3 & 4
+    // STEP 9 — Quality gates AFTER Claude (word count and weak headline only)
     const passedGates = generatedArticles.filter(item => {
       if (!item) return false;
-      const { category, article, fullText } = item;
+      const { category, article } = item;
       const wordCount = article.summary?.trim().split(/\s+/).length || 0;
-      if (wordCount < 300) {
+
+      // CHANGE A — word count gate lowered to 250 to match prompt instructions
+      if (wordCount < 250) {
         console.log(`Skipped ${category}: too short (${wordCount} words)`);
         return false;
       }
-      if (!fullText && wordCount > 700) {
-        console.log(`Skipped ${category}: likely filler (${wordCount} words from thin source)`);
-        return false;
-      }
-      if (hasTooMuchFiller(article.summary)) {
-        console.log(`Skipped ${category}: filler content detected`);
-        return false;
-      }
+
+      // Headline check — log only, never block
       if (isWeakHeadline(article.title)) {
         console.log(`Warning ${category}: weak headline detected — "${article.title}"`);
       }
+
       return true;
     });
 
@@ -757,13 +744,23 @@ export default async function handler(req, res) {
       return res.status(200).json({ message: 'No new articles to publish this run' });
     }
 
-    // STEP 12 — Insert to Supabase
-    
+    // STEP 12 — CHANGE F: Individual Supabase inserts so one failure doesn't kill all articles
+    const insertedArticles = [];
+    for (const result of results) {
+      try {
+        const { data, error } = await supabase.from('articles').insert(result).select().single();
+        if (error) {
+          console.error(`Insert failed for "${result.title}":`, error.message);
+        } else {
+          insertedArticles.push(data);
+          console.log(`Inserted: "${result.title}"`);
+        }
+      } catch (err) {
+        console.error(`Insert error for "${result.title}":`, err.message);
+      }
+    }
 
-    const { data: insertedArticles, error } = await supabase.from('articles').insert(results).select();
-    if (error) throw error;
-
-    // STEP 13 — Social media posts in parallel (CHANGE 8 — varied tone, no fixed emoji formula)
+    // STEP 13 — Social media posts in parallel
     await Promise.all(
       (insertedArticles || []).map(async inserted => {
         const articleWithUrl = {
@@ -776,7 +773,6 @@ export default async function handler(req, res) {
         const threadsText = buildSocialPost(articleWithUrl, 'threads');
 
         await Promise.all([
-          // Telegram
           fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendPhoto`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -788,7 +784,6 @@ export default async function handler(req, res) {
             })
           }).catch(err => console.error('Telegram error:', err)),
 
-          // Facebook
           fetch(`https://graph.facebook.com/${process.env.FACEBOOK_PAGE_ID}/photos`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -799,7 +794,6 @@ export default async function handler(req, res) {
             })
           }).catch(err => console.error('Facebook error:', err)),
 
-          // Threads
           (async () => {
             try {
               const containerRes = await fetch(`https://graph.threads.net/v1.0/${process.env.THREADS_USER_ID}/threads`, {
@@ -903,8 +897,8 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       success: true,
-      count: results.length,
-      published: results.map(a => ({ title: a.title, image: a.image }))
+      count: insertedArticles.length,
+      published: insertedArticles.map(a => ({ title: a.title, image: a.image }))
     });
 
   } catch (err) {
