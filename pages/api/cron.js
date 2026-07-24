@@ -277,7 +277,7 @@ async function fetchFullArticle(url, isGoogleNews = false) {
 
 function scoreRSSItem(title, description, pubDate, sourceUrl = '') {
   // CHANGE B — Commercial blacklist at RSS scoring time (zero cost rejection)
-  const COMMERCIAL_BLACKLIST = /^(best|top \d+|the \d+ best)\b|\b(buying guide|gift guide|roundup|our picks|we tested|review:|ranked|deal of|coupon)\b/i;
+  const COMMERCIAL_BLACKLIST = /^(best|top \d+|the \d+ best)\b|\b(buying guide|gift guide|roundup|our picks|we tested|review:|ranked|deal of|coupon|\/10 rating|out of 10|gaming pick|hands.?on|first look|unboxing)\b/i;
   if (COMMERCIAL_BLACKLIST.test(title)) {
     console.log(`Commercial blacklist rejected: ${title}`);
     return -999;
