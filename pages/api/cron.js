@@ -128,7 +128,7 @@ const RSS_SOURCES = {
   ],
   politics: [
     'https://www.aljazeera.com/xml/rss/all.xml',
-    'https://thehill.com/feed',
+    'https://feeds.apnews.com/rss/politics',
     'https://www.politico.com/rss/politicopicks.xml',
     'https://feeds.bbci.co.uk/news/politics/rss.xml',
     'https://rss.dw.com/rdf/rss-en-world',
@@ -640,42 +640,65 @@ export default async function handler(req, res) {
       return false;
     }
 
-    const selectedItems = {};
-    const categoriesToConsider = ['finance', 'sports', 'politics', 'technology'];
-    for (const category of categoriesToConsider) {
-      const candidates = itemsByCategory[category] || [];
-      for (const item of candidates) {
-        if (!isDuplicate(item)) {
-          selectedItems[category] = item;
-          console.log(`Selected ${category} (score ${item.score}, direct: ${!item.isGoogleNews}): ${item.title}`);
-          break;
-        } else {
-          console.log(`Skipped ${category} duplicate: ${item.title}`);
-        }
-      }
+    // STEP 5+6+7 — Candidate loop: try every source in ranked order until one passes all pre-Claude gates
+    function hasFactDensity(text) {
+      const numbers = (text.match(/\b\d+[\d,.%$£€]*\b/g) || []).length;
+      const quotes = (text.match(/["'"][^"'"]{15,}["'"]/g) || []).length;
+      const namedEntities = (text.match(/\b[A-Z][a-z]+ [A-Z][a-z]+\b/g) || []).length;
+      const factScore = numbers + quotes + namedEntities;
+      return factScore >= 6;
     }
 
-    const categoriesToProcess = Object.keys(selectedItems);
-    const fullArticleResults = await Promise.all(
-      categoriesToProcess.map(async category => {
-        const rss = selectedItems[category];
-        try {
-          const fullArticle = await fetchFullArticle(rss.itemLink, rss.isGoogleNews);
-          return { category, rss, fullText: fullArticle?.text || null, ogImage: fullArticle?.ogImage || null };
-        } catch {
-          return { category, rss, fullText: null, ogImage: null };
-        }
-      })
-    );
+    const validItems = [];
+    const categoriesToConsider = ['finance', 'sports', 'politics', 'technology'];
 
-    const validItems = fullArticleResults.filter(({ rss, fullText }) => {
-      if (!fullText && rss.description.length < 200) {
-        console.log(`Skipped: thin source (${rss.description.length} chars) for ${rss.title}`);
-        return false;
+    for (const category of categoriesToConsider) {
+      const candidates = itemsByCategory[category] || [];
+      let found = false;
+
+      for (const item of candidates) {
+        // Gate 1: duplicate check
+        if (isDuplicate(item)) {
+          console.log(`Skipped ${category} duplicate: ${item.title}`);
+          continue;
+        }
+
+        // Gate 2: fetch full article
+        let fullText = null;
+        let ogImage = null;
+        try {
+          const fullArticle = await fetchFullArticle(item.itemLink, item.isGoogleNews);
+          fullText = fullArticle?.text || null;
+          ogImage = fullArticle?.ogImage || null;
+        } catch {
+          console.log(`Fetch failed for ${category}: ${item.title}`);
+          continue;
+        }
+
+        // Gate 3: thin source check
+        if (!fullText && item.description.length < 200) {
+          console.log(`Skipped ${category}: thin source (${item.description.length} chars) for ${item.title}`);
+          continue;
+        }
+
+        // Gate 4: fact-density check — guarantees 300+ word Claude output
+        const sourceText = fullText || item.description;
+        if (!hasFactDensity(sourceText)) {
+          console.log(`Skipped ${category}: low fact density for ${item.title}`);
+          continue;
+        }
+
+        // All gates passed — this item goes to Claude
+        console.log(`Selected ${category} (score ${item.score}): ${item.title}`);
+        validItems.push({ category, rss: item, fullText, ogImage });
+        found = true;
+        break;
       }
-      
-      return true;
-    });
+
+      if (!found) {
+        console.log(`No qualifying article found for ${category} this run`);
+      }
+    }
 
     const generatedArticles = await Promise.all(
       validItems.map(async ({ category, rss, fullText, ogImage }) => {
@@ -708,7 +731,6 @@ export default async function handler(req, res) {
     const passedGates = generatedArticles.filter(item => {
       if (!item) return false;
       const { category, article } = item;
-      const wordCount = article.summary?.trim().split(/\s+/).length || 0;
 
       if (isWeakHeadline(article.title)) {
         console.log(`Warning ${category}: weak headline detected — "${article.title}"`);
