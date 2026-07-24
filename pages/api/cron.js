@@ -673,13 +673,7 @@ export default async function handler(req, res) {
         console.log(`Skipped: thin source (${rss.description.length} chars) for ${rss.title}`);
         return false;
       }
-      const sourceText = (fullText || rss.description).toLowerCase();
-      const commercialPhrases = ['affiliate', 'we tested', 'our pick', 'editor\'s choice', 'buy now', 'best price', 'sponsored'];
-      const commercialCount = commercialPhrases.filter(p => sourceText.includes(p)).length;
-      if (commercialCount >= 2) {
-        console.log(`Skipped: commercial source detected for ${rss.title}`);
-        return false;
-      }
+      
       return true;
     });
 
@@ -715,10 +709,7 @@ export default async function handler(req, res) {
       if (!item) return false;
       const { category, article } = item;
       const wordCount = article.summary?.trim().split(/\s+/).length || 0;
-      if (wordCount < 250) {
-        console.log(`Skipped ${category}: too short (${wordCount} words)`);
-        return false;
-      }
+
       if (isWeakHeadline(article.title)) {
         console.log(`Warning ${category}: weak headline detected — "${article.title}"`);
       }
