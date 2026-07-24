@@ -41,6 +41,11 @@ export default function Home({ articles, categoryFeatured, evergreenArticles, ti
   const [carouselFading, setCarouselFading] = useState(false);
   const [tickerIndex, setTickerIndex] = useState(0);
   const [tickerFading, setTickerFading] = useState(false);
+  // LOAD MORE STATE
+  const [loadMoreOffset, setLoadMoreOffset] = useState(20);
+  const [moreArticles, setMoreArticles] = useState([]);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
 
   useEffect(() => {
     const updateTime = () => setCurrentTime(new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }));
@@ -81,11 +86,36 @@ export default function Home({ articles, categoryFeatured, evergreenArticles, ti
     }, 400);
   }, []);
 
+  // LOAD MORE FUNCTION
+  const loadMore = async () => {
+    setLoadingMore(true);
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_KEY
+    );
+    const { data } = await supabase
+      .from("articles")
+      .select("id, title, meta_description, image, category, tag, created_at, views")
+      .or("evergreen.eq.false,evergreen.is.null")
+      .order("created_at", { ascending: false })
+      .range(loadMoreOffset, loadMoreOffset + 19);
+    if (data && data.length > 0) {
+      setMoreArticles(prev => [...prev, ...data]);
+      setLoadMoreOffset(prev => prev + 20);
+      if (data.length < 20) setHasMore(false);
+    } else {
+      setHasMore(false);
+    }
+    setLoadingMore(false);
+  };
+
   const categories = ["all", "sports", "finance", "politics", "technology"];
   const currentFeatured = categoryFeatured[carouselIndex];
   const currentTicker = tickerHeadlines[tickerIndex];
 
-  const filtered = articles.filter(a => {
+  // INCLUDE MORE ARTICLES IN FILTERED
+  const allArticles = [...articles, ...moreArticles];
+  const filtered = allArticles.filter(a => {
     const matchCat = activeCategory === "all" || a.category === activeCategory;
     const matchSearch = !searchQuery || a.title.toLowerCase().includes(searchQuery.toLowerCase());
     return matchCat && matchSearch;
@@ -259,6 +289,19 @@ export default function Home({ articles, categoryFeatured, evergreenArticles, ti
                       </div>
                     </Link>
                   ))}
+                </div>
+              )}
+
+              {/* LOAD MORE BUTTON */}
+              {hasMore && activeCategory === 'all' && !searchQuery && (
+                <div style={{ textAlign: "center", marginTop: "32px" }}>
+                  <button
+                    onClick={loadMore}
+                    disabled={loadingMore}
+                    style={{ background: "#cc0000", color: "#fff", border: "none", padding: "12px 40px", fontSize: "14px", fontWeight: "700", cursor: loadingMore ? "not-allowed" : "pointer", opacity: loadingMore ? 0.7 : 1, textTransform: "uppercase", letterSpacing: "1px" }}
+                  >
+                    {loadingMore ? "Loading..." : "Load More"}
+                  </button>
                 </div>
               )}
             </div>
