@@ -307,7 +307,7 @@ async function fetchFullArticle(url, isGoogleNews = false) {
 }
 
 function scoreRSSItem(title, description, pubDate, sourceUrl = '') {
-  const COMMERCIAL_BLACKLIST = /^(best|top \d+|the \d+ best)\b|\b(buying guide|gift guide|roundup|our picks|we tested|review:|ranked|deal of|coupon|\/10 rating|out of 10|gaming pick|hands.?on|first look|unboxing)\b/i;
+  const COMMERCIAL_BLACKLIST = /^(best|top \d+|the \d+ best)\b|\b(buying guide|gift guide|roundup|our picks|we tested|review:|ranked|deal of|coupon|\/10 rating|out of 10|gaming pick|hands.?on|first look|unboxing|opinion|framework for|how to decide)\b/i;
   if (COMMERCIAL_BLACKLIST.test(title)) {
     console.log(`Commercial blacklist rejected: ${title}`);
     return -999;
@@ -740,7 +740,8 @@ export default async function handler(req, res) {
 
     const itemsWithImages = await Promise.all(
       passedGates.map(async ({ category, rss, article, ogImage }) => {
-        const pexelsQuery = `${article.tag} ${article.title.split(' ').slice(0, 3).join(' ')}`;
+        const entityWords = article.title.match(/\b[A-Z][a-z]{3,}\b/g) || [];
+const pexelsQuery = entityWords.slice(0, 3).join(' ') || article.tag || article.category;
         const articleImage = ogImage || rss.image || await getPexelsImage(pexelsQuery) || FALLBACK_IMAGES[category];
         return { category, rss, article, articleImage };
       })
