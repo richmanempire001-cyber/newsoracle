@@ -105,13 +105,16 @@ import { createClient } from '@supabase/supabase-js';
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
+// CHANGE 1 — Updated RSS sources
 const RSS_SOURCES = {
   finance: [
     'https://cointelegraph.com/rss',
     'https://decrypt.co/feed',
     'https://www.coindesk.com/arc/outboundfeeds/rss/',
-    'https://feeds.reuters.com/reuters/businessNews',
     'https://www.cnbc.com/id/100003114/device/rss/rss.html',
+    'https://fortune.com/feed',
+    'https://feeds.npr.org/1006/rss.xml',
+    'https://www.theguardian.com/us/business/rss',
     'https://news.google.com/rss/search?q=bitcoin+OR+crypto+OR+stocks+OR+nasdaq+OR+S%26P500+OR+inflation+OR+Fed&ceid=US:en&hl=en-US&gl=US',
   ],
   sports: [
@@ -119,6 +122,8 @@ const RSS_SOURCES = {
     'https://www.footballtransfers.com/en/rss',
     'https://www.bbc.com/sport/rss.xml',
     'https://www.skysports.com/rss/12040',
+    'https://www.theguardian.com/us/sport/rss',
+    'https://www.theguardian.com/football/rss',
     'https://news.google.com/rss/search?q=NFL+OR+NBA+OR+soccer+OR+cricket+OR+tennis+OR+Premier+League+OR+UFC&ceid=US:en&hl=en-US&gl=US',
   ],
   politics: [
@@ -127,22 +132,26 @@ const RSS_SOURCES = {
     'https://www.politico.com/rss/politicopicks.xml',
     'https://feeds.bbci.co.uk/news/politics/rss.xml',
     'https://rss.dw.com/rdf/rss-en-world',
+    'https://feeds.npr.org/1014/rss.xml',
+    'https://www.theguardian.com/us-news/rss',
     'https://news.google.com/rss/search?q=Trump+OR+Congress+OR+White+House+OR+elections+OR+Supreme+Court+OR+Senate&ceid=US:en&hl=en-US&gl=US',
   ],
   technology: [
     'https://www.theverge.com/rss/index.xml',
-    'https://techcrunch.com/feed/',
-    'https://www.wired.com/feed/rss',
     'https://feeds.arstechnica.com/arstechnica/index',
-    'https://news.google.com/rss/search?q=AI+OR+Apple+OR+Tesla+OR+Google+OR+Meta+OR+OpenAI+OR+ChatGPT&ceid=US:en&hl=en-US&gl=US',
+    'https://www.theguardian.com/us/technology/rss',
+    'https://www.cnbc.com/id/19854910/device/rss/rss.html',
+    'https://feeds.bbci.co.uk/news/technology/rss.xml',
+    'https://news.google.com/rss/search?q=AI+OR+Apple+OR+Tesla+OR+Google+OR+Meta+OR+Microsoft+OR+Samsung+OR+Nvidia+OR+OpenAI&ceid=US:en&hl=en-US&gl=US',
   ]
 };
 
+// CHANGE 1 — Updated GOOGLE_NEWS_SOURCES to match new technology query
 const GOOGLE_NEWS_SOURCES = new Set([
   'https://news.google.com/rss/search?q=bitcoin+OR+crypto+OR+stocks+OR+nasdaq+OR+S%26P500+OR+inflation+OR+Fed&ceid=US:en&hl=en-US&gl=US',
   'https://news.google.com/rss/search?q=NFL+OR+NBA+OR+soccer+OR+cricket+OR+tennis+OR+Premier+League+OR+UFC&ceid=US:en&hl=en-US&gl=US',
   'https://news.google.com/rss/search?q=Trump+OR+Congress+OR+White+House+OR+elections+OR+Supreme+Court+OR+Senate&ceid=US:en&hl=en-US&gl=US',
-  'https://news.google.com/rss/search?q=AI+OR+Apple+OR+Tesla+OR+Google+OR+Meta+OR+OpenAI+OR+ChatGPT&ceid=US:en&hl=en-US&gl=US',
+  'https://news.google.com/rss/search?q=AI+OR+Apple+OR+Tesla+OR+Google+OR+Meta+OR+Microsoft+OR+Samsung+OR+Nvidia+OR+OpenAI&ceid=US:en&hl=en-US&gl=US',
 ]);
 
 const FALLBACK_IMAGES = {
@@ -150,6 +159,28 @@ const FALLBACK_IMAGES = {
   sports: 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=800&q=80',
   politics: 'https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=800&q=80',
   technology: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&q=80'
+};
+
+// CHANGE 2 — Source names map for specific attribution
+const SOURCE_NAMES = {
+  'cointelegraph.com': 'CoinTelegraph',
+  'decrypt.co': 'Decrypt',
+  'coindesk.com': 'CoinDesk',
+  'cnbc.com': 'CNBC',
+  'fortune.com': 'Fortune',
+  'npr.org': 'NPR',
+  'espn.com': 'ESPN',
+  'footballtransfers.com': 'FootballTransfers',
+  'bbc.com': 'BBC Sport',
+  'bbci.co.uk': 'BBC',
+  'skysports.com': 'Sky Sports',
+  'theguardian.com': 'The Guardian',
+  'aljazeera.com': 'Al Jazeera',
+  'thehill.com': 'The Hill',
+  'politico.com': 'Politico',
+  'dw.com': 'DW',
+  'theverge.com': 'The Verge',
+  'arstechnica.com': 'Ars Technica',
 };
 
 const SOCIAL_TONES = [
@@ -276,7 +307,6 @@ async function fetchFullArticle(url, isGoogleNews = false) {
 }
 
 function scoreRSSItem(title, description, pubDate, sourceUrl = '') {
-  // CHANGE B — Commercial blacklist at RSS scoring time (zero cost rejection)
   const COMMERCIAL_BLACKLIST = /^(best|top \d+|the \d+ best)\b|\b(buying guide|gift guide|roundup|our picks|we tested|review:|ranked|deal of|coupon|\/10 rating|out of 10|gaming pick|hands.?on|first look|unboxing)\b/i;
   if (COMMERCIAL_BLACKLIST.test(title)) {
     console.log(`Commercial blacklist rejected: ${title}`);
@@ -328,7 +358,12 @@ async function fetchRSS(url) {
       const description = descMatch ? (descMatch[1] || descMatch[2]).replace(/<[^>]*>/g, '').trim() : '';
       const image = imageMatch ? (imageMatch[1] || imageMatch[0]) : null;
       const sourceMatch = itemText.match(/<source[^>]*>(.*?)<\/source>/);
-      const sourceName = sourceMatch ? sourceMatch[1].trim() : '';
+      // CHANGE 3 — Specific source attribution using SOURCE_NAMES map
+      let sourceName = sourceMatch ? sourceMatch[1].trim() : '';
+      if (!sourceName) {
+        const domain = Object.keys(SOURCE_NAMES).find(d => url.includes(d));
+        if (domain) sourceName = SOURCE_NAMES[domain];
+      }
       const pubDate = pubDateMatch ? pubDateMatch[1].trim() : null;
       if (!title || title.length < 10) continue;
       if (!description || description.length < 100) continue;
@@ -507,7 +542,6 @@ Return ONLY the JSON object. No markdown, no backticks, no extra text.`
     }]
   });
 
-  // CHANGE E — JSON parse with retry on failure
   const text = message.content[0].text;
   const clean = text.replace(/```json/g, '').replace(/```/g, '').trim();
   try {
@@ -538,7 +572,6 @@ export default async function handler(req, res) {
     const now = new Date().toISOString();
     const authorNames = { sports: 'NewsOracle Editorial', finance: 'NewsOracle Editorial', politics: 'NewsOracle Editorial', technology: 'NewsOracle Editorial' };
 
-    // STEP 1 — Fetch ALL RSS sources in parallel
     const allSourceEntries = [];
     for (const [category, sources] of Object.entries(RSS_SOURCES)) {
       for (const source of sources) {
@@ -560,7 +593,6 @@ export default async function handler(req, res) {
     const allFetchedItems = rssResults.filter(Boolean);
     console.log(`Fetched ${allFetchedItems.length} RSS items from ${allSourceEntries.length} sources`);
 
-    // STEP 2 — Cross-source trending detection
     const entityCounts = {};
     for (const item of allFetchedItems) {
       for (const entity of extractEntities(item.title)) {
@@ -573,7 +605,6 @@ export default async function handler(req, res) {
       return entities.some(e => entityCounts[e] >= 2) ? 3 : 0;
     }
 
-    // STEP 3 — Group by category, apply trending bonus, sort by score
     const itemsByCategory = {};
     for (const category of ['finance', 'sports', 'politics', 'technology']) {
       itemsByCategory[category] = allFetchedItems
@@ -585,7 +616,6 @@ export default async function handler(req, res) {
         .sort((a, b) => b.score - a.score);
     }
 
-    // STEP 4 — Fetch recent articles once for duplicate checking
     const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString();
     const { data: recentArticles } = await supabase
       .from('articles')
@@ -610,7 +640,6 @@ export default async function handler(req, res) {
       return false;
     }
 
-    // STEP 5 — Pick best non-duplicate item per category
     const selectedItems = {};
     const categoriesToConsider = ['finance', 'sports', 'politics', 'technology'];
     for (const category of categoriesToConsider) {
@@ -626,7 +655,6 @@ export default async function handler(req, res) {
       }
     }
 
-    // STEP 6 — Fetch full articles in parallel
     const categoriesToProcess = Object.keys(selectedItems);
     const fullArticleResults = await Promise.all(
       categoriesToProcess.map(async category => {
@@ -640,14 +668,11 @@ export default async function handler(req, res) {
       })
     );
 
-    // STEP 7 — Quality gates BEFORE Claude
     const validItems = fullArticleResults.filter(({ rss, fullText }) => {
-      // Gate 1a: thin source
       if (!fullText && rss.description.length < 200) {
         console.log(`Skipped: thin source (${rss.description.length} chars) for ${rss.title}`);
         return false;
       }
-      // CHANGE C — Gate 1b: commercial source content pre-check
       const sourceText = (fullText || rss.description).toLowerCase();
       const commercialPhrases = ['affiliate', 'we tested', 'our pick', 'editor\'s choice', 'buy now', 'best price', 'sponsored'];
       const commercialCount = commercialPhrases.filter(p => sourceText.includes(p)).length;
@@ -658,7 +683,6 @@ export default async function handler(req, res) {
       return true;
     });
 
-    // STEP 8 — Generate all articles in parallel
     const generatedArticles = await Promise.all(
       validItems.map(async ({ category, rss, fullText, ogImage }) => {
         try {
@@ -666,7 +690,6 @@ export default async function handler(req, res) {
           const article = await generateArticle(rss.title, sourceMaterial, category);
           article.category = category;
 
-          // Internal linking to evergreen guides
           const guideLinks = {
             'Bitcoin': 'https://www.newsoracle.online/article/416-bitcoin-price-prediction-2026-expert-forecasts-key-factors-and-market-analysis',
             'Crypto': 'https://www.newsoracle.online/article/416-bitcoin-price-prediction-2026-expert-forecasts-key-factors-and-market-analysis',
@@ -688,27 +711,20 @@ export default async function handler(req, res) {
       })
     );
 
-    // STEP 9 — Quality gates AFTER Claude (word count and weak headline only)
     const passedGates = generatedArticles.filter(item => {
       if (!item) return false;
       const { category, article } = item;
       const wordCount = article.summary?.trim().split(/\s+/).length || 0;
-
-      // CHANGE A — word count gate lowered to 250 to match prompt instructions
       if (wordCount < 250) {
         console.log(`Skipped ${category}: too short (${wordCount} words)`);
         return false;
       }
-
-      // Headline check — log only, never block
       if (isWeakHeadline(article.title)) {
         console.log(`Warning ${category}: weak headline detected — "${article.title}"`);
       }
-
       return true;
     });
 
-    // STEP 10 — Fetch images in parallel
     const itemsWithImages = await Promise.all(
       passedGates.map(async ({ category, rss, article, ogImage }) => {
         const pexelsQuery = `${article.tag} ${article.title.split(' ').slice(0, 3).join(' ')}`;
@@ -717,7 +733,6 @@ export default async function handler(req, res) {
       })
     );
 
-    // STEP 11 — Build results array
     for (const { category, rss, article, articleImage } of itemsWithImages) {
       results.push({
         link: rss.itemLink,
@@ -744,7 +759,6 @@ export default async function handler(req, res) {
       return res.status(200).json({ message: 'No new articles to publish this run' });
     }
 
-    // STEP 12 — CHANGE F: Individual Supabase inserts so one failure doesn't kill all articles
     const insertedArticles = [];
     for (const result of results) {
       try {
@@ -760,7 +774,6 @@ export default async function handler(req, res) {
       }
     }
 
-    // STEP 13 — Social media posts in parallel
     await Promise.all(
       (insertedArticles || []).map(async inserted => {
         const articleWithUrl = {
@@ -822,7 +835,6 @@ export default async function handler(req, res) {
       })
     );
 
-    // STEP 14 — All indexing pings in parallel
     await Promise.all([
       (async () => {
         try {
