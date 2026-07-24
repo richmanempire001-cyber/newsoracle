@@ -1,5 +1,6 @@
 import Head from "next/head";
 import Link from "next/link";
+import { useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { articlePath } from "../../lib/slugify";
 
@@ -60,6 +61,36 @@ function getReadTime(summary) {
 
 export default function CategoryPage({ category, config, articles, featuredArticle, totalCount, sidebarGuides }) {
   if (!config) return null;
+
+  // LOAD MORE STATE
+  const [moreArticles, setMoreArticles] = useState([]);
+  const [loadMoreOffset, setLoadMoreOffset] = useState(31);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+
+  // LOAD MORE FUNCTION
+  const loadMore = async () => {
+    setLoadingMore(true);
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_KEY
+    );
+    const { data } = await supabase
+      .from("articles")
+      .select("id, title, summary, image, category, tag, created_at, author")
+      .eq("category", category)
+      .or("evergreen.eq.false,evergreen.is.null")
+      .order("created_at", { ascending: false })
+      .range(loadMoreOffset, loadMoreOffset + 19);
+    if (data && data.length > 0) {
+      setMoreArticles(prev => [...prev, ...data]);
+      setLoadMoreOffset(prev => prev + 20);
+      if (data.length < 20) setHasMore(false);
+    } else {
+      setHasMore(false);
+    }
+    setLoadingMore(false);
+  };
 
   return (
     <>
@@ -186,7 +217,7 @@ export default function CategoryPage({ category, config, articles, featuredArtic
               </div>
 
               <div className="cat-grid" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "20px" }}>
-                {articles.map(article => (
+                {[...articles, ...moreArticles].map(article => (
                   <Link key={article.id} href={articlePath(article)} style={{ textDecoration: "none" }}>
                     <div className="cat-card" style={{ background: "#fff", cursor: "pointer", boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
                       <img loading="lazy" src={getImage(article)} alt={article.title} style={{ width: "100%", height: "180px", objectFit: "cover", display: "block" }} />
@@ -205,6 +236,19 @@ export default function CategoryPage({ category, config, articles, featuredArtic
                   </Link>
                 ))}
               </div>
+
+              {/* LOAD MORE BUTTON */}
+              {hasMore && (
+                <div style={{ textAlign: "center", marginTop: "32px" }}>
+                  <button
+                    onClick={loadMore}
+                    disabled={loadingMore}
+                    style={{ background: config.color, color: "#fff", border: "none", padding: "12px 40px", fontSize: "14px", fontWeight: "700", cursor: loadingMore ? "not-allowed" : "pointer", opacity: loadingMore ? 0.7 : 1, textTransform: "uppercase", letterSpacing: "1px" }}
+                  >
+                    {loadingMore ? "Loading..." : "Load More"}
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Sidebar */}
@@ -227,7 +271,7 @@ export default function CategoryPage({ category, config, articles, featuredArtic
                   ))}
                 </div>
 
-                {/* Guides Widget — auto-updates with every new guide */}
+                {/* Guides Widget */}
                 {sidebarGuides?.length > 0 && (
                   <div style={{ background: "#fff", padding: "20px", marginBottom: "20px", boxShadow: "0 1px 4px rgba(0,0,0,0.08)", borderTop: "3px solid #111" }}>
                     <h3 style={{ fontSize: "13px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1.5px", color: "#111", margin: "0 0 16px", paddingBottom: "10px", borderBottom: "2px solid #111" }}>📚 Guides</h3>
@@ -324,13 +368,12 @@ export async function getServerSideProps({ params }) {
 
   const { data: allArticles, count } = await supabaseServer
     .from("articles")
-    .select("*", { count: "exact" })
+    .select("id, title, summary, image, category, tag, created_at, author, meta_description", { count: "exact" })
     .eq("category", category)
     .or("evergreen.eq.false,evergreen.is.null")
     .order("created_at", { ascending: false })
     .limit(31);
 
-  // Fetch all guides for sidebar
   const { data: sidebarGuides } = await supabaseServer
     .from("articles")
     .select("id, title, category, tag")
