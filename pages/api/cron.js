@@ -298,7 +298,7 @@ async function fetchFullArticle(url, isGoogleNews = false) {
 }
 
 function scoreRSSItem(title, description, pubDate, sourceUrl = '') {
-  const COMMERCIAL_BLACKLIST = /^(best|top \d+|the \d+ best)\b|\b(buying guide|gift guide|roundup|our picks|we tested|review:|ranked|deal of|coupon|\/10 rating|out of 10|gaming pick|hands.?on|first look|unboxing|opinion|framework for|how to decide)\b/i;
+  const COMMERCIAL_BLACKLIST = /^(best|top \d+|the \d+ best)\b|\b(buying guide|gift guide|roundup|our picks|we tested|review:|ranked|deal of|coupon|\/10 rating|out of 10|gaming pick|hands.?on|first look|unboxing|opinion|framework for|how to decide|dies by suicide|died by suicide|death by suicide)\b/i;
   if (COMMERCIAL_BLACKLIST.test(title)) {
     console.log(`Commercial blacklist rejected: ${title}`);
     return -999;
@@ -757,7 +757,9 @@ export default async function handler(req, res) {
       passedGates.map(async ({ category, rss, article, ogImage }) => {
         const entityWords = article.title.match(/\b[A-Z][a-z]{3,}\b/g) || [];
         const pexelsQuery = entityWords.slice(0, 3).join(' ') || article.tag || article.category;
-        const articleImage = ogImage || rss.image || await getPexelsImage(pexelsQuery) || FALLBACK_IMAGES[category];
+        const SKIP_RSS_IMAGE_DOMAINS = ['bbc.com', 'bbci.co.uk', 'espn.com', 'cnbc.com', 'aljazeera.com', 'politico.com', 'apnews.com'];
+const hasLogo = SKIP_RSS_IMAGE_DOMAINS.some(d => rss?.sourceUrl?.includes(d));
+const articleImage = (!hasLogo && (ogImage || rss.image)) || await getPexelsImage(pexelsQuery) || FALLBACK_IMAGES[category];
         return { category, rss, article, articleImage };
       })
     );
