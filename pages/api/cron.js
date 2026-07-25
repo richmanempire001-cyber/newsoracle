@@ -113,7 +113,6 @@ const RSS_SOURCES = {
     'https://www.cnbc.com/id/100003114/device/rss/rss.html',
     'https://fortune.com/feed',
     'https://feeds.npr.org/1006/rss.xml',
-    'https://www.theguardian.com/us/business/rss',
     'https://news.google.com/rss/search?q=bitcoin+OR+crypto+OR+stocks+OR+nasdaq+OR+S%26P500+OR+inflation+OR+Fed&ceid=US:en&hl=en-US&gl=US',
   ],
   sports: [
@@ -121,8 +120,6 @@ const RSS_SOURCES = {
     'https://www.footballtransfers.com/en/rss',
     'https://www.bbc.com/sport/rss.xml',
     'https://www.skysports.com/rss/12040',
-    'https://www.theguardian.com/us/sport/rss',
-    'https://www.theguardian.com/football/rss',
     'https://news.google.com/rss/search?q=NFL+OR+NBA+OR+soccer+OR+cricket+OR+tennis+OR+Premier+League+OR+UFC&ceid=US:en&hl=en-US&gl=US',
   ],
   politics: [
@@ -132,13 +129,11 @@ const RSS_SOURCES = {
     'https://feeds.bbci.co.uk/news/politics/rss.xml',
     'https://rss.dw.com/rdf/rss-en-world',
     'https://feeds.npr.org/1014/rss.xml',
-    'https://www.theguardian.com/us-news/rss',
     'https://news.google.com/rss/search?q=Trump+OR+Congress+OR+White+House+OR+elections+OR+Supreme+Court+OR+Senate&ceid=US:en&hl=en-US&gl=US',
   ],
   technology: [
     'https://www.theverge.com/rss/index.xml',
     'https://feeds.arstechnica.com/arstechnica/index',
-    'https://www.theguardian.com/us/technology/rss',
     'https://www.cnbc.com/id/19854910/device/rss/rss.html',
     'https://feeds.bbci.co.uk/news/technology/rss.xml',
     'https://news.google.com/rss/search?q=AI+OR+Apple+OR+Tesla+OR+Google+OR+Meta+OR+Microsoft+OR+Samsung+OR+Nvidia+OR+OpenAI&ceid=US:en&hl=en-US&gl=US',
@@ -171,7 +166,6 @@ const SOURCE_NAMES = {
   'bbc.com': 'BBC Sport',
   'bbci.co.uk': 'BBC',
   'skysports.com': 'Sky Sports',
-  'theguardian.com': 'The Guardian',
   'aljazeera.com': 'Al Jazeera',
   'apnews.com': 'AP News',
   'politico.com': 'Politico',
@@ -763,8 +757,7 @@ export default async function handler(req, res) {
       passedGates.map(async ({ category, rss, article, ogImage }) => {
         const entityWords = article.title.match(/\b[A-Z][a-z]{3,}\b/g) || [];
         const pexelsQuery = entityWords.slice(0, 3).join(' ') || article.tag || article.category;
-        const isGuardian = rss?.sourceUrl?.includes('theguardian.com') || rss?.source?.includes('theguardian.com') || rss?.itemLink?.includes('theguardian.com');
-        const articleImage = (!isGuardian && (ogImage || rss.image)) || await getPexelsImage(pexelsQuery) || FALLBACK_IMAGES[category];
+        const articleImage = ogImage || rss.image || await getPexelsImage(pexelsQuery) || FALLBACK_IMAGES[category];
         return { category, rss, article, articleImage };
       })
     );
