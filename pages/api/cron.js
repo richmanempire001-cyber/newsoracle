@@ -742,7 +742,8 @@ export default async function handler(req, res) {
         const entityWords = article.title.match(/\b[A-Z][a-z]{3,}\b/g) || [];
         const pexelsQuery = entityWords.slice(0, 3).join(' ') || article.tag || article.category;
         const isGuardian = rss.sourceUrl?.includes('theguardian.com');
-        const articleImage = (!isGuardian && ogImage) || rss.image || await getPexelsImage(pexelsQuery) || FALLBACK_IMAGES[category];
+        const isGuardian = rss?.sourceUrl?.includes('theguardian.com') || rss?.source?.includes('theguardian.com') || rss?.itemLink?.includes('theguardian.com');
+const articleImage = (!isGuardian && ogImage) || rss.image || await getPexelsImage(pexelsQuery) || FALLBACK_IMAGES[category];
         return { category, rss, article, articleImage };
       })
     );
