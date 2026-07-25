@@ -540,21 +540,43 @@ Return ONLY the JSON object. No markdown, no backticks, no extra text.`
 
   const text = message.content[0].text;
   const clean = text.replace(/```json/g, '').replace(/```/g, '').trim();
+
+  function normalizeResult(parsed) {
+    // Fix 2 — normalize keyPoints if Claude returns an array instead of newline-separated string
+    if (Array.isArray(parsed.keyPoints)) {
+      parsed.keyPoints = parsed.keyPoints.join('\n');
+    }
+    return parsed;
+  }
+
   try {
-    return JSON.parse(clean);
+    return normalizeResult(JSON.parse(clean));
   } catch (e) {
-    console.log(`JSON parse failed, retrying once...`);
+    // Fix 1 — retry with full prompt context, not blind headline-only retry
+    console.log(`JSON parse failed, retrying with full prompt...`);
     const retry = await anthropic.messages.create({
       model: 'claude-haiku-4-5',
       max_tokens: 4096,
       messages: [{
         role: 'user',
-        content: `Return ONLY a valid JSON object. No markdown, no backticks, no extra text before or after. Original headline: "${headline}". Category: "${category}". Return the JSON now.`
+        content: `Your previous response was not valid JSON. Return the same article as a valid JSON object only — no markdown, no backticks, no text before or after the JSON.
+
+Headline: "${headline}"
+Source material: "${description}"
+
+${fieldsInstruction[category]}
+
+Return ONLY the JSON object.`
       }]
     });
     const retryText = retry.content[0].text;
     const retryClean = retryText.replace(/```json/g, '').replace(/```/g, '').trim();
-    return JSON.parse(retryClean);
+    try {
+      return normalizeResult(JSON.parse(retryClean));
+    } catch (e2) {
+      console.log(`Retry also failed for ${category} — dropping article`);
+      throw e2;
+    }
   }
 }
 
@@ -742,7 +764,7 @@ export default async function handler(req, res) {
         const entityWords = article.title.match(/\b[A-Z][a-z]{3,}\b/g) || [];
         const pexelsQuery = entityWords.slice(0, 3).join(' ') || article.tag || article.category;
         const isGuardian = rss?.sourceUrl?.includes('theguardian.com') || rss?.source?.includes('theguardian.com') || rss?.itemLink?.includes('theguardian.com');
-        const articleImage = (!isGuardian && ogImage) || rss.image || await getPexelsImage(pexelsQuery) || FALLBACK_IMAGES[category];
+        const articleImage = (!isGuardian && (ogImage || rss.image)) || await getPexelsImage(pexelsQuery) || FALLBACK_IMAGES[category];
         return { category, rss, article, articleImage };
       })
     );
