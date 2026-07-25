@@ -105,7 +105,6 @@ import { createClient } from '@supabase/supabase-js';
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
-// CHANGE 1 — Updated RSS sources
 const RSS_SOURCES = {
   finance: [
     'https://cointelegraph.com/rss',
@@ -146,7 +145,6 @@ const RSS_SOURCES = {
   ]
 };
 
-// CHANGE 1 — Updated GOOGLE_NEWS_SOURCES to match new technology query
 const GOOGLE_NEWS_SOURCES = new Set([
   'https://news.google.com/rss/search?q=bitcoin+OR+crypto+OR+stocks+OR+nasdaq+OR+S%26P500+OR+inflation+OR+Fed&ceid=US:en&hl=en-US&gl=US',
   'https://news.google.com/rss/search?q=NFL+OR+NBA+OR+soccer+OR+cricket+OR+tennis+OR+Premier+League+OR+UFC&ceid=US:en&hl=en-US&gl=US',
@@ -161,7 +159,6 @@ const FALLBACK_IMAGES = {
   technology: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&q=80'
 };
 
-// CHANGE 2 — Source names map for specific attribution
 const SOURCE_NAMES = {
   'cointelegraph.com': 'CoinTelegraph',
   'decrypt.co': 'Decrypt',
@@ -176,7 +173,7 @@ const SOURCE_NAMES = {
   'skysports.com': 'Sky Sports',
   'theguardian.com': 'The Guardian',
   'aljazeera.com': 'Al Jazeera',
-  'thehill.com': 'The Hill',
+  'apnews.com': 'AP News',
   'politico.com': 'Politico',
   'dw.com': 'DW',
   'theverge.com': 'The Verge',
@@ -358,7 +355,6 @@ async function fetchRSS(url) {
       const description = descMatch ? (descMatch[1] || descMatch[2]).replace(/<[^>]*>/g, '').trim() : '';
       const image = imageMatch ? (imageMatch[1] || imageMatch[0]) : null;
       const sourceMatch = itemText.match(/<source[^>]*>(.*?)<\/source>/);
-      // CHANGE 3 — Specific source attribution using SOURCE_NAMES map
       let sourceName = sourceMatch ? sourceMatch[1].trim() : '';
       if (!sourceName) {
         const domain = Object.keys(SOURCE_NAMES).find(d => url.includes(d));
@@ -572,6 +568,7 @@ export default async function handler(req, res) {
     const now = new Date().toISOString();
     const authorNames = { sports: 'NewsOracle Editorial', finance: 'NewsOracle Editorial', politics: 'NewsOracle Editorial', technology: 'NewsOracle Editorial' };
 
+    // STEP 1 — Fetch ALL RSS sources in parallel
     const allSourceEntries = [];
     for (const [category, sources] of Object.entries(RSS_SOURCES)) {
       for (const source of sources) {
@@ -593,6 +590,7 @@ export default async function handler(req, res) {
     const allFetchedItems = rssResults.filter(Boolean);
     console.log(`Fetched ${allFetchedItems.length} RSS items from ${allSourceEntries.length} sources`);
 
+    // STEP 2 — Cross-source trending detection
     const entityCounts = {};
     for (const item of allFetchedItems) {
       for (const entity of extractEntities(item.title)) {
@@ -605,6 +603,7 @@ export default async function handler(req, res) {
       return entities.some(e => entityCounts[e] >= 2) ? 3 : 0;
     }
 
+    // STEP 3 — Group by category, apply trending bonus, sort by score
     const itemsByCategory = {};
     for (const category of ['finance', 'sports', 'politics', 'technology']) {
       itemsByCategory[category] = allFetchedItems
@@ -616,6 +615,7 @@ export default async function handler(req, res) {
         .sort((a, b) => b.score - a.score);
     }
 
+    // STEP 4 — Fetch recent articles once for duplicate checking
     const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString();
     const { data: recentArticles } = await supabase
       .from('articles')
@@ -640,66 +640,64 @@ export default async function handler(req, res) {
       return false;
     }
 
-    // STEP 5+6+7 — Candidate loop: try every source in ranked order until one passes all pre-Claude gates
+    // STEP 5+6+7 — FIX: all 4 categories run in parallel, candidates try sequentially within each
     function hasFactDensity(text) {
       const numbers = (text.match(/\b\d+[\d,.%$£€]*\b/g) || []).length;
       const quotes = (text.match(/["'"][^"'"]{15,}["'"]/g) || []).length;
       const namedEntities = (text.match(/\b[A-Z][a-z]+ [A-Z][a-z]+\b/g) || []).length;
       const factScore = numbers + quotes + namedEntities;
-      return factScore >= 6;
+      return factScore >= 4;
     }
 
-    const validItems = [];
-    const categoriesToConsider = ['finance', 'sports', 'politics', 'technology'];
+    // FIX A — cheap pre-screen on RSS description before expensive fetch
+    function hasBasicDensity(text) {
+      const numbers = (text.match(/\b\d+[\d,.%$£€]*\b/g) || []).length;
+      const namedEntities = (text.match(/\b[A-Z][a-z]+ [A-Z][a-z]+\b/g) || []).length;
+      return (numbers + namedEntities) >= 2;
+    }
 
-    for (const category of categoriesToConsider) {
-      const candidates = itemsByCategory[category] || [];
-      let found = false;
-
-      for (const item of candidates) {
-        // Gate 1: duplicate check
-        if (isDuplicate(item)) {
-          console.log(`Skipped ${category} duplicate: ${item.title}`);
-          continue;
+    // FIX B — process all 4 categories in parallel, candidates sequential within each
+    const validItems = (await Promise.all(
+      ['finance', 'sports', 'politics', 'technology'].map(async (category) => {
+        const candidates = (itemsByCategory[category] || []).slice(0, 3); // FIX C — cap at 3 candidates
+        for (const item of candidates) {
+          if (isDuplicate(item)) {
+            console.log(`Skipped ${category} duplicate: ${item.title}`);
+            continue;
+          }
+          // FIX A — cheap pre-screen before HTTP fetch
+          if (!hasBasicDensity(item.description)) {
+            console.log(`Skipped ${category}: low basic density for ${item.title}`);
+            continue;
+          }
+          let fullText = null;
+          let ogImage = null;
+          try {
+            const fullArticle = await fetchFullArticle(item.itemLink, item.isGoogleNews);
+            fullText = fullArticle?.text || null;
+            ogImage = fullArticle?.ogImage || null;
+          } catch {
+            console.log(`Fetch failed for ${category}: ${item.title}`);
+            continue;
+          }
+          if (!fullText && item.description.length < 200) {
+            console.log(`Skipped ${category}: thin source for ${item.title}`);
+            continue;
+          }
+          const sourceText = fullText || item.description;
+          if (!hasFactDensity(sourceText)) {
+            console.log(`Skipped ${category}: low fact density for ${item.title}`);
+            continue;
+          }
+          console.log(`Selected ${category} (score ${item.score}): ${item.title}`);
+          return { category, rss: item, fullText, ogImage };
         }
-
-        // Gate 2: fetch full article
-        let fullText = null;
-        let ogImage = null;
-        try {
-          const fullArticle = await fetchFullArticle(item.itemLink, item.isGoogleNews);
-          fullText = fullArticle?.text || null;
-          ogImage = fullArticle?.ogImage || null;
-        } catch {
-          console.log(`Fetch failed for ${category}: ${item.title}`);
-          continue;
-        }
-
-        // Gate 3: thin source check
-        if (!fullText && item.description.length < 200) {
-          console.log(`Skipped ${category}: thin source (${item.description.length} chars) for ${item.title}`);
-          continue;
-        }
-
-        // Gate 4: fact-density check — guarantees 300+ word Claude output
-        const sourceText = fullText || item.description;
-        if (!hasFactDensity(sourceText)) {
-          console.log(`Skipped ${category}: low fact density for ${item.title}`);
-          continue;
-        }
-
-        // All gates passed — this item goes to Claude
-        console.log(`Selected ${category} (score ${item.score}): ${item.title}`);
-        validItems.push({ category, rss: item, fullText, ogImage });
-        found = true;
-        break;
-      }
-
-      if (!found) {
         console.log(`No qualifying article found for ${category} this run`);
-      }
-    }
+        return null;
+      })
+    )).filter(Boolean);
 
+    // STEP 8 — Generate all articles in parallel
     const generatedArticles = await Promise.all(
       validItems.map(async ({ category, rss, fullText, ogImage }) => {
         try {
@@ -728,26 +726,28 @@ export default async function handler(req, res) {
       })
     );
 
+    // STEP 9 — Quality gate: weak headline warning only
     const passedGates = generatedArticles.filter(item => {
       if (!item) return false;
       const { category, article } = item;
-
       if (isWeakHeadline(article.title)) {
         console.log(`Warning ${category}: weak headline detected — "${article.title}"`);
       }
       return true;
     });
 
+    // STEP 10 — Fetch images in parallel
     const itemsWithImages = await Promise.all(
       passedGates.map(async ({ category, rss, article, ogImage }) => {
         const entityWords = article.title.match(/\b[A-Z][a-z]{3,}\b/g) || [];
-const pexelsQuery = entityWords.slice(0, 3).join(' ') || article.tag || article.category;
+        const pexelsQuery = entityWords.slice(0, 3).join(' ') || article.tag || article.category;
         const isGuardian = rss.sourceUrl?.includes('theguardian.com');
-const articleImage = (!isGuardian && ogImage) || rss.image || await getPexelsImage(pexelsQuery) || FALLBACK_IMAGES[category];
+        const articleImage = (!isGuardian && ogImage) || rss.image || await getPexelsImage(pexelsQuery) || FALLBACK_IMAGES[category];
         return { category, rss, article, articleImage };
       })
     );
 
+    // STEP 11 — Build results array
     for (const { category, rss, article, articleImage } of itemsWithImages) {
       results.push({
         link: rss.itemLink,
@@ -774,6 +774,7 @@ const articleImage = (!isGuardian && ogImage) || rss.image || await getPexelsIma
       return res.status(200).json({ message: 'No new articles to publish this run' });
     }
 
+    // STEP 12 — Individual Supabase inserts
     const insertedArticles = [];
     for (const result of results) {
       try {
@@ -789,6 +790,7 @@ const articleImage = (!isGuardian && ogImage) || rss.image || await getPexelsIma
       }
     }
 
+    // STEP 13 — Social media posts in parallel
     await Promise.all(
       (insertedArticles || []).map(async inserted => {
         const articleWithUrl = {
@@ -850,6 +852,7 @@ const articleImage = (!isGuardian && ogImage) || rss.image || await getPexelsIma
       })
     );
 
+    // STEP 14 — All indexing pings in parallel
     await Promise.all([
       (async () => {
         try {
