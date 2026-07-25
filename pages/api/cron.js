@@ -120,7 +120,7 @@ const RSS_SOURCES = {
     'https://www.footballtransfers.com/en/rss',
     'https://www.bbc.com/sport/rss.xml',
     'https://www.skysports.com/rss/12040',
-    'https://news.google.com/rss/search?q=NFL+OR+NBA+OR+soccer+OR+cricket+OR+tennis+OR+Premier+League+OR+UFC&ceid=US:en&hl=en-US&gl=US',
+    'https://news.google.com/rss/search?q=NBA+OR+soccer+OR+cricket+OR+UFC&ceid=US:en&hl=en-US&gl=US',
   ],
   politics: [
     'https://www.aljazeera.com/xml/rss/all.xml',
@@ -306,10 +306,8 @@ function scoreRSSItem(title, description, pubDate, sourceUrl = '') {
 
   let score = 0;
   if (GOOGLE_NEWS_SOURCES.has(sourceUrl)) {
-    score -= 3;
-  } else {
-    score += 2;
-  }
+  score += 10;
+}
   if (pubDate) {
     const ageMs = Date.now() - new Date(pubDate).getTime();
     const ageHours = ageMs / (1000 * 60 * 60);
@@ -675,7 +673,7 @@ export default async function handler(req, res) {
     // FIX B — process all 4 categories in parallel, candidates sequential within each
     const validItems = (await Promise.all(
       ['finance', 'sports', 'politics', 'technology'].map(async (category) => {
-        const candidates = (itemsByCategory[category] || []).slice(0, 3); // FIX C — cap at 3 candidates
+        const candidates = (itemsByCategory[category] || []).slice(0, 8); // FIX C — cap at 3 candidates
         for (const item of candidates) {
           if (isDuplicate(item)) {
             console.log(`Skipped ${category} duplicate: ${item.title}`);
