@@ -456,7 +456,7 @@ async function generateArticle(headline, description, category) {
 - title: (SEO-optimized headline, max 12 words, HARD LIMIT 100 characters. Write it the way someone would SEARCH for this story on Google. Include names, scores, teams. HEADLINE RULES — all must apply: (1) Put the most recognizable entity in the first 5 words. (2) Include a specific number if the story has one — "Falls 8%" beats "Falls Sharply". (3) Use a change-of-state verb where possible: Falls, Surges, Wins, Loses, Dies, Launches, Bans, Hits, Ousts, Faces, Cuts, Raises, Resigns, Fires. (4) For public figures with health or age context, include age: "84-Year-Old Senator Says..." style. (5) Never start with vague openers like "New Report Shows", "Sources Say", "Report:", "Watch:", "Here's Why". (6) NEVER use these banned phrases: "Sends Clear Message", "Comments On", "Status Check", "Weighs In", "Speaks Out", "Reacts To". (7) HEADLINE SHAPE VARIETY — rotate between these formats: [Entity] [Verb] [Outcome] e.g. "Liverpool Ban 432 Fans After £1.2m Seizure" OR [Number]: [What happened] e.g. "432 Lifetime Bans: Liverpool Cracks Down on Ticket Touts" OR Quote-driven e.g. "Chelsea Boss Says Rogers Deal 'Changes Everything' After £117m Transfer". Pick the format that best fits THIS story.)
 - metaDescription: (SEO meta description, exactly 1 sentence, 140-155 characters, summarising the key fact — do NOT truncate mid-word)
 - keyPoints: (exactly 3 bullet points separated by \\n, each ONE short sentence summarizing a key fact. Must be DIFFERENT from the article opening.)
-- summary: (full news article, length matched to story weight — breaking news 250-400 words, developing story 500-700 words, landmark event 700-900 words. Must contain at least 3 specific named facts. Use \\n\\n between paragraphs. End based on story type: if genuine reader impact exists, connect it directly and personally; otherwise end on the strongest remaining fact or what happens next.)
+- summary: (full news article, length matched to story weight — breaking news 400-600 words, developing story 600-800 words, landmark event 700-900 words. Must contain at least 3 specific named facts. Use \\n\\n between paragraphs. End based on story type: if genuine reader impact exists, connect it directly and personally; otherwise end on the strongest remaining fact or what happens next.)
 - category: MUST be exactly "${category}"
 - tag: (specific tag like "Premier League", "NBA", "UFC", "Tennis", "Cricket")
 - disclaimer: ("This article is for informational purposes only. Content is based on publicly available news sources.")`,
@@ -464,7 +464,7 @@ async function generateArticle(headline, description, category) {
 - title: (SEO-optimized headline, max 12 words, HARD LIMIT 100 characters. Write it the way someone would SEARCH for this story on Google. Include names, numbers. HEADLINE RULES — all must apply: (1) Put the most recognizable entity in the first 5 words. (2) Include a specific number if the story has one — "Falls 8%" beats "Falls Sharply". (3) Use a change-of-state verb where possible: Falls, Surges, Wins, Loses, Dies, Launches, Bans, Hits, Ousts, Faces, Cuts, Raises, Resigns, Fires. (4) For public figures with health or age context, include age: "84-Year-Old Senator Says..." style. (5) Never start with vague openers like "New Report Shows", "Sources Say", "Report:", "Watch:", "Here's Why". (6) NEVER use these banned phrases: "Sends Clear Message", "Comments On", "Status Check", "Weighs In", "Speaks Out", "Reacts To". (7) HEADLINE SHAPE VARIETY — rotate between these formats: [Entity] [Verb] [Number] e.g. "Revolut Hits $115B Valuation in Share Sale" OR [Number]: [What happened] e.g. "$115B: Revolut Now Europe's Most Valuable Startup" OR Quote-driven e.g. "Revolut CEO Says Valuation 'Just the Beginning' After $115B Deal". Pick the format that best fits THIS story.)
 - metaDescription: (SEO meta description, exactly 1 sentence, 140-155 characters, summarising the key fact — do NOT truncate mid-word)
 - keyPoints: (exactly 3 bullet points separated by \\n, each ONE short sentence summarizing a key fact. Must be DIFFERENT from the article opening.)
-- summary: (full news article, length matched to story weight — breaking news 250-400 words, developing story 500-700 words, major market event 700-900 words. Must contain at least 3 specific named facts — prices, percentages, names, quotes. Use \\n\\n between paragraphs. End based on story type: if genuine direct financial impact on readers exists, state it specifically; otherwise end on what happens next.)
+- summary: (full news article, length matched to story weight — breaking news 400-600 words, developing story 600-800 words, major market event 700-900 words. Must contain at least 3 specific named facts — prices, percentages, names, quotes. Use \\n\\n between paragraphs. End based on story type: if genuine direct financial impact on readers exists, state it specifically; otherwise end on what happens next.)
 - prediction: (contextual outlook, 60-80 words, based strictly on facts already stated in the article — no invented analyst names, no fabricated forecasts, no "experts believe" unless a named expert was quoted in the source)
 - category: MUST be exactly "${category}"
 - tag: (specific tag like "Bitcoin", "S&P 500", "Fed", "Inflation", "Crypto")
@@ -475,7 +475,7 @@ async function generateArticle(headline, description, category) {
 - title: (SEO-optimized headline, max 12 words, HARD LIMIT 100 characters. Write it the way someone would SEARCH for this story on Google. Include names, policies. HEADLINE RULES — all must apply: (1) Put the most recognizable entity in the first 5 words. (2) Include a specific number if the story has one — "Falls 8%" beats "Falls Sharply". (3) Use a change-of-state verb where possible: Falls, Surges, Wins, Loses, Dies, Launches, Bans, Hits, Ousts, Faces, Cuts, Raises, Resigns, Fires. (4) For public figures with health or age context, include age: "84-Year-Old Senator Says..." style. (5) Never start with vague openers like "New Report Shows", "Sources Say", "Report:", "Watch:", "Here's Why". (6) NEVER use these banned phrases: "Sends Clear Message", "Comments On", "Status Check", "Weighs In", "Speaks Out", "Reacts To". (7) HEADLINE SHAPE VARIETY — rotate between these formats: [Entity] [Verb] [Outcome] e.g. "Trump Signs TikTok Ban: What Happens Next" OR Quote-driven e.g. "Peters Calls Hegseth a 'Failure' at $70B Defense Hearing" OR [Number/Fact]: [Context] e.g. "11 Days of Iran Strikes: What the US Has Hit So Far". Pick the format that best fits THIS story.)
 - metaDescription: (SEO meta description, exactly 1 sentence, 140-155 characters, summarising the key fact — do NOT truncate mid-word)
 - keyPoints: (exactly 3 bullet points separated by \\n, each ONE short sentence summarizing a key fact. Must be DIFFERENT from the article opening.)
-- summary: (full news article, length matched to story weight — breaking news 250-400 words, developing story 500-700 words, landmark policy 700-900 words. Must contain at least 3 specific named facts — names, decisions, votes, quotes. Use \\n\\n between paragraphs. End based on story type: if genuine reader impact exists, state it specifically and personally; otherwise end on what happens next politically.)
+- summary: (full news article, length matched to story weight — breaking news 400-600 words, developing story 600-800 words, landmark policy 700-900 words. Must contain at least 3 specific named facts — names, decisions, votes, quotes. Use \\n\\n between paragraphs. End based on story type: if genuine reader impact exists, state it specifically and personally; otherwise end on what happens next politically.)
 - prediction: (contextual outlook, 60-80 words, written as neutral analysis based strictly on facts already stated — no invented analyst names, no fabricated forecasts)
 - category: MUST be exactly "${category}"
 - tag: (specific tag like "Trump", "Congress", "Supreme Court", "NATO", "Senate")
@@ -484,7 +484,7 @@ async function generateArticle(headline, description, category) {
 - title: (SEO-optimized headline, max 12 words, HARD LIMIT 100 characters. Write it the way someone would SEARCH for this story on Google. Include product/company names. HEADLINE RULES — all must apply: (1) Put the most recognizable entity in the first 5 words. (2) Include a specific number if the story has one — "Falls 8%" beats "Falls Sharply". (3) Use a change-of-state verb where possible: Falls, Surges, Wins, Loses, Dies, Launches, Bans, Hits, Ousts, Faces, Cuts, Raises, Resigns, Fires. (4) For public figures with health or age context, include age: "84-Year-Old Senator Says..." style. (5) Never start with vague openers like "New Report Shows", "Sources Say", "Report:", "Watch:", "Here's Why". (6) NEVER use these banned phrases: "Sends Clear Message", "Comments On", "Status Check", "Weighs In", "Speaks Out", "Reacts To". (7) HEADLINE SHAPE VARIETY — rotate between these formats: [Entity] [Verb] [Outcome] e.g. "OpenAI Launches GPT-5: Price, Features and Release Date" OR Quote-driven e.g. "OpenAI CEO Says GPT-5 Is 'Most Capable Model Ever Built'" OR [Number/Fact]: [Context] e.g. "33% of Ransomware Victims Hit Twice, Proofpoint Study Finds". Pick the format that best fits THIS story.)
 - metaDescription: (SEO meta description, exactly 1 sentence, 140-155 characters, summarising the key fact — do NOT truncate mid-word)
 - keyPoints: (exactly 3 bullet points separated by \\n, each ONE short sentence summarizing a key fact. Must be DIFFERENT from the article opening.)
-- summary: (full news article, length matched to story weight — breaking news 250-400 words, developing story 500-700 words, major launch or policy 700-900 words. Must contain at least 3 specific named facts — product names, specs, prices, quotes, dates. Use \\n\\n between paragraphs. End based on story type: if genuine user or market impact exists, state it specifically; otherwise end on what comes next.)
+- summary: (full news article, length matched to story weight — breaking news 400-600 words, developing story 600-800 words, major launch or policy 700-900 words. Must contain at least 3 specific named facts — product names, specs, prices, quotes, dates. Use \\n\\n between paragraphs. End based on story type: if genuine user or market impact exists, state it specifically; otherwise end on what comes next.)
 - prediction: (contextual outlook, 60-80 words, based strictly on facts already stated — no invented analyst names, no fabricated forecasts)
 - category: MUST be exactly "${category}"
 - tag: (specific tag like "Apple", "AI", "Tesla", "Google", "OpenAI", "Meta", "ChatGPT")
@@ -511,7 +511,7 @@ STYLE DIRECTION FOR THIS ARTICLE: ${styleSeed}
 
 Headline: "${headline}"
 Source material: "${description}"
-Source quality: ${description.length > 1000 ? 'Full article available — write a comprehensive article matched to story weight' : 'Limited source — write a focused 300-450 word article using only available facts, do not pad'}
+Source quality: ${description.length > 1000 ? 'Full article available — write a comprehensive article matched to story weight' : 'Limited source — write a focused 400-550 word article using only available facts, do not pad'}
 
 ABSOLUTE RULES — violating any of these makes the article unpublishable:
 - Write ONLY based on facts in the headline and source material. Do NOT invent quotes, statistics, names, or details.
@@ -524,7 +524,7 @@ ABSOLUTE RULES — violating any of these makes the article unpublishable:
 - Every paragraph must contain at least one specific fact — no paragraph should be pure commentary or filler.
 - Vary sentence lengths deliberately every paragraph. Include at least two sentences under 8 words somewhere in the article. Never write three consecutive sentences of similar length.
 - Attribute every non-obvious fact to its source within the sentence. Examples: "according to the filing", "the company confirmed", "per ESPN's report", "the senator said in a statement". Never state a fact as if it is your own knowledge.
-- Match article length to story weight: breaking news (event just happened) = 250-400 words, no subheading; developing story (ongoing situation) = 500-700 words; landmark event (major policy, record, historic) = 700-900 words with one subheading. Never pad a breaking story to reach a word count.
+- Match article length to story weight: breaking news (event just happened) = 400-600 words, no subheading; developing story (ongoing situation) = 600-800 words; landmark event (major policy, record, historic) = 700-900 words with one subheading. Never pad a breaking story to reach a word count.
 - Only insert a subheading if the story is a developing or analysis-worthy story — not breaking news. If used, place it after the 3rd paragraph as ## Subheading specific to THIS story. Never use generic subheadings like "## Background" or "## Analysis".
 - Include ONE brief historical comparison or precedent. Keep it to one sentence. Base it on real knowledge only.
 - Only end with a reader-impact paragraph when there is genuine direct impact on the reader's life, money, or daily routine. When there is no strong direct impact, end on the strongest remaining fact or what happens next. Never use second-person "If you..." more than once per article.
@@ -646,7 +646,7 @@ export default async function handler(req, res) {
       const quotes = (text.match(/["'"][^"'"]{15,}["'"]/g) || []).length;
       const namedEntities = (text.match(/\b[A-Z][a-z]+ [A-Z][a-z]+\b/g) || []).length;
       const factScore = numbers + quotes + namedEntities;
-      return factScore >= 4;
+      return factScore >= 6;
     }
 
     // FIX A — cheap pre-screen on RSS description before expensive fetch
@@ -741,9 +741,8 @@ export default async function handler(req, res) {
       passedGates.map(async ({ category, rss, article, ogImage }) => {
         const entityWords = article.title.match(/\b[A-Z][a-z]{3,}\b/g) || [];
         const pexelsQuery = entityWords.slice(0, 3).join(' ') || article.tag || article.category;
-        const isGuardian = rss.sourceUrl?.includes('theguardian.com');
         const isGuardian = rss?.sourceUrl?.includes('theguardian.com') || rss?.source?.includes('theguardian.com') || rss?.itemLink?.includes('theguardian.com');
-const articleImage = (!isGuardian && ogImage) || rss.image || await getPexelsImage(pexelsQuery) || FALLBACK_IMAGES[category];
+        const articleImage = (!isGuardian && ogImage) || rss.image || await getPexelsImage(pexelsQuery) || FALLBACK_IMAGES[category];
         return { category, rss, article, articleImage };
       })
     );
