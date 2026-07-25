@@ -500,13 +500,17 @@ ORIGINAL VALUE REQUIREMENT — this is mandatory:
     max_tokens: 4096,
     messages: [{
       role: 'user',
-      content: `You are a senior journalist at a major international newsroom like CNN, BBC, or Reuters. Based on this real news headline and source material, write a professional news article.
+      content: `You are a senior journalist with more than 20 years of experience at a major international newsroom like CNN, BBC, or Reuters. Based on this real news headline and source material, write a professional news article.
 
 Headline: "${headline}"
 Source material: "${description}"
-Source quality: ${description.length > 1000 ? 'Full article available — write a comprehensive 600-900 word article' : 'Limited source — write a focused 400-500 word article using only available facts, do not pad'}
+Source quality: ${description.length between 500 and 1000 ? 'Full article available — write a comprehensive 600-900 word article' : 'Limited source — write a focused 400-500 word article using only available facts, do not pad'}
 
-ABSOLUTE RULES — violating any of these makes the article unpublishable:
+ABSOLUTE RULES — you should follow these rules while generating article ,there are no exceptions:
+- ALWAYS include the exact date the event occurred in the first or second paragraph — never write "recently" or "this week", always use the specific date.
+- ALWAYS extract and use exact numbers from the source — dollar amounts, percentages, scores, vote counts. Never round or generalize.
+- If the source contains a direct quote, include it using quotation marks and attribute it to the named speaker.-the article should be 100 out of 100 score,trending and viral.
+-you should use the dates,quotes,name of the place or other facts as it is and always quote them properly
 - Write ONLY based on facts in the headline and source material. Do NOT invent quotes, statistics, names, or details.
 - The first sentence MUST be a dateline followed by the single most important concrete fact. Example: "WASHINGTON — The Senate voted 52-48 on Thursday to confirm..."
 - The article MUST contain at least 3 specific named facts from the source material (names, numbers, scores, quotes, dates, locations). If the source doesn't have 3 facts, use every fact it does have and keep the article short.
@@ -670,6 +674,13 @@ const guideLinks = {
   'AI Trading': 'https://www.newsoracle.online/article/415-best-ai-tools-for-stock-trading-2026-the-ultimate-guide-to-automated-invest',
   'World Cup 2026': 'https://www.newsoracle.online/article/388-all-fifa-world-cup-winners-1930-2026-complete-history-and-champion-list',
   'FIFA': 'https://www.newsoracle.online/article/388-all-fifa-world-cup-winners-1930-2026-complete-history-and-champion-list',
+  'Iran': 'https://www.newsoracle.online/article/469-us-strikes-on-iran-2026-complete-day-by-day-timeline',
+  'Iran Strikes': 'https://www.newsoracle.online/article/469-us-strikes-on-iran-2026-complete-day-by-day-timeline',
+  'AI': 'https://www.newsoracle.online/article/473-machines-of-loving-grace-what-dario-amodei-and-the-worlds-top-ai-leaders-believe-about-ais-future',
+  'OpenAI': 'https://www.newsoracle.online/article/473-machines-of-loving-grace-what-dario-amodei-and-the-worlds-top-ai-leaders-believe-about-ais-future',
+  'Nvidia': 'https://www.newsoracle.online/article/503-jensen-huangs-first-x-post-why-25-tech-giants-are-demanding-america-keep-ai-open',
+  'Microsoft': 'https://www.newsoracle.online/article/503-jensen-huangs-first-x-post-why-25-tech-giants-are-demanding-america-keep-ai-open',
+  'Meta': 'https://www.newsoracle.online/article/503-jensen-huangs-first-x-post-why-25-tech-giants-are-demanding-america-keep-ai-open',
 };
 if (article.tag && guideLinks[article.tag]) {
   article.summary += `\n\nRelated Guide: For deeper analysis, read our complete guide: ${guideLinks[article.tag]}`;
