@@ -504,7 +504,7 @@ ORIGINAL VALUE REQUIREMENT — this is mandatory:
 
 Headline: "${headline}"
 Source material: "${description}"
-Source quality: ${description.length between 500 and 1000 ? 'Full article available — write a comprehensive 600-900 word article' : 'Limited source — write a focused 400-500 word article using only available facts, do not pad'}
+Source quality: ${description.length > 1000 ? 'Full article available — write a comprehensive article matched to story weight' : 'Limited source — write a focused 400-550 word article using only available facts, do not pad'}
 
 ABSOLUTE RULES — you should follow these rules while generating article ,there are no exceptions:
 - ALWAYS include the exact date the event occurred in the first or second paragraph — never write "recently" or "this week", always use the specific date.
