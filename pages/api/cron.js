@@ -272,9 +272,7 @@ function scoreRSSItem(title, description, pubDate, sourceUrl = '') {
 
   // Source quality scoring — direct sources preferred over Google News wrappers
   if (GOOGLE_NEWS_SOURCES.has(sourceUrl)) {
-    score -= 3; // Google News penalty — last resort
-  } else {
-    score += 2; // Direct source bonus — always preferred
+    score += 10; // Google News first priority — trending curated queries
   }
 
   // Recency scoring
@@ -535,7 +533,42 @@ Return ONLY the JSON object. No markdown, no backticks, no extra text.`
 
   const text = message.content[0].text;
   const clean = text.replace(/```json/g, '').replace(/```/g, '').trim();
-  return JSON.parse(clean);
+
+  function normalizeResult(parsed) {
+    if (Array.isArray(parsed.keyPoints)) {
+      parsed.keyPoints = parsed.keyPoints.join('\n');
+    }
+    return parsed;
+  }
+
+  try {
+    return normalizeResult(JSON.parse(clean));
+  } catch (e) {
+    console.log(`JSON parse failed, retrying with full prompt...`);
+    const retry = await anthropic.messages.create({
+      model: 'claude-haiku-4-5',
+      max_tokens: 4096,
+      messages: [{
+        role: 'user',
+        content: `Your previous response was not valid JSON. Return the same article as a valid JSON object only — no markdown, no backticks, no text before or after the JSON.
+
+Headline: "${headline}"
+Source material: "${description}"
+
+${fieldsInstruction[category]}
+
+Return ONLY the JSON object.`
+      }]
+    });
+    const retryText = retry.content[0].text;
+    const retryClean = retryText.replace(/```json/g, '').replace(/```/g, '').trim();
+    try {
+      return normalizeResult(JSON.parse(retryClean));
+    } catch (e2) {
+      console.log(`Retry also failed — dropping article`);
+      throw e2;
+    }
+  }
 }
 
 export default async function handler(req, res) {
@@ -620,19 +653,24 @@ export default async function handler(req, res) {
       return false;
     }
 
-    // STEP 5 — Pick best non-duplicate item per category
-    const selectedItems = {};
-    for (const category of ['finance', 'sports', 'politics', 'technology']) {
-      const candidates = itemsByCategory[category] || [];
-      for (const item of candidates) {
-        if (!isDuplicate(item)) {
-          selectedItems[category] = item;
-          console.log(`Selected ${category} (score ${item.score}, direct: ${!item.isGoogleNews}): ${item.title}`);
-          break;
-        } else {
-          console.log(`Skipped ${category} duplicate: ${item.title}`);
+    // STEP 5 — Pick best non-duplicate item per category (parallel across all 4 categories)
+    const selectedItemsArr = await Promise.all(
+      ['finance', 'sports', 'politics', 'technology'].map(async (category) => {
+        const candidates = (itemsByCategory[category] || []).slice(0, 8);
+        for (const item of candidates) {
+          if (!isDuplicate(item)) {
+            console.log(`Selected ${category} (score ${item.score}, direct: ${!item.isGoogleNews}): ${item.title}`);
+            return { category, item };
+          } else {
+            console.log(`Skipped ${category} duplicate: ${item.title}`);
+          }
         }
-      }
+        return null;
+      })
+    );
+    const selectedItems = {};
+    for (const result of selectedItemsArr.filter(Boolean)) {
+      selectedItems[result.category] = result.item;
     }
 
     // STEP 6 — Fetch full articles in parallel (pass isGoogleNews flag)
@@ -683,7 +721,7 @@ const guideLinks = {
   'Meta': 'https://www.newsoracle.online/article/503-jensen-huangs-first-x-post-why-25-tech-giants-are-demanding-america-keep-ai-open',
 };
 if (article.tag && guideLinks[article.tag]) {
-  article.summary += `\n\nRelated Guide: For deeper analysis, read our complete guide: ${guideLinks[article.tag]}`;
+  article.summary += `\n\n**Related Guide:** <a href="${guideLinks[article.tag]}" style="color:#cc0000;font-weight:600;">Read our complete guide →</a>`;
 }
 
 return { category, rss, article, fullText, ogImage };
@@ -763,9 +801,21 @@ return { category, rss, article, fullText, ogImage };
       return res.status(200).json({ message: 'No new articles to publish this run' });
     }
 
-    // STEP 12 — Insert to Supabase
-    const { data: insertedArticles, error } = await supabase.from('articles').insert(results).select();
-    if (error) throw error;
+    // STEP 12 — Individual Supabase inserts so one failure doesn't kill all articles
+    const insertedArticles = [];
+    for (const result of results) {
+      try {
+        const { data, error } = await supabase.from('articles').insert(result).select().single();
+        if (error) {
+          console.error(`Insert failed for "${result.title}":`, error.message);
+        } else {
+          insertedArticles.push(data);
+          console.log(`Inserted: "${result.title}"`);
+        }
+      } catch (err) {
+        console.error(`Insert error for "${result.title}":`, err.message);
+      }
+    }
 
     // STEP 13 — Social media posts in parallel
     await Promise.all(
