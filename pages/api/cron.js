@@ -441,7 +441,7 @@ async function generateArticle(headline, description, category) {
 - Focus on: what was launched/announced, specific specs or numbers, who said what, how it compares to competitors, immediate user/market impact.
 - Write like a Verge or TechCrunch reporter — clear, informed, forward-looking.
 - Include a prediction field. Do NOT generate sentiment or confidence fields.
-- REQUIRED: exact figure (price, funding amount, user count, or spec), the company full name, the date, and a named executive if one is quoted.
+- REQUIRED: exact figure (price, funding amount, user count, or spec), the company full name, the date, and a named executive if one is quoted.`,
   };
 
   const fieldsInstruction = {
