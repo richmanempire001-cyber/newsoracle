@@ -430,7 +430,7 @@ async function generateArticle(headline, description, category) {
 - Start with a dateline in caps (e.g. "NEW YORK —", "WASHINGTON —", "LONDON —") based on the market or institution involved.- REQUIRED: exact price or index level, exact percentage move, the date, and the specific trigger event.
 - Focus on: exact numbers (price, percentage move, market cap), who said what, what triggered the move, immediate market reaction.
 - Write like a Bloomberg or CNBC reporter — precise, data-driven, authoritative.
-- Include prediction, sentiment, and confidence fields.`,
+- Include a prediction field only.`,
     politics: `
 - Start with a dateline in caps (e.g. "WASHINGTON —", "BRUSSELS —", "LONDON —") based on where the political event occurred.- REQUIRED: exact vote count or margin if a vote occurred, full names with official titles, the date, and the specific bill or order name.
 - Focus on: who did what, the specific policy or decision, direct consequences, who opposes it, what happens next.
@@ -448,7 +448,7 @@ async function generateArticle(headline, description, category) {
     sports: `Return ONLY a JSON object with these fields:
 - title: (SEO-optimized headline, max 12 words, HARD LIMIT 100 characters. Write it the way someone would SEARCH for this story on Google. Include names, scores, teams. HEADLINE RULES — all must apply: (1) Put the most recognizable entity in the first 5 words. (2) Include a specific number if the story has one — "Falls 8%" beats "Falls Sharply". (3) Use a change-of-state verb where possible: Falls, Surges, Wins, Loses, Dies, Launches, Bans, Hits, Ousts, Faces, Cuts, Raises, Resigns, Fires. (4) For public figures with health or age context, include age: "84-Year-Old Senator Says..." style. (5) Never start with vague openers like "New Report Shows", "Sources Say", "Report:", "Watch:", "Here's Why". (6) NEVER use these banned phrases: "Sends Clear Message", "Comments On", "Status Check", "Weighs In", "Speaks Out", "Reacts To". Example: "Lakers Beat Celtics 112-108: LeBron Scores 34 in Playoff Win")
 - metaDescription: (SEO meta description, exactly 1 sentence, 140-155 characters, summarising the key fact — do NOT truncate mid-word)
-- keyPoints: (exactly 3 bullet points separated by \\n, each ONE short sentence summarizing a key fact. Must be DIFFERENT from the article opening. Example: "- Messi scored the equalizer in the 83rd minute.\\n- Argentina advances to the quarterfinals.\\n- Egypt's VAR appeal was denied by the referee.")
+- keyPoints: (exactly 3 bullet points separated by \\n, each ONE short sentence summarizing a key fact. EVERY bullet must contain at least one exact number, date, or proper name. A bullet with no specific data is invalid. Must be DIFFERENT from the article opening. Example: "- Messi scored the equalizer in the 83rd minute.\\n- Argentina advances to the quarterfinals.\\n- Egypt's VAR appeal was denied by the referee.")
 - factsUsed: (list every concrete fact extracted from source: exact dates, exact numbers, full names with titles, direct quotes with speaker. Minimum 5.)- summary: (full news article. PARAGRAPH 1: most important fact with exact date and exact number. PARAGRAPH 2: direct quote with named speaker, or second most important number. PARAGRAPH 3+: remaining facts each anchored to a specific figure, name, or date from factsUsed. Use \n\n between paragraphs.), must contain at least 3 specific named facts from source — names, scores, stats, quotes. Start with dateline. Use \\n\\n between paragraphs. End with a "why this matters" paragraph.)
 - category: MUST be exactly "${category}" — do not change this under any circumstances regardless of article content
 - tag: (specific tag like "Premier League", "NBA", "UFC", "Tennis", "Cricket")
@@ -456,18 +456,16 @@ async function generateArticle(headline, description, category) {
     finance: `Return ONLY a JSON object with these fields:
 - title: (SEO-optimized headline, max 12 words, HARD LIMIT 100 characters. Write it the way someone would SEARCH for this story on Google. Include names, numbers. HEADLINE RULES — all must apply: (1) Put the most recognizable entity in the first 5 words. (2) Include a specific number if the story has one — "Falls 8%" beats "Falls Sharply". (3) Use a change-of-state verb where possible: Falls, Surges, Wins, Loses, Dies, Launches, Bans, Hits, Ousts, Faces, Cuts, Raises, Resigns, Fires. (4) For public figures with health or age context, include age: "84-Year-Old Senator Says..." style. (5) Never start with vague openers like "New Report Shows", "Sources Say", "Report:", "Watch:", "Here's Why". (6) NEVER use these banned phrases: "Sends Clear Message", "Comments On", "Status Check", "Weighs In", "Speaks Out", "Reacts To". Example: "Bitcoin Drops 5% to $62K After Fed Holds Interest Rates")
 - metaDescription: (SEO meta description, exactly 1 sentence, 140-155 characters, summarising the key fact — do NOT truncate mid-word)
-- keyPoints: (exactly 3 bullet points separated by \\n, each ONE short sentence summarizing a key fact. Must be DIFFERENT from the article opening. Example: "- Bitcoin fell 5% to $62,000 after the Fed held rates steady.\\n- Ethereum outperformed with a 2% gain during the same period.\\n- Analysts expect continued volatility through Q3.")
+- keyPoints: (exactly 3 bullet points separated by \\n,each ONE short sentence summarizing a key fact. EVERY bullet must contain at least one exact number, date, or proper name. A bullet with no specific data is invalid. Must be DIFFERENT from the article opening.. Example: "- Bitcoin fell 5% to $62,000 after the Fed held rates steady.\\n- Ethereum outperformed with a 2% gain during the same period.\\n- Analysts expect continued volatility through Q3.")
 - factsUsed: (list every concrete fact extracted from source: exact dates, exact numbers, full names with titles, direct quotes with speaker. Minimum 5.)- summary: (full news article. PARAGRAPH 1: most important fact with exact date and exact number. PARAGRAPH 2: direct quote with named speaker, or second most important number. PARAGRAPH 3+: remaining facts each anchored to a specific figure, name, or date from factsUsed. Use \n\n between paragraphs.), must contain at least 3 specific named facts from source — prices, percentages, names, quotes. Start with dateline. Use \\n\\n between paragraphs. End with a "why this matters" paragraph.)
 - prediction: (future outlook or analysis, written as expert market view, 60-80 words)
 - category: MUST be exactly "${category}" — do not change this under any circumstances regardless of article content
 - tag: (specific tag like "Bitcoin", "S&P 500", "Fed", "Inflation", "Crypto")
-- sentiment: (either "positive", "negative", or "neutral")
-- confidence: (number between 60-95)
 - disclaimer: ("This article is for informational purposes only. Content is based on publicly available news sources.")`,
     politics: `Return ONLY a JSON object with these fields:
 - title: (SEO-optimized headline, max 12 words, HARD LIMIT 100 characters. Write it the way someone would SEARCH for this story on Google. Include names, policies. HEADLINE RULES — all must apply: (1) Put the most recognizable entity in the first 5 words. (2) Include a specific number if the story has one — "Falls 8%" beats "Falls Sharply". (3) Use a change-of-state verb where possible: Falls, Surges, Wins, Loses, Dies, Launches, Bans, Hits, Ousts, Faces, Cuts, Raises, Resigns, Fires. (4) For public figures with health or age context, include age: "84-Year-Old Senator Says..." style. (5) Never start with vague openers like "New Report Shows", "Sources Say", "Report:", "Watch:", "Here's Why". (6) NEVER use these banned phrases: "Sends Clear Message", "Comments On", "Status Check", "Weighs In", "Speaks Out", "Reacts To". Example: "Trump Signs Executive Order Banning TikTok: What It Means")
 - metaDescription: (SEO meta description, exactly 1 sentence, 140-155 characters, summarising the key fact — do NOT truncate mid-word)
-- keyPoints: (exactly 3 bullet points separated by \\n, each ONE short sentence summarizing a key fact. Must be DIFFERENT from the article opening. Example: "- Trump signed the order banning TikTok from US app stores.\\n- Congress has 90 days to pass legislation before the ban takes effect.\\n- ByteDance says it will challenge the order in court.")
+- keyPoints: (exactly 3 bullet points separated by \\n,each ONE short sentence summarizing a key fact. EVERY bullet must contain at least one exact number, date, or proper name. A bullet with no specific data is invalid. Must be DIFFERENT from the article opening. Example: "- Trump signed the order banning TikTok from US app stores.\\n- Congress has 90 days to pass legislation before the ban takes effect.\\n- ByteDance says it will challenge the order in court.")
 - factsUsed: (list every concrete fact extracted from source: exact dates, exact numbers, full names with titles, direct quotes with speaker. Minimum 5.)- summary: (full news article. PARAGRAPH 1: most important fact with exact date and exact number. PARAGRAPH 2: direct quote with named speaker, or second most important number. PARAGRAPH 3+: remaining facts each anchored to a specific figure, name, or date from factsUsed. Use \n\n between paragraphs.), must contain at least 3 specific named facts from source — names, decisions, votes, quotes. Start with dateline. Use \\n\\n between paragraphs. End with a "why this matters" paragraph.)
 - prediction: (what happens next politically, written as neutral analysis, 60-80 words)
 - category: MUST be exactly "${category}" — do not change this under any circumstances regardless of article content
@@ -476,7 +474,7 @@ async function generateArticle(headline, description, category) {
     technology: `Return ONLY a JSON object with these fields:
 - title: (SEO-optimized headline, max 12 words, HARD LIMIT 100 characters. Write it the way someone would SEARCH for this story on Google. Include product/company names. HEADLINE RULES — all must apply: (1) Put the most recognizable entity in the first 5 words. (2) Include a specific number if the story has one — "Falls 8%" beats "Falls Sharply". (3) Use a change-of-state verb where possible: Falls, Surges, Wins, Loses, Dies, Launches, Bans, Hits, Ousts, Faces, Cuts, Raises, Resigns, Fires. (4) For public figures with health or age context, include age: "84-Year-Old Senator Says..." style. (5) Never start with vague openers like "New Report Shows", "Sources Say", "Report:", "Watch:", "Here's Why". (6) NEVER use these banned phrases: "Sends Clear Message", "Comments On", "Status Check", "Weighs In", "Speaks Out", "Reacts To". Example: "OpenAI Launches GPT-5: Price, Features and Release Date")
 - metaDescription: (SEO meta description, exactly 1 sentence, 140-155 characters, summarising the key fact — do NOT truncate mid-word)
-- keyPoints: (exactly 3 bullet points separated by \\n, each ONE short sentence summarizing a key fact. Must be DIFFERENT from the article opening. Example: "- OpenAI released GPT-5 with 10x faster processing speed.\\n- The new model costs $30/month for Plus subscribers.\\n- Google and Anthropic are expected to respond within weeks.")
+- keyPoints: (exactly 3 bullet points separated by \\n,each ONE short sentence summarizing a key fact. EVERY bullet must contain at least one exact number, date, or proper name. A bullet with no specific data is invalid. Must be DIFFERENT from the article opening. Example: "- OpenAI released GPT-5 with 10x faster processing speed.\\n- The new model costs $30/month for Plus subscribers.\\n- Google and Anthropic are expected to respond within weeks.")
 - factsUsed: (list every concrete fact extracted from source: exact dates, exact numbers, full names with titles, direct quotes with speaker. Minimum 5.)- summary: (full news article. PARAGRAPH 1: most important fact with exact date and exact number. PARAGRAPH 2: direct quote with named speaker, or second most important number. PARAGRAPH 3+: remaining facts each anchored to a specific figure, name, or date from factsUsed. Use \n\n between paragraphs.), must contain at least 3 specific named facts from source — product names, specs, prices, quotes, dates. Start with dateline. Use \\n\\n between paragraphs. End with a "why this matters" paragraph.)
 - prediction: (what this means for the tech industry or consumers, written as informed analysis, 60-80 words)
 - category: MUST be exactly "${category}" — do not change this under any circumstances regardless of article content
@@ -519,14 +517,22 @@ ABSOLUTE RULES — you should follow these rules while generating article ,there
 - If the article is 350+ words, insert exactly ONE subheading after the 3rd paragraph. Format it on its own line as ## followed by the subheading text (e.g. "## Impact on Global Markets"). The subheading must be specific to THIS story — never generic like "## Background" or "## Analysis"
 - End on the strongest remaining fact or the concrete next step (a scheduled date, a pending vote, an upcoming earnings call). Only write about reader impact if there is a specific material effect — never generic.
 - Do NOT mention AI, Claude, or that this was rewritten
-- ALWAYS include the exact date the event occurred in the first or second paragraph.
+- BANNED VAGUE QUANTIFIERS — never use these words to describe any change: significantly, sharply, substantially, dramatically, notably, considerably, slightly, marginally, somewhat. Every change must be stated as an exact figure or percentage. If the source has no figure, describe what happened without quantifying it.- ALWAYS include the exact date the event occurred in the first or second paragraph.
 - ALWAYS extract and use exact numbers — dollar amounts, percentages, scores, vote counts. Never round or generalize.
-- If the source contains a direct quote, include it with quotation marks and the named speaker.
+- If the source contains a direct quote, include it with quotation marks and the named speaker. NEVER write a paragraph whose purpose is to characterise or interpret ("this underscores", "this reflects", "this signals", "this highlights", "this marks"). Every paragraph must report something that happened, was said, or was measured.
 - Every paragraph must contain at least one concrete fact from your factsUsed list.
 ${originalValueInstruction}
 ${categoryInstructions[category]}
 
 ${fieldsInstruction[category]}
+
+BEFORE RETURNING — silently verify your article:
+1. Does paragraph 1 contain exact date and exact figure?
+2. Does every keyPoint contain a number, date, or proper name?
+3. Have you used any banned vague quantifier?
+4. Does every paragraph contain at least one specific fact?
+5. Is the article at least 400 words?
+Fix any failures silently, then return only the corrected JSON.
 
 Return ONLY the JSON object. No markdown, no backticks, no extra text.`
     }]
@@ -702,7 +708,12 @@ export default async function handler(req, res) {
       validItems.map(async ({ category, rss, fullText, ogImage }) => {
         try {
           const sourceMaterial = fullText || rss.description;
-          const article = await generateArticle(rss.title, sourceMaterial, category);
+          const hasNumbers = (sourceMaterial.match(/\b\d+[\d,.%$£€]*\b/g) || []).length;
+const hasDate = /\b(January|February|March|April|May|June|July|August|September|October|November|December|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday|\d{1,2}\/\d{1,2}|\d{4})\b/i.test(sourceMaterial);
+if (hasNumbers < 3 || !hasDate) {
+  console.log(`Skipped ${category}: source lacks numbers or date — ${rss.title}`);
+  return null;
+}const article = await generateArticle(rss.title, sourceMaterial, category);
           article.category = category;
           
 
