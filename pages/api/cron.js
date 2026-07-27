@@ -737,26 +737,6 @@ return { category, rss, article, fullText, ogImage };
     const passedGates = generatedArticles.filter(item => {
       if (!item) return false;
       const { category, article, fullText } = item;
-
-      // Gate 2: too short
-      const wordCount = article.summary?.trim().split(/\s+/).length || 0;
-      if (wordCount < 300) {
-        console.log(`Skipped ${category}: too short (${wordCount} words)`);
-        return false;
-      }
-
-      // Gate 3: filler from thin source
-      if (!fullText && wordCount > 700) {
-        console.log(`Skipped ${category}: likely filler (${wordCount} words from thin source)`);
-        return false;
-      }
-
-      // Gate 4: filler phrase detection
-      if (hasTooMuchFiller(article.summary)) {
-        console.log(`Skipped ${category}: filler content detected`);
-        return false;
-      }
-
       // Headline check: flag weak headlines (log but don't block — Claude should have followed rules)
       if (isWeakHeadline(article.title)) {
         console.log(`Warning ${category}: weak headline detected — "${article.title}"`);
@@ -819,8 +799,8 @@ return { category, rss, article, fullText, ogImage };
     }
 
     // STEP 13 — Social media posts in parallel
-    await Promise.all(
-      (insertedArticles || []).map(async inserted => {
+    Promise.all(
+  (insertedArticles || []).map(async inserted => {
         const articleWithUrl = {
           ...inserted,
           articleUrl: `https://www.newsoracle.online/article/${inserted.id}-${slugify(inserted.title)}`
@@ -852,7 +832,7 @@ return { category, rss, article, fullText, ogImage };
       })(),
       (async () => {
         try {
-          await Promise.all([
+          Promise.all([
             fetch('https://www.google.com/ping?sitemap=https://www.newsoracle.online/news-sitemap.xml'),
             fetch('https://www.google.com/ping?sitemap=https://www.newsoracle.online/sitemap.xml')
           ]);
