@@ -422,17 +422,17 @@ function hasTooMuchFiller(summary) {
 async function generateArticle(headline, description, category) {
   const categoryInstructions = {
     sports: `
-- Start with a dateline in caps (e.g. "LONDON —", "NEW YORK —", "MIAMI —") based on where the event took place.
+- Start with a dateline in caps (e.g. "LONDON —", "NEW YORK —", "MIAMI —") based on where the event took place.- REQUIRED: final score, at least two named players with their individual stats, the venue, and the date.
 - Focus on: final score, key player performances, decisive moments, what this means for standings/tournament.
 - Write like a CNN Sports or ESPN reporter — vivid, immediate, factual.
 - Do NOT generate prediction, sentiment, or confidence fields. Only return: title, summary, keyPoints, category, tag, disclaimer.`,
     finance: `
-- Start with a dateline in caps (e.g. "NEW YORK —", "WASHINGTON —", "LONDON —") based on the market or institution involved.
+- Start with a dateline in caps (e.g. "NEW YORK —", "WASHINGTON —", "LONDON —") based on the market or institution involved.- REQUIRED: exact price or index level, exact percentage move, the date, and the specific trigger event.
 - Focus on: exact numbers (price, percentage move, market cap), who said what, what triggered the move, immediate market reaction.
 - Write like a Bloomberg or CNBC reporter — precise, data-driven, authoritative.
 - Include prediction, sentiment, and confidence fields.`,
     politics: `
-- Start with a dateline in caps (e.g. "WASHINGTON —", "BRUSSELS —", "LONDON —") based on where the political event occurred.
+- Start with a dateline in caps (e.g. "WASHINGTON —", "BRUSSELS —", "LONDON —") based on where the political event occurred.- REQUIRED: exact vote count or margin if a vote occurred, full names with official titles, the date, and the specific bill or order name.
 - Focus on: who did what, the specific policy or decision, direct consequences, who opposes it, what happens next.
 - Write like a CNN Politics or AP reporter — neutral, factual, no editorializing.
 - Include a prediction field. Do NOT generate sentiment or confidence fields.`,
@@ -440,7 +440,7 @@ async function generateArticle(headline, description, category) {
 - Start with a dateline in caps (e.g. "SAN FRANCISCO —", "CUPERTINO —", "SEATTLE —") based on where the company or event is located.
 - Focus on: what was launched/announced, specific specs or numbers, who said what, how it compares to competitors, immediate user/market impact.
 - Write like a Verge or TechCrunch reporter — clear, informed, forward-looking.
-- Include a prediction field. Do NOT generate sentiment or confidence fields.`
+- Include a prediction field. Do NOT generate sentiment or confidence fields.`- REQUIRED: exact figure (price, funding amount, user count, or spec), the company full name, the date, and a named executive if one is quoted.
   };
 
   const fieldsInstruction = {
@@ -505,10 +505,6 @@ Source material: "${description}"
 Source quality: ${description.length > 1000 ? 'Full article available — write a comprehensive article matched to story weight' : 'Limited source — write a focused 400-550 word article using only available facts, do not pad'}
 
 ABSOLUTE RULES — you should follow these rules while generating article ,there are no exceptions:
-- ALWAYS include the exact date the event occurred in the first or second paragraph — never write "recently" or "this week", always use the specific date.
-- ALWAYS extract and use exact numbers from the source — dollar amounts, percentages, scores, vote counts. Never round or generalize.
-- If the source contains a direct quote, include it using quotation marks and attribute it to the named speaker.-the article should be 100 out of 100 score,trending and viral.
--you should use the dates,quotes,name of the place or other facts as it is and always quote them properly
 - Write ONLY based on facts in the headline and source material. Do NOT invent quotes, statistics, names, or details.
 - The first sentence MUST be a dateline followed by the single most important concrete fact. Example: "WASHINGTON — The Senate voted 52-48 on Thursday to confirm..."
 - The article MUST contain at least 3 specific named facts from the source material (names, numbers, scores, quotes, dates, locations). If the source doesn't have 3 facts, use every fact it does have and keep the article short.
@@ -518,10 +514,14 @@ ABSOLUTE RULES — you should follow these rules while generating article ,there
 - NEVER use the phrase "the question remains" or "all eyes are on" or "sent shockwaves"
 - Every paragraph must contain at least one specific fact — no paragraph should be pure commentary or filler
 - Include ONE brief historical comparison or precedent (e.g. "The last time a company of this size filed similar claims was in 2020 when..." or "This marks only the second time since 2018 that..."). Keep it to one sentence and base it on real knowledge if possible.
-- Match article length to available facts. If the source material is thin, write 400 words. Do NOT pad with filler to reach a word count.
+- Target 600-900 words. If the source genuinely lacks enough facts, write no fewer than 450 words using every available fact — never pad with commentary to reach length.
 - If the article is 350+ words, insert exactly ONE subheading after the 3rd paragraph. Format it on its own line as ## followed by the subheading text (e.g. "## Impact on Global Markets"). The subheading must be specific to THIS story — never generic like "## Background" or "## Analysis"
-- End with a brief "why this matters" paragraph — connect it directly to the READER. Not "This sets a precedent for the industry" but "If you hold Bitcoin, this ruling could directly affect your portfolio" or "If you follow the Premier League, this transfer changes the title race." Make it personal and specific.
+- End on the strongest remaining fact or the concrete next step (a scheduled date, a pending vote, an upcoming earnings call). Only write about reader impact if there is a specific material effect — never generic.
 - Do NOT mention AI, Claude, or that this was rewritten
+- ALWAYS include the exact date the event occurred in the first or second paragraph.
+- ALWAYS extract and use exact numbers — dollar amounts, percentages, scores, vote counts. Never round or generalize.
+- If the source contains a direct quote, include it with quotation marks and the named speaker.
+- Every paragraph must contain at least one concrete fact from your factsUsed list.
 ${originalValueInstruction}
 ${categoryInstructions[category]}
 
