@@ -710,7 +710,7 @@ export default async function handler(req, res) {
           const sourceMaterial = fullText || rss.description;
           const hasNumbers = (sourceMaterial.match(/\b\d+[\d,.%$£€]*\b/g) || []).length;
 const hasDate = /\b(January|February|March|April|May|June|July|August|September|October|November|December|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday|\d{1,2}\/\d{1,2}|\d{4})\b/i.test(sourceMaterial);
-if (hasNumbers < 3 || !hasDate) {
+if (hasNumbers < 2) {
   console.log(`Skipped ${category}: source lacks numbers or date — ${rss.title}`);
   return null;
 }const article = await generateArticle(rss.title, sourceMaterial, category);
