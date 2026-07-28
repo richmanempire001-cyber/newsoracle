@@ -697,9 +697,13 @@ export default async function handler(req, res) {
     // STEP 7 — Quality gate 1 (thin source)
     const validItems = fullArticleResults.filter(({ rss, fullText }) => {
       if (!fullText && rss.description.length < 200) {
-        console.log(`Skipped: thin source (${rss.description.length} chars) for ${rss.title}`);
-        return false;
-      }
+  console.log(`Skipped: thin source (${rss.description.length} chars) for ${rss.title}`);
+  return false;
+}
+if (!fullText && rss.isGoogleNews) {
+  console.log(`Skipped: Google News unwrap failed for ${rss.title}`);
+  return false;
+}
       return true;
     });
 
