@@ -129,7 +129,7 @@ const RSS_SOURCES = {
   politics: [
     // Direct sources — always tried after google news
     'https://www.aljazeera.com/xml/rss/all.xml',
-    'https://thehill.com/feed',
+    'https://feeds.apnews.com/rss/politics',
     'https://www.politico.com/rss/politicopicks.xml',
     'https://feeds.bbci.co.uk/news/politics/rss.xml',
     'https://rss.dw.com/rdf/rss-en-world',
@@ -147,7 +147,7 @@ const GOOGLE_NEWS_SOURCES = new Set([
   'https://news.google.com/rss/search?q=bitcoin+OR+crypto+OR+stocks+OR+nasdaq+OR+S%26P500+OR+inflation+OR+Fed&ceid=US:en&hl=en-US&gl=US',
   'https://news.google.com/rss/search?q=NBA+OR+soccer+OR+cricket+OR+UFC&ceid=US:en&hl=en-US&gl=US',
   'https://news.google.com/rss/search?q=Trump+OR+Congress+OR+White+House+OR+elections+OR+Supreme+Court+OR+Senate&ceid=US:en&hl=en-US&gl=US',
-  'https://news.google.com/rss/search?q=AI+OR+Apple+OR+Tesla+OR+Google+OR+Meta+OR+OpenAI+OR+ChatGPT&ceid=US:en&hl=en-US&gl=US',
+  'https://news.google.com/rss/search?q=AI+Technology+OR+Apple+OR+Tesla+OR+Google+OR+Meta+OR+OpenAI+OR+ChatGPT&ceid=US:en&hl=en-US&gl=US',
 ]);
 
 const FALLBACK_IMAGES = {
