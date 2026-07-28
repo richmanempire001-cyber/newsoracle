@@ -756,7 +756,8 @@ return { category, rss, article, fullText, ogImage };
     const itemsWithImages = await Promise.all(
       passedGates.map(async ({ category, rss, article, ogImage }) => {
         const pexelsQuery = `${article.tag} ${article.title.split(' ').slice(0, 3).join(' ')}`;
-        const articleImage = ogImage || rss.image || await getPexelsImage(pexelsQuery) || FALLBACK_IMAGES[category];
+        const isBBC = rss?.sourceUrl?.includes('bbci.co.uk') || rss?.sourceUrl?.includes('bbc.com') || rss?.itemLink?.includes('bbc.co') || rss?.itemLink?.includes('bbc.com');
+const articleImage = (!isBBC && (ogImage || rss.image)) || await getPexelsImage(pexelsQuery) || FALLBACK_IMAGES[category];
         return { category, rss, article, articleImage };
       })
     );
