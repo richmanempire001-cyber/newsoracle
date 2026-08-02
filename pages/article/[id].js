@@ -372,7 +372,7 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
                 </>
               )}
               <span style={{ fontSize: "13px", color: "#999" }}>{getReadTime(article.summary)} min read</span>
-              {viewsFormatted && <span style={{ fontSize: "13px", color: "#999" }}>👁 {viewsFormatted}</span>}
+              
             </div>
 
             {!isEvergreen && article.source && (
