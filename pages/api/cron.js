@@ -112,7 +112,6 @@ const RSS_SOURCES = {
     'https://cointelegraph.com/rss',
     'https://decrypt.co/feed',
     'https://www.coindesk.com/arc/outboundfeeds/rss/',
-    'https://feeds.reuters.com/reuters/businessNews',
     'https://www.cnbc.com/id/100003114/device/rss/rss.html',
     // Google News — always tried first (high quality, full text)
     'https://news.google.com/rss/search?q=bitcoin+OR+crypto+OR+stocks+OR+nasdaq+OR+S%26P500+OR+inflation+OR+Fed&ceid=US:en&hl=en-US&gl=US',
@@ -137,7 +136,11 @@ const RSS_SOURCES = {
     'https://news.google.com/rss/search?q=Trump+OR+Congress+OR+White+House+OR+elections+OR+Supreme+Court+OR+Senate&ceid=US:en&hl=en-US&gl=US',
   ],
   technology: [
-    // Google News — always tried first
+    // Direct sources — full article text
+    'https://www.theverge.com/rss/index.xml',
+    'https://feeds.arstechnica.com/arstechnica/index',
+    'https://www.cnbc.com/id/19854910/device/rss/rss.html',
+    // Google News
     'https://news.google.com/rss/search?q=AI+Technology+OR+Apple+OR+Tesla+OR+Google+OR+Meta+OR+OpenAI+OR+ChatGPT&ceid=US:en&hl=en-US&gl=US',
   ]
 };
@@ -272,7 +275,7 @@ function scoreRSSItem(title, description, pubDate, sourceUrl = '') {
 
   // Source quality scoring — direct sources preferred over Google News wrappers
   if (GOOGLE_NEWS_SOURCES.has(sourceUrl)) {
-    score += 10; // Google News first priority — trending curated queries
+    score += 4; // Google News first priority — trending curated queries
   }
 
   // Recency scoring
@@ -698,10 +701,6 @@ export default async function handler(req, res) {
     const validItems = fullArticleResults.filter(({ rss, fullText }) => {
       if (!fullText && rss.description.length < 200) {
   console.log(`Skipped: thin source (${rss.description.length} chars) for ${rss.title}`);
-  return false;
-}
-if (!fullText && rss.isGoogleNews) {
-  console.log(`Skipped: Google News unwrap failed for ${rss.title}`);
   return false;
 }
       return true;
