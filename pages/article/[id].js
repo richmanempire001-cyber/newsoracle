@@ -467,7 +467,7 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
                   <><a href={article.link} target="_blank" rel="noopener noreferrer" style={{ color: '#cc0000', textDecoration: 'none', fontWeight: '600' }}>{article.source}</a> and other international news outlets.</>
                 ) : article.source ? (
                   <><strong>{article.source}</strong> and other international news outlets.</>
-                ) : 'AP, Reuters, ESPN, Bloomberg, BBC and other international news outlets.'}
+                ) : 'Publicly available news sources.'}
               </p>
             </div>
 
