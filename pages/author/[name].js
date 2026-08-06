@@ -212,7 +212,7 @@ export default function AuthorPage({ articles, totalCount }) {
               NEWS<span style={{ color: '#cc0000' }}>ORACLE</span>
             </h2>
             <p style={{ margin: 0, fontSize: '12px', textAlign: 'center' }}>
-              &copy; 2026 NewsOracle. All Rights Reserved. Content is produced with AI assistance based on publicly available sources. Readers should independently verify all information. NewsOracle does not intend to defame any individual or organisation. Content is for informational purposes only and does not constitute legal, financial, or professional advice.
+              &copy; 2026 NewsOracle. All Rights Reserved. While we strive for accuracy, NewsOracle makes no warranty as to the completeness or accuracy of the information. Errors and omissions may occur. Readers should independently verify all information before acting on it. NewsOracle does not intend to defame any individual or organisation and accepts no liability for any loss or damage arising from reliance on this content. Content is for informational purposes only and does not constitute legal, financial, medical, or professional advice. Unauthorised reproduction prohibited.
             </p>
           </div>
         </footer>
