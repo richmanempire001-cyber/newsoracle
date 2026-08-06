@@ -293,7 +293,7 @@ export default function Home({ articles, categoryFeatured, evergreenArticles, ti
               )}
 
               {/* LOAD MORE BUTTON */}
-              {hasMore && activeCategory === 'all' && !searchQuery && (
+              {hasMore && !searchQuery && (
                 <div style={{ textAlign: "center", marginTop: "32px" }}>
                   <button
                     onClick={loadMore}
