@@ -580,7 +580,7 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
               <Link href="/terms" style={{ color: "#999", textDecoration: "none", fontSize: "13px" }}>Terms of Service</Link>
             </div>
             <h2 style={{ color: "#fff", margin: "0 0 10px", fontSize: "24px", fontWeight: "900", textAlign: "center" }}>NEWS<span style={{ color: "#cc0000" }}>ORACLE</span></h2>
-            <p style={{ margin: 0, fontSize: "12px", textAlign: "center" }}>2026 NewsOracle. All content is for informational purposes only and does not constitute financial or betting advice.</p>
+            <p style={{ margin: 0, fontSize: "12px", textAlign: "center" }}>2026 NewsOracle. All Rights Reserved. Content is produced with AI assistance based on publicly available sources. Readers should independently verify all information. NewsOracle does not intend to defame any individual or organisation. Content is for informational purposes only and does not constitute legal, financial, or professional advice.</p>
           </div>
         </footer>
 
