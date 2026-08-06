@@ -130,7 +130,7 @@ export default function About() {
                   Claiming a "team" when there is one founder is a credibility
                   risk if a reviewer or reader checks. Update this copy for
                   real once you have named contributors to point to. */}
-              NewsOracle produces all content with AI assistance based on publicly available news sources. Readers are strongly advised to independently verify all information before acting on it. We do not intend to defame, harm, or misrepresent any individual, organisation, or entity. We are not responsible for errors, omissions, or inaccuracies in source reporting. Nothing on this site constitutes legal, financial, or professional advice.
+              While we strive for accuracy, NewsOracle makes no warranty as to the completeness or accuracy of the information. Errors and omissions may occur. Readers should independently verify all information before acting on it. NewsOracle does not intend to defame any individual or organisation and accepts no liability for any loss or damage arising from reliance on this content. Content is for informational purposes only and does not constitute legal, financial, medical, or professional advice. All rights reserved. Unauthorised reproduction prohibited.
             </p>
           </div>
 
@@ -294,7 +294,7 @@ export default function About() {
           <div style={{ background: '#fffbf0', border: '1px solid #ffe082', padding: '24px', marginBottom: '24px' }}>
             <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#111', margin: '0 0 12px', textTransform: 'uppercase', letterSpacing: '1px' }}>Disclaimer</h3>
             <p style={{ fontSize: '14px', color: '#666', lineHeight: '1.7', margin: 0 }}>
-              All content on NewsOracle is produced with AI assistance based on publicly available news sources. Readers should independently verify all information before acting on it. NewsOracle does not intend to defame any individual or organisation. Content is for informational purposes only and does not constitute legal, financial, or professional advice.
+              While we strive for accuracy, NewsOracle makes no warranty as to the completeness or accuracy of the information. Errors and omissions may occur. Readers should independently verify all information before acting on it. NewsOracle does not intend to defame any individual or organisation and accepts no liability for any loss or damage arising from reliance on this content. Content is for informational purposes only and does not constitute legal, financial, medical, or professional advice. All rights reserved. Unauthorised reproduction prohibited.
             </p>
           </div>
 
@@ -330,7 +330,7 @@ export default function About() {
               NEWS<span style={{ color: '#cc0000' }}>ORACLE</span>
             </h2>
             <p style={{ margin: 0, fontSize: '12px', textAlign: 'center' }}>
-              2026 NewsOracle. All Rights Reserved. Content is produced with AI assistance based on publicly available sources. Readers should independently verify all information. NewsOracle does not intend to defame any individual or organisation. Content is for informational purposes only and does not constitute legal, financial, or professional advice.
+              2026 NewsOracle. All Rights Reserved. While we strive for accuracy, NewsOracle makes no warranty as to the completeness or accuracy of the information. Errors and omissions may occur. Readers should independently verify all information before acting on it. NewsOracle does not intend to defame any individual or organisation and accepts no liability for any loss or damage arising from reliance on this content. Content is for informational purposes only and does not constitute legal, financial, medical, or professional advice. Unauthorised reproduction prohibited.
             </p>
           </div>
         </footer>
