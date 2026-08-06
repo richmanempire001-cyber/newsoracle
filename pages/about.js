@@ -294,7 +294,7 @@ export default function About() {
           <div style={{ background: '#fffbf0', border: '1px solid #ffe082', padding: '24px', marginBottom: '24px' }}>
             <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#111', margin: '0 0 12px', textTransform: 'uppercase', letterSpacing: '1px' }}>Disclaimer</h3>
             <p style={{ fontSize: '14px', color: '#666', lineHeight: '1.7', margin: 0 }}>
-              All content published on NewsOracle is for informational purposes only. Articles are written based on publicly available news sources and do not constitute financial, legal, or investment advice. Market outlooks and predictions represent editorial analysis only. Always consult a qualified professional before making financial decisions.
+              All content on NewsOracle is produced with AI assistance based on publicly available news sources. Readers should independently verify all information before acting on it. NewsOracle does not intend to defame any individual or organisation. Content is for informational purposes only and does not constitute legal, financial, or professional advice.
             </p>
           </div>
 
