@@ -48,6 +48,9 @@ export default function PrivacyPolicy() {
           <div style={{ background: '#fff', padding: '40px', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
 
             <h1 style={{ fontSize: '28px', fontWeight: '900', color: '#111', margin: '0 0 8px', letterSpacing: '-0.5px' }}>Privacy Policy</h1>
+            <div style={{ background: '#fff8e1', border: '1px solid #ffe082', padding: '16px', marginBottom: '24px', borderRadius: '2px' }}>
+              <p style={{ margin: 0, fontSize: '13px', color: '#555', lineHeight: '1.7' }}>NewsOracle uses AI assistance to produce content based on publicly available news sources. No personal data is used in article generation. Readers should independently verify all information published on this site.</p>
+            </div>
             <p style={{ fontSize: '13px', color: '#999', margin: '0 0 32px' }}>Last updated: July 19, 2026 · Effective date: June 2026</p>
 
             <p style={{ fontSize: '15px', lineHeight: '1.8', color: '#444', margin: '0 0 32px' }}>
@@ -210,7 +213,7 @@ export default function PrivacyPolicy() {
               NEWS<span style={{ color: '#cc0000' }}>ORACLE</span>
             </h2>
             <p style={{ margin: 0, fontSize: '12px', textAlign: 'center' }}>
-              &copy; 2026 NewsOracle. All Rights Reserved. All content is for informational purposes only.
+              &copy; 2026 NewsOracle. All Rights Reserved. Content is produced with AI assistance based on publicly available sources. Readers should independently verify all information. NewsOracle does not intend to defame any individual or organisation. Content is for informational purposes only and does not constitute legal, financial, or professional advice.
             </p>
           </div>
         </footer>
