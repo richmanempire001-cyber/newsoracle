@@ -270,7 +270,7 @@ async function fetchFullArticle(url, isGoogleNews = false) {
 }
 
 // CHANGE 4 — scoreRSSItem now penalizes Google News (-3) and rewards direct sources (+2)
-function scoreRSSItem(title, description, pubDate, sourceUrl = '') {
+function scoreRSSItem(title, description, pubDate, sourceUrl = '', category = '') {
   let score = 0;
 
   // Source quality scoring — direct sources preferred over Google News wrappers
@@ -300,10 +300,20 @@ function scoreRSSItem(title, description, pubDate, sourceUrl = '') {
   // Description richness (+1)
   if (description.length > 300) score += 1;
 
+  // Topic relevance bonus (+5) — rewards on-topic stories from direct sources
+  const TOPIC_KEYWORDS = {
+    finance: /bitcoin|crypto|federal reserve|s&p|nasdaq|dow|inflation|interest rate|oil|gold|wall street|earnings|gdp|recession|ipo|stocks/i,
+    sports: /premier league|champions league|nba|nfl|ufc|world cup|transfer|wimbledon|lebron|messi|ronaldo|formula 1|f1/i,
+    politics: /trump|iran|russia|ukraine|nato|supreme court|congress|senate|gaza|middle east|nuclear|sanctions|white house|election/i,
+    technology: /openai|chatgpt|nvidia|apple|google|meta|microsoft|samsung|tesla|artificial intelligence|cybersecurity|gemini/i
+  };
+  if (TOPIC_KEYWORDS[category] && TOPIC_KEYWORDS[category].test(title + ' ' + description)) {
+    score += 5;
+  }
   return score;
 }
 
-async function fetchRSS(url) {
+async function fetchRSS(url, category = '') {
   try {
     const res = await fetch(url);
     const text = await res.text();
@@ -332,7 +342,7 @@ async function fetchRSS(url) {
       if (!title || title.length < 10) continue;
       if (!description || description.length < 100) continue;
       // Pass sourceUrl so score reflects direct vs Google News
-      const score = scoreRSSItem(title, description, pubDate, url);
+      const score = scoreRSSItem(title, description, pubDate, url, category);
       if (score === -999) {
         console.log(`Skipped (stale >6hr): ${title}`);
         continue;
@@ -455,7 +465,7 @@ async function generateArticle(headline, description, category) {
 - factsUsed: (list every concrete fact extracted from source: exact dates, exact numbers, full names with titles, direct quotes with speaker. Minimum 5.)- summary: (full news article. PARAGRAPH 1: most important fact with exact date and exact number. PARAGRAPH 2: direct quote with named speaker, or second most important number. PARAGRAPH 3+: remaining facts each anchored to a specific figure, name, or date from factsUsed. Use \n\n between paragraphs.), must contain at least 3 specific named facts from source — names, scores, stats, quotes. Start with dateline. Use \\n\\n between paragraphs. End with a "why this matters" paragraph.)
 - category: MUST be exactly "${category}" — do not change this under any circumstances regardless of article content
 - tag: (specific tag like "Premier League", "NBA", "UFC", "Tennis", "Cricket")
-- disclaimer: ("This article was produced with AI assistance based on publicly available news sources. NewsOracle is not responsible for errors in source reporting. Content is for informational purposes only.")`,
+- disclaimer: ("This article was produced with AI assistance based on publicly available news sources. Readers should independently verify all information. NewsOracle does not intend to defame any individual or organisation. Content is for informational purposes only and does not constitute legal, financial, or professional advice.")`,
     finance: `Return ONLY a JSON object with these fields:
 - title: (SEO-optimized headline, max 12 words, HARD LIMIT 100 characters. Write it the way someone would SEARCH for this story on Google. Include names, numbers. HEADLINE RULES — all must apply: (1) Put the most recognizable entity in the first 5 words. (2) Include a specific number if the story has one — "Falls 8%" beats "Falls Sharply". (3) Use a change-of-state verb where possible: Falls, Surges, Wins, Loses, Dies, Launches, Bans, Hits, Ousts, Faces, Cuts, Raises, Resigns, Fires. (4) For public figures with health or age context, include age: "84-Year-Old Senator Says..." style. (5) Never start with vague openers like "New Report Shows", "Sources Say", "Report:", "Watch:", "Here's Why". (6) NEVER use these banned phrases: "Sends Clear Message", "Comments On", "Status Check", "Weighs In", "Speaks Out", "Reacts To". Example: "Bitcoin Drops 5% to $62K After Fed Holds Interest Rates")
 - metaDescription: (SEO meta description, exactly 1 sentence, 140-155 characters, summarising the key fact — do NOT truncate mid-word)
@@ -464,7 +474,7 @@ async function generateArticle(headline, description, category) {
 - prediction: (future outlook or analysis, written as expert market view, 60-80 words)
 - category: MUST be exactly "${category}" — do not change this under any circumstances regardless of article content
 - tag: (specific tag like "Bitcoin", "S&P 500", "Fed", "Inflation", "Crypto")
-- disclaimer: ("This article was produced with AI assistance based on publicly available news sources. NewsOracle is not responsible for errors in source reporting. Content is for informational purposes only.")`,
+- disclaimer: ("This article was produced with AI assistance based on publicly available news sources. Readers should independently verify all information. NewsOracle does not intend to defame any individual or organisation. Content is for informational purposes only and does not constitute legal, financial, or professional advice.")`,
     politics: `Return ONLY a JSON object with these fields:
 - title: (SEO-optimized headline, max 12 words, HARD LIMIT 100 characters. Write it the way someone would SEARCH for this story on Google. Include names, policies. HEADLINE RULES — all must apply: (1) Put the most recognizable entity in the first 5 words. (2) Include a specific number if the story has one — "Falls 8%" beats "Falls Sharply". (3) Use a change-of-state verb where possible: Falls, Surges, Wins, Loses, Dies, Launches, Bans, Hits, Ousts, Faces, Cuts, Raises, Resigns, Fires. (4) For public figures with health or age context, include age: "84-Year-Old Senator Says..." style. (5) Never start with vague openers like "New Report Shows", "Sources Say", "Report:", "Watch:", "Here's Why". (6) NEVER use these banned phrases: "Sends Clear Message", "Comments On", "Status Check", "Weighs In", "Speaks Out", "Reacts To". Example: "Trump Signs Executive Order Banning TikTok: What It Means")
 - metaDescription: (SEO meta description, exactly 1 sentence, 140-155 characters, summarising the key fact — do NOT truncate mid-word)
@@ -473,7 +483,7 @@ async function generateArticle(headline, description, category) {
 - prediction: (what happens next politically, written as neutral analysis, 60-80 words)
 - category: MUST be exactly "${category}" — do not change this under any circumstances regardless of article content
 - tag: (specific tag like "Trump", "Congress", "Supreme Court", "NATO", "Senate")
-- disclaimer: ("This article was produced with AI assistance based on publicly available news sources. NewsOracle is not responsible for errors in source reporting. Content is for informational purposes only.")`,
+- disclaimer: ("This article was produced with AI assistance based on publicly available news sources. Readers should independently verify all information. NewsOracle does not intend to defame any individual or organisation. Content is for informational purposes only and does not constitute legal, financial, or professional advice.")`,
     technology: `Return ONLY a JSON object with these fields:
 - title: (SEO-optimized headline, max 12 words, HARD LIMIT 100 characters. Write it the way someone would SEARCH for this story on Google. Include product/company names. HEADLINE RULES — all must apply: (1) Put the most recognizable entity in the first 5 words. (2) Include a specific number if the story has one — "Falls 8%" beats "Falls Sharply". (3) Use a change-of-state verb where possible: Falls, Surges, Wins, Loses, Dies, Launches, Bans, Hits, Ousts, Faces, Cuts, Raises, Resigns, Fires. (4) For public figures with health or age context, include age: "84-Year-Old Senator Says..." style. (5) Never start with vague openers like "New Report Shows", "Sources Say", "Report:", "Watch:", "Here's Why". (6) NEVER use these banned phrases: "Sends Clear Message", "Comments On", "Status Check", "Weighs In", "Speaks Out", "Reacts To". Example: "OpenAI Launches GPT-5: Price, Features and Release Date")
 - metaDescription: (SEO meta description, exactly 1 sentence, 140-155 characters, summarising the key fact — do NOT truncate mid-word)
@@ -482,7 +492,7 @@ async function generateArticle(headline, description, category) {
 - prediction: (what this means for the tech industry or consumers, written as informed analysis, 60-80 words)
 - category: MUST be exactly "${category}" — do not change this under any circumstances regardless of article content
 - tag: (specific tag like "Apple", "AI", "Tesla", "Google", "OpenAI", "Meta", "ChatGPT")
-- disclaimer: ("This article was produced with AI assistance based on publicly available news sources. NewsOracle is not responsible for errors in source reporting. Content is for informational purposes only.")`
+- disclaimer: ("This article was produced with AI assistance based on publicly available news sources. Readers should independently verify all information. NewsOracle does not intend to defame any individual or organisation. Content is for informational purposes only and does not constitute legal, financial, or professional advice.")`
   };
 
   // CHANGE 7 — Original value element added to prompt for all categories
@@ -602,7 +612,7 @@ export default async function handler(req, res) {
     const rssResults = await Promise.all(
       allSourceEntries.map(async ({ category, source }) => {
         try {
-          const rss = await fetchRSS(source);
+          const rss = await fetchRSS(source, category);
           return rss ? { ...rss, category, source } : null;
         } catch {
           return null;
