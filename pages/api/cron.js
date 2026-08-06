@@ -455,7 +455,7 @@ async function generateArticle(headline, description, category) {
 - factsUsed: (list every concrete fact extracted from source: exact dates, exact numbers, full names with titles, direct quotes with speaker. Minimum 5.)- summary: (full news article. PARAGRAPH 1: most important fact with exact date and exact number. PARAGRAPH 2: direct quote with named speaker, or second most important number. PARAGRAPH 3+: remaining facts each anchored to a specific figure, name, or date from factsUsed. Use \n\n between paragraphs.), must contain at least 3 specific named facts from source — names, scores, stats, quotes. Start with dateline. Use \\n\\n between paragraphs. End with a "why this matters" paragraph.)
 - category: MUST be exactly "${category}" — do not change this under any circumstances regardless of article content
 - tag: (specific tag like "Premier League", "NBA", "UFC", "Tennis", "Cricket")
-- disclaimer: ("This article is for informational purposes only. Content is based on publicly available news sources.")`,
+- disclaimer: ("This article was produced with AI assistance based on publicly available news sources. NewsOracle is not responsible for errors in source reporting. Content is for informational purposes only.")`,
     finance: `Return ONLY a JSON object with these fields:
 - title: (SEO-optimized headline, max 12 words, HARD LIMIT 100 characters. Write it the way someone would SEARCH for this story on Google. Include names, numbers. HEADLINE RULES — all must apply: (1) Put the most recognizable entity in the first 5 words. (2) Include a specific number if the story has one — "Falls 8%" beats "Falls Sharply". (3) Use a change-of-state verb where possible: Falls, Surges, Wins, Loses, Dies, Launches, Bans, Hits, Ousts, Faces, Cuts, Raises, Resigns, Fires. (4) For public figures with health or age context, include age: "84-Year-Old Senator Says..." style. (5) Never start with vague openers like "New Report Shows", "Sources Say", "Report:", "Watch:", "Here's Why". (6) NEVER use these banned phrases: "Sends Clear Message", "Comments On", "Status Check", "Weighs In", "Speaks Out", "Reacts To". Example: "Bitcoin Drops 5% to $62K After Fed Holds Interest Rates")
 - metaDescription: (SEO meta description, exactly 1 sentence, 140-155 characters, summarising the key fact — do NOT truncate mid-word)
@@ -464,7 +464,7 @@ async function generateArticle(headline, description, category) {
 - prediction: (future outlook or analysis, written as expert market view, 60-80 words)
 - category: MUST be exactly "${category}" — do not change this under any circumstances regardless of article content
 - tag: (specific tag like "Bitcoin", "S&P 500", "Fed", "Inflation", "Crypto")
-- disclaimer: ("This article is for informational purposes only. Content is based on publicly available news sources.")`,
+- disclaimer: ("This article was produced with AI assistance based on publicly available news sources. NewsOracle is not responsible for errors in source reporting. Content is for informational purposes only.")`,
     politics: `Return ONLY a JSON object with these fields:
 - title: (SEO-optimized headline, max 12 words, HARD LIMIT 100 characters. Write it the way someone would SEARCH for this story on Google. Include names, policies. HEADLINE RULES — all must apply: (1) Put the most recognizable entity in the first 5 words. (2) Include a specific number if the story has one — "Falls 8%" beats "Falls Sharply". (3) Use a change-of-state verb where possible: Falls, Surges, Wins, Loses, Dies, Launches, Bans, Hits, Ousts, Faces, Cuts, Raises, Resigns, Fires. (4) For public figures with health or age context, include age: "84-Year-Old Senator Says..." style. (5) Never start with vague openers like "New Report Shows", "Sources Say", "Report:", "Watch:", "Here's Why". (6) NEVER use these banned phrases: "Sends Clear Message", "Comments On", "Status Check", "Weighs In", "Speaks Out", "Reacts To". Example: "Trump Signs Executive Order Banning TikTok: What It Means")
 - metaDescription: (SEO meta description, exactly 1 sentence, 140-155 characters, summarising the key fact — do NOT truncate mid-word)
@@ -473,7 +473,7 @@ async function generateArticle(headline, description, category) {
 - prediction: (what happens next politically, written as neutral analysis, 60-80 words)
 - category: MUST be exactly "${category}" — do not change this under any circumstances regardless of article content
 - tag: (specific tag like "Trump", "Congress", "Supreme Court", "NATO", "Senate")
-- disclaimer: ("This article is for informational purposes only. Content is based on publicly available news sources.")`,
+- disclaimer: ("This article was produced with AI assistance based on publicly available news sources. NewsOracle is not responsible for errors in source reporting. Content is for informational purposes only.")`,
     technology: `Return ONLY a JSON object with these fields:
 - title: (SEO-optimized headline, max 12 words, HARD LIMIT 100 characters. Write it the way someone would SEARCH for this story on Google. Include product/company names. HEADLINE RULES — all must apply: (1) Put the most recognizable entity in the first 5 words. (2) Include a specific number if the story has one — "Falls 8%" beats "Falls Sharply". (3) Use a change-of-state verb where possible: Falls, Surges, Wins, Loses, Dies, Launches, Bans, Hits, Ousts, Faces, Cuts, Raises, Resigns, Fires. (4) For public figures with health or age context, include age: "84-Year-Old Senator Says..." style. (5) Never start with vague openers like "New Report Shows", "Sources Say", "Report:", "Watch:", "Here's Why". (6) NEVER use these banned phrases: "Sends Clear Message", "Comments On", "Status Check", "Weighs In", "Speaks Out", "Reacts To". Example: "OpenAI Launches GPT-5: Price, Features and Release Date")
 - metaDescription: (SEO meta description, exactly 1 sentence, 140-155 characters, summarising the key fact — do NOT truncate mid-word)
@@ -482,7 +482,7 @@ async function generateArticle(headline, description, category) {
 - prediction: (what this means for the tech industry or consumers, written as informed analysis, 60-80 words)
 - category: MUST be exactly "${category}" — do not change this under any circumstances regardless of article content
 - tag: (specific tag like "Apple", "AI", "Tesla", "Google", "OpenAI", "Meta", "ChatGPT")
-- disclaimer: ("This article is for informational purposes only. Content is based on publicly available news sources.")`
+- disclaimer: ("This article was produced with AI assistance based on publicly available news sources. NewsOracle is not responsible for errors in source reporting. Content is for informational purposes only.")`
   };
 
   // CHANGE 7 — Original value element added to prompt for all categories
@@ -507,7 +507,7 @@ Source material: "${description}"
 Source quality: ${description.length > 1000 ? 'Full article available — write a comprehensive article matched to story weight' : 'Limited source — write a focused 400-550 word article using only available facts, do not pad'}
 
 ABSOLUTE RULES — you should follow these rules while generating article ,there are no exceptions:
-- Write ONLY based on facts in the headline and source material. Do NOT invent quotes, statistics, names, or details.
+- Write ONLY based on facts in the headline and source material. Do NOT invent quotes, statistics, names, or details. If you cannot find a specific fact in the source material, OMIT it entirely — never speculate or fill gaps with plausible-sounding information.
 - The first sentence MUST be a dateline followed by the single most important concrete fact. Example: "WASHINGTON — The Senate voted 52-48 on Thursday to confirm..."
 - The article MUST contain at least 3 specific named facts from the source material (names, numbers, scores, quotes, dates, locations). If the source doesn't have 3 facts, use every fact it does have and keep the article short.
 - Title MUST be optimized for Google Search — write headlines the way someone would search for this story. Include specific names, numbers, or outcomes people would type into Google. Example: instead of "Team wins game" write "Lakers Beat Celtics 112-108: LeBron Scores 34 in Playoff Victory"
