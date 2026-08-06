@@ -26,7 +26,7 @@ export default function AuthorPage({ articles, totalCount }) {
     <>
       <Head>
         <title>NewsOracle Editorial Team — About Our Journalists</title>
-        <meta name="description" content="NewsOracle Editorial Team covers breaking news in Sports, Finance, Politics and Technology. Editor in Chief: Sourav, based in Toronto, Canada." />
+        <meta name="description" content="NewsOracle Editorial Team covers breaking news in Sports, Finance, Politics and Technology. Based in Toronto, Canada." />
         <meta name="robots" content="index, follow" />
         <link rel="canonical" href="https://www.newsoracle.online/author/newsoracle-editorial" />
         <meta property="og:title" content="NewsOracle Editorial Team" />
@@ -37,7 +37,7 @@ export default function AuthorPage({ articles, totalCount }) {
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
           "@context": "https://schema.org",
           "@type": "Person",
-          "name": "Sourav",
+          "name": "NewsOracle Editorial",
           "jobTitle": "Founder & Editor in Chief",
           "worksFor": {
             "@type": "NewsMediaOrganization",
@@ -103,14 +103,14 @@ export default function AuthorPage({ articles, totalCount }) {
               {/* Info */}
               <div style={{ flex: 1 }}>
                 <h1 style={{ fontSize: '28px', fontWeight: '900', color: '#111', margin: '0 0 4px', letterSpacing: '-0.5px' }}>NewsOracle Editorial Team</h1>
-                <p style={{ fontSize: '14px', color: '#cc0000', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 16px' }}>Editor in Chief: Sourav · Founded June 2026 · Toronto, Canada</p>
+                <p style={{ fontSize: '14px', color: '#cc0000', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 16px' }}>NewsOracle Editorial Team · Founded June 2026 · Toronto, Canada</p>
 
                 <p style={{ fontSize: '15px', lineHeight: '1.8', color: '#555', margin: '0 0 20px' }}>
                   NewsOracle is a digital news publication founded in Toronto, Canada in June 2026. Our editorial team monitors trusted global news sources daily — including AP, Reuters, ESPN, Bloomberg and BBC — to deliver breaking news in Sports, Finance, Politics and Technology. Every story is read, verified and written by our editorial team before publication.
                 </p>
 
                 <p style={{ fontSize: '15px', lineHeight: '1.8', color: '#555', margin: '0 0 24px' }}>
-                  NewsOracle is led by Sourav, Founder and Editor in Chief, who oversees all editorial decisions, content quality standards, and the strategic direction of the publication. All published articles are reviewed for accuracy and attribution before going live.
+                  NewsOracle Editorial Team oversees all editorial decisions, content quality standards, and the strategic direction of the publication. All published articles are reviewed for accuracy and attribution before going live.
                 </p>
 
                 {/* Stats */}
@@ -212,7 +212,7 @@ export default function AuthorPage({ articles, totalCount }) {
               NEWS<span style={{ color: '#cc0000' }}>ORACLE</span>
             </h2>
             <p style={{ margin: 0, fontSize: '12px', textAlign: 'center' }}>
-              &copy; 2026 NewsOracle. All Rights Reserved. All content is for informational purposes only.
+              &copy; 2026 NewsOracle. All Rights Reserved. Content is produced with AI assistance based on publicly available sources. Readers should independently verify all information. NewsOracle does not intend to defame any individual or organisation. Content is for informational purposes only and does not constitute legal, financial, or professional advice.
             </p>
           </div>
         </footer>
