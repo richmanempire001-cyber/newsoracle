@@ -49,7 +49,7 @@ export default function PrivacyPolicy() {
 
             <h1 style={{ fontSize: '28px', fontWeight: '900', color: '#111', margin: '0 0 8px', letterSpacing: '-0.5px' }}>Privacy Policy</h1>
             <div style={{ background: '#fff8e1', border: '1px solid #ffe082', padding: '16px', marginBottom: '24px', borderRadius: '2px' }}>
-              <p style={{ margin: 0, fontSize: '13px', color: '#555', lineHeight: '1.7' }}>NewsOracle uses AI assistance to produce content based on publicly available news sources. No personal data is used in article generation. Readers should independently verify all information published on this site.</p>
+              <p style={{ margin: 0, fontSize: '13px', color: '#555', lineHeight: '1.7' }}>While we strive for accuracy, NewsOracle makes no warranty as to the completeness or accuracy of the information. Errors and omissions may occur. Readers should independently verify all information before acting on it. NewsOracle does not intend to defame any individual or organisation and accepts no liability for any loss or damage arising from reliance on this content. Content is for informational purposes only and does not constitute legal, financial, medical, or professional advice. All rights reserved. Unauthorised reproduction prohibited.</p>
             </div>
             <p style={{ fontSize: '13px', color: '#999', margin: '0 0 32px' }}>Last updated: July 19, 2026 · Effective date: June 2026</p>
 
@@ -213,7 +213,7 @@ export default function PrivacyPolicy() {
               NEWS<span style={{ color: '#cc0000' }}>ORACLE</span>
             </h2>
             <p style={{ margin: 0, fontSize: '12px', textAlign: 'center' }}>
-              &copy; 2026 NewsOracle. All Rights Reserved. Content is produced with AI assistance based on publicly available sources. Readers should independently verify all information. NewsOracle does not intend to defame any individual or organisation. Content is for informational purposes only and does not constitute legal, financial, or professional advice.
+              &copy; 2026 NewsOracle. All Rights Reserved. While we strive for accuracy, NewsOracle makes no warranty as to the completeness or accuracy of the information. Errors and omissions may occur. Readers should independently verify all information before acting on it. NewsOracle does not intend to defame any individual or organisation and accepts no liability for any loss or damage arising from reliance on this content. Content is for informational purposes only and does not constitute legal, financial, medical, or professional advice. Unauthorised reproduction prohibited.
             </p>
           </div>
         </footer>
