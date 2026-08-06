@@ -92,7 +92,7 @@ export default function EditorialGuidelines() {
             {/* Independence */}
             <h2 style={{ fontSize: "22px", fontWeight: "800", color: "#111", margin: "0 0 12px" }}>Editorial Independence</h2>
             <p style={{ fontSize: "15px", lineHeight: "1.8", color: "#444", marginBottom: "32px" }}>
-              NewsOracle's editorial decisions are made entirely independently of commercial, advertising, or third-party interests. No advertiser, sponsor, or external party influences which stories we cover, how we cover them, or what conclusions we draw. Our Editor in Chief, Sourav, has final authority over all editorial decisions.
+              NewsOracle's editorial decisions are made entirely independently of commercial, advertising, or third-party interests. No advertiser, sponsor, or external party influences which stories we cover, how we cover them, or what conclusions we draw. Our Editorial Team has final authority over all editorial decisions.
             </p>
 
             {/* Sourcing */}
@@ -176,7 +176,7 @@ export default function EditorialGuidelines() {
               <a href="mailto:news.oracle@outlook.com" style={{ fontSize: "14px", color: "#cc0000", textDecoration: "none", fontWeight: "600" }}>
                 news.oracle@outlook.com
               </a>
-              <p style={{ fontSize: "13px", color: "#999", margin: "8px 0 0" }}>Editor in Chief: Sourav — NewsOracle, Toronto, Canada</p>
+              <p style={{ fontSize: "13px", color: "#999", margin: "8px 0 0" }}>NewsOracle Editorial Team — Toronto, Canada</p>
             </div>
 
           </div>
@@ -193,7 +193,7 @@ export default function EditorialGuidelines() {
               <Link href="/privacy-policy" style={{ color: "#999", textDecoration: "none", fontSize: "13px" }}>Privacy Policy</Link>
               <Link href="/terms" style={{ color: "#999", textDecoration: "none", fontSize: "13px" }}>Terms of Service</Link>
             </div>
-            <p style={{ margin: 0, fontSize: "12px", textAlign: "center" }}>2026 NewsOracle. All content is for informational purposes only and does not constitute financial or betting advice.</p>
+            <p style={{ margin: 0, fontSize: "12px", textAlign: "center" }}>2026 NewsOracle. All Rights Reserved. Content is produced with AI assistance based on publicly available sources. Readers should independently verify all information. NewsOracle does not intend to defame any individual or organisation. Content is for informational purposes only and does not constitute legal, financial, or professional advice.</p>
           </div>
         </footer>
 
