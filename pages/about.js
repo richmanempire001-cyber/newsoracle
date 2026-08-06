@@ -28,7 +28,7 @@ export default function About() {
           "foundingLocation": "Toronto, Ontario, Canada",
           "editor": {
             "@type": "Person",
-            "name": "Sourav",
+            "name": "NewsOracle Editorial",
             "jobTitle": "Founder & Editor in Chief",
             "email": "news.oracle@outlook.com"
             // REMOVED "sameAs" LinkedIn link. The slug (news-oracle-a7543b423)
@@ -146,7 +146,7 @@ export default function About() {
                     as anonymous/placeholder to a reviewer. */}
               </div>
               <div>
-                <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#111', margin: '0 0 4px' }}>Sourav</h3>
+                <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#111', margin: '0 0 4px' }}>NewsOracle Editorial</h3>
                 {/* TODO: Add a last name if you're willing to use one publicly.
                     A single first name on a byline reads as anonymous,
                     especially for finance/politics coverage. This is optional
@@ -273,7 +273,7 @@ export default function About() {
                       there's no team to attribute this to yet. Overclaiming
                       a team you can't back up is worse than being direct
                       about a solo-founder operation. */}
-                  <p style={{ margin: 0, fontSize: '14px', fontWeight: '700', color: '#111' }}>Sourav, Founder & Editor in Chief</p>
+                  <p style={{ margin: 0, fontSize: '14px', fontWeight: '700', color: '#111' }}>NewsOracle Editorial Team</p>
                   <a href="mailto:news.oracle@outlook.com" style={{ fontSize: '13px', color: '#cc0000', textDecoration: 'none' }}>news.oracle@outlook.com</a>
                   {/* TODO (needs your action, not something I can fake): a
                       free @outlook.com address is a low-trust signal for a
@@ -330,7 +330,7 @@ export default function About() {
               NEWS<span style={{ color: '#cc0000' }}>ORACLE</span>
             </h2>
             <p style={{ margin: 0, fontSize: '12px', textAlign: 'center' }}>
-              2026 NewsOracle. All content is for informational purposes only and does not constitute financial or betting advice.
+              2026 NewsOracle. All Rights Reserved. Content is produced with AI assistance based on publicly available sources. Readers should independently verify all information. NewsOracle does not intend to defame any individual or organisation. Content is for informational purposes only and does not constitute legal, financial, or professional advice.
             </p>
           </div>
         </footer>
