@@ -337,7 +337,20 @@ async function fetchRSS(url, category = '') {
       const description = descMatch ? (descMatch[1] || descMatch[2]).replace(/<[^>]*>/g, '').trim() : '';
       const image = imageMatch ? (imageMatch[1] || imageMatch[0]) : null;
       const sourceMatch = itemText.match(/<source[^>]*>(.*?)<\/source>/);
-      const sourceName = sourceMatch ? sourceMatch[1].trim() : '';
+      let sourceName = sourceMatch ? sourceMatch[1].trim() : '';
+      if (!sourceName) {
+        const SOURCE_NAMES = {
+          'cointelegraph.com': 'CoinTelegraph', 'decrypt.co': 'Decrypt',
+          'coindesk.com': 'CoinDesk', 'cnbc.com': 'CNBC', 'fortune.com': 'Fortune',
+          'npr.org': 'NPR', 'espn.com': 'ESPN', 'footballtransfers.com': 'FootballTransfers',
+          'bbc.com': 'BBC Sport', 'bbci.co.uk': 'BBC', 'skysports.com': 'Sky Sports',
+          'aljazeera.com': 'Al Jazeera', 'apnews.com': 'AP News', 'politico.com': 'Politico',
+          'dw.com': 'DW', 'theverge.com': 'The Verge', 'arstechnica.com': 'Ars Technica',
+          'cbssports.com': 'CBS Sports', 'investing.com': 'Investing.com',
+        };
+        const domain = Object.keys(SOURCE_NAMES).find(d => url.includes(d));
+        if (domain) sourceName = SOURCE_NAMES[domain];
+      }
       const pubDate = pubDateMatch ? pubDateMatch[1].trim() : null;
       if (!title || title.length < 10) continue;
       if (!description || description.length < 100) continue;
