@@ -214,7 +214,8 @@ export default function ArticlePage({ article, related, crossCategoryArticles })
         <footer style={{ background: "#111", color: "#999", padding: "40px 20px", marginTop: "40px" }}>
           <div style={{ maxWidth: "1200px", margin: "0 auto", textAlign: "center" }}>
             <h2 style={{ color: "#fff", margin: "0 0 10px", fontSize: "24px", fontWeight: "900" }}>NEWS<span style={{ color: "#cc0000" }}>ORACLE</span></h2>
-            <p style={{ margin: 0, fontSize: "12px" }}>2026 NewsOracle. All content is for informational purposes only.</p>
+            <p style={{ margin: 0, fontSize: "12px", textAlign: "center" }}>&copy; 2026 NewsOracle. All Rights Reserved.</p>
+<p style={{ margin: "8px 0 0", fontSize: "11px", textAlign: "center", color: "#777", lineHeight: "1.6", maxWidth: "800px", marginLeft: "auto", marginRight: "auto" }}>All content is produced with AI assistance based on publicly available news sources. Readers should independently verify all information. NewsOracle does not intend to defame any individual or organisation and is not responsible for errors in source reporting. Content is for informational purposes only and does not constitute legal, financial, or professional advice.</p>
           </div>
         </footer>
       </div>
