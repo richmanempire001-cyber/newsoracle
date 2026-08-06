@@ -96,7 +96,7 @@ export default function Contact() {
             </div>
             <div style={{ marginTop: "32px", padding: "24px", background: "#f8f8f8" }}>
               <p style={{ margin: 0, color: "#666", fontSize: "14px", lineHeight: "1.6" }}>
-                <strong>Note:</strong> NewsOracle is a digital news platform. Content is produced with AI assistance based on publicly available sources. Readers should independently verify all information. NewsOracle does not intend to defame any individual or organisation. Content is for informational purposes only. For urgent news tips, please email us directly.
+                <strong>Note:</strong> While we strive for accuracy, NewsOracle makes no warranty as to the completeness or accuracy of the information. Errors and omissions may occur. Readers should independently verify all information before acting on it. NewsOracle does not intend to defame any individual or organisation and accepts no liability for any loss or damage arising from reliance on this content. Content is for informational purposes only and does not constitute legal, financial, medical, or professional advice. All rights reserved. Unauthorised reproduction prohibited.
               </p>
             </div>
           </div>
@@ -111,7 +111,7 @@ export default function Contact() {
               <Link href="/privacy-policy" style={{ color: "#999", textDecoration: "none", fontSize: "13px" }}>Privacy Policy</Link>
               <Link href="/terms" style={{ color: "#999", textDecoration: "none", fontSize: "13px" }}>Terms of Service</Link>
             </div>
-            <p style={{ margin: 0, fontSize: "12px", textAlign: "center" }}>2026 NewsOracle. All Rights Reserved. Content is produced with AI assistance based on publicly available sources. Readers should independently verify all information. NewsOracle does not intend to defame any individual or organisation. Content is for informational purposes only and does not constitute legal, financial, or professional advice.</p>
+            <p style={{ margin: 0, fontSize: "12px", textAlign: "center" }}>2026 NewsOracle. All Rights Reserved. While we strive for accuracy, NewsOracle makes no warranty as to the completeness or accuracy of the information. Errors and omissions may occur. Readers should independently verify all information before acting on it. NewsOracle does not intend to defame any individual or organisation and accepts no liability for any loss or damage arising from reliance on this content. Content is for informational purposes only and does not constitute legal, financial, medical, or professional advice. Unauthorised reproduction prohibited.</p>
           </div>
         </footer>
 
