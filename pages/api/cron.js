@@ -114,7 +114,7 @@ const RSS_SOURCES = {
     'https://www.coindesk.com/arc/outboundfeeds/rss/',
     'https://www.cnbc.com/id/100003114/device/rss/rss.html',
     // Google News — always tried first (high quality, full text)
-    'https://news.google.com/rss/search?q=bitcoin+OR+crypto+OR+stocks+OR+nasdaq+OR+S%26P500+OR+inflation+OR+Fed&ceid=US:en&hl=en-US&gl=US',
+    'https://news.google.com/rss/search?q=Bitcoin+OR+Federal+Reserve+OR+S%26P500+OR+inflation+OR+interest+rates+OR+recession+OR+oil+prices+OR+Wall+Street+OR+crypto+OR+gold&ceid=US:en&hl=en-US&gl=US',
   ],
   sports: [
     // Direct sources — last resort fallback only
@@ -123,7 +123,7 @@ const RSS_SOURCES = {
     'https://www.bbc.com/sport/rss.xml',
     'https://www.skysports.com/rss/12040',
     // Google News — always tried first (high quality, full text)
-    'https://news.google.com/rss/search?q=NBA+OR+soccer+OR+cricket+OR+UFC&ceid=US:en&hl=en-US&gl=US',
+    'https://news.google.com/rss/search?q=Premier+League+OR+Champions+League+OR+NBA+OR+NFL+OR+UFC+OR+World+Cup+OR+Wimbledon+OR+transfer+OR+LeBron+OR+Messi&ceid=US:en&hl=en-US&gl=US',
   ],
   politics: [
     // Direct sources — always tried after google news
@@ -133,7 +133,7 @@ const RSS_SOURCES = {
     'https://feeds.bbci.co.uk/news/politics/rss.xml',
     'https://rss.dw.com/rdf/rss-en-world',
     // Google News — first priority (high quality, full text)
-    'https://news.google.com/rss/search?q=Trump+OR+Congress+OR+White+House+OR+elections+OR+Supreme+Court+OR+Senate&ceid=US:en&hl=en-US&gl=US',
+    'https://news.google.com/rss/search?q=Trump+OR+Iran+war+OR+Russia+Ukraine+OR+NATO+OR+Supreme+Court+OR+Congress+OR+Gaza+OR+Middle+East+OR+sanctions+OR+nuclear&ceid=US:en&hl=en-US&gl=US',
   ],
   technology: [
     // Direct sources — full article text
@@ -141,16 +141,16 @@ const RSS_SOURCES = {
     'https://feeds.arstechnica.com/arstechnica/index',
     'https://www.cnbc.com/id/19854910/device/rss/rss.html',
     // Google News
-    'https://news.google.com/rss/search?q=AI+Technology+OR+Apple+OR+Tesla+OR+Google+OR+Meta+OR+OpenAI+OR+ChatGPT&ceid=US:en&hl=en-US&gl=US',
+    'https://news.google.com/rss/search?q=OpenAI+OR+ChatGPT+OR+Nvidia+OR+Apple+OR+Google+OR+Meta+AI+OR+Tesla+OR+Samsung+OR+Microsoft+OR+cybersecurity&ceid=US:en&hl=en-US&gl=US',
   ]
 };
 
 // Track which sources are Google News wrappers
 const GOOGLE_NEWS_SOURCES = new Set([
-  'https://news.google.com/rss/search?q=bitcoin+OR+crypto+OR+stocks+OR+nasdaq+OR+S%26P500+OR+inflation+OR+Fed&ceid=US:en&hl=en-US&gl=US',
-  'https://news.google.com/rss/search?q=NBA+OR+soccer+OR+cricket+OR+UFC&ceid=US:en&hl=en-US&gl=US',
-  'https://news.google.com/rss/search?q=Trump+OR+Congress+OR+White+House+OR+elections+OR+Supreme+Court+OR+Senate&ceid=US:en&hl=en-US&gl=US',
-  'https://news.google.com/rss/search?q=AI+Technology+OR+Apple+OR+Tesla+OR+Google+OR+Meta+OR+OpenAI+OR+ChatGPT&ceid=US:en&hl=en-US&gl=US',
+  'https://news.google.com/rss/search?q=Bitcoin+OR+Federal+Reserve+OR+S%26P500+OR+inflation+OR+interest+rates+OR+recession+OR+oil+prices+OR+Wall+Street+OR+crypto+OR+gold&ceid=US:en&hl=en-US&gl=US',
+  'https://news.google.com/rss/search?q=Premier+League+OR+Champions+League+OR+NBA+OR+NFL+OR+UFC+OR+World+Cup+OR+Wimbledon+OR+transfer+OR+LeBron+OR+Messi&ceid=US:en&hl=en-US&gl=US',
+  'https://news.google.com/rss/search?q=Trump+OR+Iran+war+OR+Russia+Ukraine+OR+NATO+OR+Supreme+Court+OR+Congress+OR+Gaza+OR+Middle+East+OR+sanctions+OR+nuclear&ceid=US:en&hl=en-US&gl=US',
+  'https://news.google.com/rss/search?q=OpenAI+OR+ChatGPT+OR+Nvidia+OR+Apple+OR+Google+OR+Meta+AI+OR+Tesla+OR+Samsung+OR+Microsoft+OR+cybersecurity&ceid=US:en&hl=en-US&gl=US',
 ]);
 
 const FALLBACK_IMAGES = {
@@ -663,48 +663,39 @@ export default async function handler(req, res) {
       return false;
     }
 
-    // STEP 5 — Pick best non-duplicate item per category (parallel across all 4 categories)
-    const selectedItemsArr = await Promise.all(
+    // STEP 5+6+7 — Pick best candidate per category with full-text fetch + 800-char gate inside loop
+    const validItems = (await Promise.all(
       ['finance', 'sports', 'politics', 'technology'].map(async (category) => {
         const candidates = (itemsByCategory[category] || []).slice(0, 8);
         for (const item of candidates) {
-          if (!isDuplicate(item)) {
-            console.log(`Selected ${category} (score ${item.score}, direct: ${!item.isGoogleNews}): ${item.title}`);
-            return { category, item };
-          } else {
+          // Gate 1: duplicate check
+          if (isDuplicate(item)) {
             console.log(`Skipped ${category} duplicate: ${item.title}`);
+            continue;
           }
+          // Gate 2: fetch full article text
+          let fullText = null;
+          let ogImage = null;
+          try {
+            const fullArticle = await fetchFullArticle(item.itemLink, item.isGoogleNews);
+            fullText = fullArticle?.text || null;
+            ogImage = fullArticle?.ogImage || null;
+          } catch {
+            console.log(`Fetch failed for ${category}: ${item.title}`);
+          }
+          // Gate 3: minimum 800 chars — no stub articles ever reach Claude
+          const sourceLen = fullText ? fullText.length : item.description.length;
+          if (sourceLen < 800) {
+            console.log(`Skipped ${category}: insufficient material (${sourceLen} chars) — ${item.title}`);
+            continue;
+          }
+          console.log(`Selected ${category} (score ${item.score}): ${item.title}`);
+          return { category, rss: item, fullText, ogImage };
         }
+        console.log(`No qualifying article found for ${category} this run`);
         return null;
       })
-    );
-    const selectedItems = {};
-    for (const result of selectedItemsArr.filter(Boolean)) {
-      selectedItems[result.category] = result.item;
-    }
-
-    // STEP 6 — Fetch full articles in parallel (pass isGoogleNews flag)
-    const categoriesToProcess = Object.keys(selectedItems);
-    const fullArticleResults = await Promise.all(
-      categoriesToProcess.map(async category => {
-        const rss = selectedItems[category];
-        try {
-          const fullArticle = await fetchFullArticle(rss.itemLink, rss.isGoogleNews);
-          return { category, rss, fullText: fullArticle?.text || null, ogImage: fullArticle?.ogImage || null };
-        } catch {
-          return { category, rss, fullText: null, ogImage: null };
-        }
-      })
-    );
-
-    // STEP 7 — Quality gate 1 (thin source)
-    const validItems = fullArticleResults.filter(({ rss, fullText }) => {
-      if (!fullText && rss.description.length < 200) {
-  console.log(`Skipped: thin source (${rss.description.length} chars) for ${rss.title}`);
-  return false;
-}
-      return true;
-    });
+    )).filter(Boolean);
 
     // STEP 8 — Generate all articles in parallel
     const generatedArticles = await Promise.all(
