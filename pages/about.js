@@ -122,7 +122,7 @@ export default function About() {
           <div style={{ background: '#fff', padding: '32px', marginBottom: '24px', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
             <h2 style={{ fontSize: '22px', fontWeight: '800', color: '#111', margin: '0 0 16px', paddingBottom: '12px', borderBottom: '3px solid #cc0000' }}>Our Mission</h2>
             <p style={{ fontSize: '16px', lineHeight: '1.8', color: '#444', margin: '0 0 16px' }}>
-              Founded in Toronto, Canada in June 2026, NewsOracle was built on a simple belief: everyone deserves access to fast, accurate, and readable news — without paywalls, without bias, and without the noise.
+              
             </p>
             <p style={{ fontSize: '16px', lineHeight: '1.8', color: '#444', margin: 0 }}>
               {/* CHANGED: "Our editorial team" -> accurate singular framing.
@@ -130,7 +130,7 @@ export default function About() {
                   Claiming a "team" when there is one founder is a credibility
                   risk if a reviewer or reader checks. Update this copy for
                   real once you have named contributors to point to. */}
-              Sourav founded NewsOracle to combine the discipline of professional journalism with the reach of a global news platform — delivering breaking news in Sports, Finance, Politics and Technology, updated continuously, every single day.
+              NewsOracle produces all content with AI assistance based on publicly available news sources. Readers are strongly advised to independently verify all information before acting on it. We do not intend to defame, harm, or misrepresent any individual, organisation, or entity. We are not responsible for errors, omissions, or inaccuracies in source reporting. Nothing on this site constitutes legal, financial, or professional advice.
             </p>
           </div>
 
@@ -154,7 +154,7 @@ export default function About() {
                     EEAT on solo-founder news sites. */}
                 <p style={{ fontSize: '13px', color: '#cc0000', fontWeight: '600', margin: '0 0 12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Founder & Editor in Chief</p>
                 <p style={{ fontSize: '14px', lineHeight: '1.7', color: '#555', margin: '0 0 12px' }}>
-                  Sourav is the founder and Editor in Chief of NewsOracle, based in Toronto, Canada. He oversees all editorial decisions, content quality standards, and the strategic direction of the publication. NewsOracle was founded in June 2026 with a mission to make global news fast, accurate and accessible to everyone.
+                   NewsOracle was founded in June 2026 with a mission to make global news fast and accessible to everyone.
                 </p>
                 <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                   <a href="mailto:news.oracle@outlook.com" style={{ fontSize: '13px', color: '#cc0000', textDecoration: 'none', fontWeight: '600' }}>news.oracle@outlook.com</a>
@@ -176,12 +176,12 @@ export default function About() {
                 {
                   num: '01',
                   title: 'Monitor',
-                  desc: 'We monitor trusted global news sources daily — including AP, Reuters, ESPN, Bloomberg and BBC — to identify the most important breaking stories.'
+                  desc: 'We monitor trusted global news sources daily  to identify the most important breaking stories.'
                 },
                 {
                   num: '02',
                   title: 'Report',
-                  desc: 'Every story is read in full, verified, and written from scratch in professional journalism style — with clear facts, named sources and proper attribution.'
+                  desc: 'Every story is read in full, and written from scratch in professional journalism style — with clear facts, named sources and proper attribution.'
                 },
                 {
                   num: '03',
